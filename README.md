@@ -1,2 +1,17 @@
-# smartpark-iot-practice-4-aws-alexa
-IoT Practice 4 (SIS-234): SmartPark smart object with AWS IoT Core, IoT Rules, Lambda, DynamoDB and Alexa. Edge/cloud control logic and data storage.
+# Práctica 4 — Procesamiento, Almacenamiento y Lógica de Negocio de Objetos Inteligentes con AWS y Alexa
+
+**SmartPark — Integración de un objeto inteligente con AWS (IoT Core, IoT Rules, Lambda y DynamoDB) y Alexa, con procesamiento, almacenamiento y lógica de control en el Edge y/o en la Nube**
+
+**Asignatura:** Internet de las Cosas [SIS-234]
+ 
+**Semestre:** 2-2026
+ 
+**Grupo:** 9
+ 
+**Integrantes:**
+ 
+- Carlos Eduardo Iriarte Rodriguez
+- Isabella Catherine Montes Iñiguez
+- Henry Alejandro Rivera Mendez
+---
+ 
