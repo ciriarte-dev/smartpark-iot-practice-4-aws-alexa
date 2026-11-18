@@ -1,0 +1,68 @@
+# ============================================================
+# Secrets and credentials 
+# ============================================================
+firmware/include/secrets.h
+firmware/include/config.h
+*.pem
+*.key
+*.crt
+*.cert
+*.csr
+certs/
+.env
+.env.*
+!.env.example
+aws-credentials*
+*.local.json
+
+# ============================================================
+# Firmware (C++ / PlatformIO)
+# ============================================================
+.pio/
+.pioenvs/
+.piolibdeps/
+firmware/.pio/
+*.elf
+*.bin
+*.map
+
+# ============================================================
+# Cloud (Python / AWS Lambda)
+# ============================================================
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Lambda build output
+cloud/lambdas/**/build/
+cloud/lambdas/**/dist/
+cloud/lambdas/**/*.zip
+cloud/lambdas/**/package/
+
+# ============================================================
+# Editors and IDEs
+# ============================================================
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+*.swp
+
+# ============================================================
+# Operating system files
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================================
+# Logs and temporary files
+# ============================================================
+*.log
+tmp/
+temp/
