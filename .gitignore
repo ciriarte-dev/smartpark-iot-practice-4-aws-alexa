@@ -71,3 +71,37 @@ temp/
 # LOCAL agent guidelines 
 # ============================================================
 AGENTS.md
+
+
+# Credenciales y configuración privada
+/include/secrets.h
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.aws/
+
+# PlatformIO y configuración local del editor
+.pio/
+.vscode/
+.idea/
+.codex/
+.agents/
+
+# Entornos Python y archivos generados
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+lambda/build/
+lambda/dist/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+/include/config.h
+/docs/evidencias/
