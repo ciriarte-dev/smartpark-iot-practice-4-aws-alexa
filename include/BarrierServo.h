@@ -16,7 +16,7 @@ public:
 private:
     bool command(State state);
     Servo servo_;
-    bool initialized_ = false, moving_ = false;
+    bool prepared_ = false, initialized_ = false, moving_ = false;
     State commanded_ = State::Closed;
     uint32_t commandTime_ = 0;
 };

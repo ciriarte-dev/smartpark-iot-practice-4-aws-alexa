@@ -5,7 +5,7 @@
 // Parser acotado, sin String ni asignacion dinamica. Una linea larga se descarta entera.
 class SerialCommands {
 public:
-    enum class Command { None, Open, Close, Status, Distance, Help, Invalid };
+    enum class Command { None, Open, Close, Status, Distance, Slot1, Help, Invalid };
     Command feed(char c) {
         if (c == '\r' || c == '\n') {
             if (overflow_) { reset(); return Command::Invalid; }
@@ -21,6 +21,7 @@ public:
             else if (!strcmp(start, "CLOSE")) result = Command::Close;
             else if (!strcmp(start, "STATUS")) result = Command::Status;
             else if (!strcmp(start, "DISTANCE")) result = Command::Distance;
+            else if (!strcmp(start, "SLOT1")) result = Command::Slot1;
             else if (!strcmp(start, "HELP")) result = Command::Help;
             reset(); return result;
         }

@@ -16,7 +16,8 @@
 #define AWS_IOT_ENDPOINT   "a1acybki981kqw-ats.iot.us-east-1.amazonaws.com"
 #define MQTT_PORT          8883
 #define THING_NAME         "smartpark-grupo9-01" // Debe coincidir con el Thing creado en AWS.
-#define MQTT_BUFFER_SIZE   1024
+// GET V2 con metadatos y encabezado MQTT medido en pruebas host.
+#define MQTT_BUFFER_SIZE   3072
 
 // ---------- Topicos Device Shadow ----------
 #define TOPIC_SHADOW_UPDATE "$aws/things/" THING_NAME "/shadow/update"
@@ -60,6 +61,19 @@
 #define SERVO_MAX_US              2400
 #define SERVO_TRAVEL_MS           700UL // Estimacion, sin confirmacion fisica.
 
+// ---------- Ocupacion de cuatro plazas y LCD 20x4 ----------
+constexpr uint8_t PARKING_CAPACITY = 4; // Plazas activas, habilitadas desde el slot 1.
+struct ParkingSlotPins { uint8_t ir, red, green; };
+constexpr ParkingSlotPins SLOT_PINS[] = {
+    {34, 17, 13}, {36, 14, 19}, {39, 23, 25}, {33, 26, 27}
+};
+constexpr uint8_t IR_OCCUPIED_LEVEL = LOW;
+constexpr uint16_t IR_SAMPLE_MS = 10;
+constexpr uint16_t IR_DEBOUNCE_MIN_MS = 50;
+constexpr uint16_t IR_DEBOUNCE_DEFAULT_MS = 120;
+constexpr uint16_t IR_DEBOUNCE_MAX_MS = 1000;
+constexpr uint8_t LCD_SDA_PIN = 21, LCD_SCL_PIN = 22, LCD_I2C_ADDRESS = 0x27;
+
 // ---------- Tiempos de reconexion ----------
 #define WIFI_RETRY_INTERVAL_MS    5000UL
 #define MQTT_RETRY_INTERVAL_MS    5000UL
@@ -91,9 +105,15 @@ static_assert(VEHICLE_DETECTION_CM >= MIN_DISTANCE_CM &&
 #define AWS_MAX_REQUEST_ATTEMPTS           3U
 #define AWS_STATUS_INTERVAL_MS             30000UL
 #define AWS_NTP_TIMEOUT_MS                 30000UL
+constexpr uint32_t AWS_ORDER_TTL_S = 30;
 #define AWS_MIN_VALID_EPOCH                1767225600LL // 2026-01-01 UTC
 static_assert(AWS_RESERVED_CONTROL_UPDATES < AWS_MAX_SHADOW_UPDATES_PER_DAY, "Reserva invalida");
 static_assert(AWS_PRESENCE_STABLE_SAMPLES > 0, "Estabilidad invalida");
 static_assert(AWS_RETRY_MAX_MS >= 1000 && AWS_RETRY_MAX_MS < 0x80000000UL, "Backoff invalido");
 static_assert(AWS_MAX_CONNECTION_ATTEMPTS > 0 && AWS_MAX_REQUEST_ATTEMPTS > 0, "Reintentos invalidos");
 static_assert(AWS_REPORT_INTERVAL_MS > 0 && AWS_MIN_PUBLISH_INTERVAL_MS > 0, "Intervalos invalidos");
+
+// Historico: presupuesto independiente del Shadow y cola RAM por prioridad.
+constexpr uint8_t HISTORY_BARRIER_QUEUE = 8, HISTORY_SLOT_QUEUE = 16;
+constexpr uint32_t HISTORY_SAMPLE_INTERVAL_MS = 300000, HISTORY_PUBLISH_INTERVAL_MS = 10000;
+constexpr uint8_t HISTORY_MAX_ATTEMPTS = 3;

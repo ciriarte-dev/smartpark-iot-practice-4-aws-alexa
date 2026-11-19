@@ -1,5 +1,7 @@
 #pragma once
 #include <Arduino.h>
+#include <atomic>
+#include <ArduinoJson.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <WiFiClientSecure.h>
@@ -8,28 +10,62 @@
 #include "BarrierServo.h"
 #include "UltrasonicSensor.h"
 #include "ShadowBudget.h"
+#include "Parking.h"
+#include "HistoryPublisher.h"
 
 // Solo tick() toca hardware. La tarea de red es la unica propietaria de MQTT/NVS.
 class AwsIoTManager {
 public:
-    bool begin();
-    void tick(BarrierServo& barrier, const UltrasonicSensor& sensor);
+    bool begin(Parking& parking);
+    void applyPending(BarrierServo& barrier, Parking& parking, bool serialPending);
+    void tick(const BarrierServo& barrier, const UltrasonicSensor& sensor, const Parking& parking);
     void printStatus();
-    void noteSerialCommand(bool open);
+    void noteSerialCommand(bool open, bool blocked, bool available = true, bool moved = false);
+    void observeBarrier(const BarrierServo& barrier);
 private:
     friend struct AwsIoTManagerTest;
+    using Origin = HistoryPublisher::Origin;
+    enum class Outcome : uint8_t { None, Accepted, Blocked, Expired, Unavailable };
+    struct Order {
+        char id[33]{};
+        Origin origin = Origin::None;
+        Outcome outcome = Outcome::None;
+        bool open = false;
+    };
     struct Snapshot {
         float distance = 0;
-        bool valid = false, ready = false, open = false;
+        bool valid = false, ready = false, open = false, moving = false;
         int presence = -1;
         uint32_t sample = 0, applied = 0, serial = 0;
-        bool serialOpen = false;
+        bool parkingValid = false;
+        Parking::State parking;
+        Order order;
     };
-    struct Command { bool open; uint32_t sequence; };
+    struct Command {
+        Order order;
+        uint32_t sequence = 0, motionSequence = 0, generation = 0, expiresAt = 0;
+        Parking::Mode mode = Parking::Mode::Manual;
+        uint16_t debounceMs = 0;
+        bool configure = false;
+    };
+    struct OrderLedger {
+        uint64_t modern = 0;
+        char modernId[33]{};
+        uint32_t legacy[2]{};
+    };
+    OrderLedger ledger_;
+    bool ledgerOK_ = true;
+    std::atomic<uint32_t> generation_{0};
+    Parking::Mode remoteMode_ = Parking::Mode::Manual;
+    uint16_t remoteDebounceMs_ = 0;
+    Command pendingCommand_;
+    uint32_t mainMotion_ = 0;
     uint32_t mainApplied_ = 0, mainSerial_ = 0;
-    bool mainSerialOpen_ = false;
+    Order mainOrder_;
     uint32_t desiredSequence_ = 0, seenSerial_ = 0;
+    HistoryPublisher history_;
     struct Status {
+        HistoryPublisher::Stats history{};
         uint32_t counts[4] = {}, reconnects = 0, skipped = 0, accepted = 0, rejected = 0;
         uint32_t lastPublish = 0, connectedMs = 0, day = 0;
         bool storage = false, time = false, recoveryOK = false;
@@ -72,6 +108,7 @@ private:
     bool loadBudget();
     void requestShadow();
     void report(ShadowBudget::Kind kind);
-    void applyDesired(const char* value);
+    void applyDesired(JsonObjectConst desired, JsonObjectConst metadata, bool get);
+    bool rememberOrder(const OrderLedger& next);
     void updateStatus();
 };

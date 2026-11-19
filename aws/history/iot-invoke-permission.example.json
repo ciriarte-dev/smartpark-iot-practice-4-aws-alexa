@@ -1,0 +1,8 @@
+{
+  "FunctionName": "SmartParkHistoryProcessor",
+  "StatementId": "SmartParkHistoryIngest",
+  "Action": "lambda:InvokeFunction",
+  "Principal": "iot.amazonaws.com",
+  "SourceArn": "arn:aws:iot:<REGION>:<ACCOUNT_ID>:rule/SmartParkHistoryIngest",
+  "SourceAccount": "<ACCOUNT_ID>"
+}

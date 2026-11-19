@@ -14,6 +14,7 @@ inline unsigned triggers=0;
 }
 inline uint32_t millis() { return Fake::now; }
 inline void pinMode(int p,int m) { Fake::modes[p]=m; }
+inline int digitalRead(int p) { return Fake::levels[p]; }
 inline void digitalWrite(int p,int v) { Fake::levels[p]=v; if(v==HIGH) ++Fake::triggers; }
 inline void delayMicroseconds(unsigned long) {}
 inline unsigned long pulseIn(int,int,unsigned long timeout) {

@@ -1,0 +1,12 @@
+{
+  "TableName": "SmartParkHistory",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    {"AttributeName": "thingName", "AttributeType": "S"},
+    {"AttributeName": "eventKey", "AttributeType": "S"}
+  ],
+  "KeySchema": [
+    {"AttributeName": "thingName", "KeyType": "HASH"},
+    {"AttributeName": "eventKey", "KeyType": "RANGE"}
+  ]
+}

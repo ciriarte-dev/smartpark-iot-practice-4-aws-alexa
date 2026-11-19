@@ -1,0 +1,9 @@
+{
+  "sql": "SELECT topic(2) AS thingName, topic(4) AS schemaVersion, eventId, occurredAt, eventType, origin, data, timestamp() AS receivedAt FROM 'smartpark/+/history/v1'",
+  "description": "SmartPark history ingestion",
+  "awsIotSqlVersion": "2016-03-23",
+  "ruleDisabled": true,
+  "actions": [
+    {"lambda": {"functionArn": "arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:SmartParkHistoryProcessor"}}
+  ]
+}

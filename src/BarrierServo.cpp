@@ -6,20 +6,17 @@ int pulseForAngle(int angle) {
 }
 }
 bool BarrierServo::begin() {
-    if (initialized_) return true;
-    servo_.setPeriodHertz(SERVO_FREQUENCY_HZ);
-    servo_.attach(SERVO_PIN, SERVO_MIN_US, SERVO_MAX_US);
-    initialized_ = servo_.attached();
-    if (initialized_) {
-        servo_.writeMicroseconds(pulseForAngle(BARRIER_CLOSED_ANGLE));
-        commanded_ = State::Closed;
-        commandTime_ = millis();
-        moving_ = true;
-    }
-    return initialized_;
+    prepared_ = true;
+    return true;
 }
 bool BarrierServo::command(State state) {
-    if (!initialized_ || state == commanded_) return false;
+    if (!prepared_ || (initialized_ && state == commanded_)) return false;
+    if (!initialized_) {
+        servo_.setPeriodHertz(SERVO_FREQUENCY_HZ);
+        servo_.attach(SERVO_PIN, SERVO_MIN_US, SERVO_MAX_US);
+        initialized_ = servo_.attached();
+        if (!initialized_) return false;
+    }
     servo_.writeMicroseconds(pulseForAngle(state == State::Open ? BARRIER_OPEN_ANGLE : BARRIER_CLOSED_ANGLE));
     commanded_ = state;
     commandTime_ = millis();
