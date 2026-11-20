@@ -7,6 +7,10 @@ from ask_sdk_core.skill_builder import SkillBuilder
 
 from handlers.barrier_handlers import AbrirBarreraHandler, CerrarBarreraHandler, EstadoBarreraHandler
 from handlers.binding_handlers import CambiarVinculacionHandler, DesvincularParqueoHandler, VincularParqueoHandler
+from handlers.parking_handlers import (
+    ActivateAutomaticHandler, ActivateManualHandler, AvailableSpacesHandler, OccupiedSpacesHandler,
+    ParkingModeHandler, ParkingSlotHandler, ReadDebounceHandler, SetDebounceHandler,
+)
 from handlers.sensor_handlers import ConsultarDistanciaHandler, ConsultarVehiculoHandler
 from handlers.system_handlers import ExitHandler, FallbackHandler, HelpHandler, LaunchHandler, SafeExceptionHandler, SessionEndedHandler
 from services.validation import validate_user
@@ -16,7 +20,9 @@ builder = SkillBuilder()
 for handler in (
     LaunchHandler(), VincularParqueoHandler(), CambiarVinculacionHandler(), DesvincularParqueoHandler(),
     ConsultarDistanciaHandler(), ConsultarVehiculoHandler(), AbrirBarreraHandler(), CerrarBarreraHandler(),
-    EstadoBarreraHandler(), HelpHandler(), ExitHandler(), SessionEndedHandler(), FallbackHandler(),
+    EstadoBarreraHandler(), AvailableSpacesHandler(), OccupiedSpacesHandler(), ParkingSlotHandler(),
+    ParkingModeHandler(), ActivateAutomaticHandler(), ActivateManualHandler(), ReadDebounceHandler(),
+    SetDebounceHandler(), HelpHandler(), ExitHandler(), SessionEndedHandler(), FallbackHandler(),
 ):
     builder.add_request_handler(handler)
 builder.add_exception_handler(SafeExceptionHandler())

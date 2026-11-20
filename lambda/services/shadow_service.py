@@ -8,6 +8,11 @@ from botocore.exceptions import BotoCoreError, ClientError
 from .errors import ServiceError, UserError
 from .validation import validate_thing
 
+# Mantener en sincronía con IR_DEBOUNCE_MIN_MS e IR_DEBOUNCE_MAX_MS del firmware.
+IR_DEBOUNCE_MIN_MS = 50
+IR_DEBOUNCE_MAX_MS = 1000
+PARKING_MODES = ("manual", "automatico")
+
 
 class ShadowService:
     def __init__(self, iot_client, data_client_factory, max_age=180, clock=time.time):
@@ -27,7 +32,10 @@ class ShadowService:
         except BotoCoreError as exc:
             raise ServiceError() from exc
 
-    def get_reported(self, thing, field):
+    def get_reported(self, thing, field, *nested):
+        return self.get_reported_fields(thing, (field, *nested))[0]
+
+    def get_reported_fields(self, thing, *paths):
         validate_thing(thing)
         try:
             result = self.data_client_factory().get_thing_shadow(thingName=thing)
@@ -41,14 +49,21 @@ class ShadowService:
             def reject_constant(_):
                 raise ValueError("nonfinite")
             document = json.loads(raw, parse_constant=reject_constant)
-            value = document["state"]["reported"][field]
-            timestamp = document["metadata"]["reported"][field]["timestamp"]
-            if type(timestamp) not in (int, float) or not math.isfinite(timestamp):
-                raise ValueError("timestamp")
-            age = self.clock() - timestamp
-            if age < -30 or age > self.max_age:
-                raise UserError("El último dato del dispositivo está desactualizado. No puedo confirmar su estado actual.")
-            return value
+            values = []
+            now = self.clock()
+            for path in paths:
+                value = document["state"]["reported"]
+                metadata = document["metadata"]["reported"]
+                for key in path:
+                    value = value[key]
+                    metadata = metadata[key]
+                timestamp = metadata["timestamp"]
+                if type(timestamp) not in (int, float) or not math.isfinite(timestamp):
+                    raise ValueError("timestamp")
+                if not -30 <= now - timestamp <= self.max_age:
+                    raise UserError("El último dato del dispositivo está desactualizado. No puedo confirmar su estado actual.")
+                values.append(value)
+            return tuple(values)
         except ClientError as exc:
             if exc.response.get("Error", {}).get("Code") == "ResourceNotFoundException":
                 raise UserError("El dispositivo todavía no tiene un Shadow disponible.") from exc
@@ -59,10 +74,23 @@ class ShadowService:
             raise UserError("No tengo un dato reportado válido y reciente del dispositivo.") from exc
 
     def set_barrier(self, thing, state):
-        validate_thing(thing)
         if state not in {"abierta", "cerrada"}:
             raise ValueError("Unsupported barrier target")
-        payload = json.dumps({"state": {"desired": {"barrera": state}}}, separators=(",", ":")).encode()
+        self._update_desired(thing, {"barrera": state})
+
+    def set_mode(self, thing, mode):
+        if mode not in PARKING_MODES:
+            raise ValueError("Unsupported parking mode")
+        self._update_desired(thing, {"modo": mode})
+
+    def set_debounce(self, thing, milliseconds):
+        if type(milliseconds) is not int or not IR_DEBOUNCE_MIN_MS <= milliseconds <= IR_DEBOUNCE_MAX_MS:
+            raise ValueError("Unsupported IR debounce")
+        self._update_desired(thing, {"parametros_auto": {"antirrebote_ir_ms": milliseconds}})
+
+    def _update_desired(self, thing, patch):
+        validate_thing(thing)
+        payload = json.dumps({"state": {"desired": patch}}, separators=(",", ":")).encode()
         try:
             response = self.data_client_factory().update_thing_shadow(thingName=thing, payload=payload)
             body = response.get("payload")

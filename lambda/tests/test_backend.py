@@ -5,6 +5,8 @@ import io
 import json
 import os
 import time
+from pathlib import Path
+import re
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -122,6 +124,106 @@ class BackendTests(unittest.TestCase):
         self.assertNotIn(USER, text)
         self.assertNotIn(CODE, text)
         return text
+
+    def report_parking(self):
+        self.report()
+        stamp = self.document["timestamp"] - 5
+        fields = {"slots": {"1": "libre", "2": "ocupado", "3": "desconocido", "4": "libre"},
+                  "disponibles": 2, "ocupados": 1, "capacidad": 4,
+                  "modo": "manual", "parametros_auto": {"antirrebote_ir_ms": 120}}
+        reported = self.document["state"]["reported"]
+        reported.update(fields)
+        self.document["state"]["desired"].update(modo="automatico", parametros_auto={"antirrebote_ir_ms": 300})
+        self.document["metadata"]["reported"].update({
+            key: ({child: {"timestamp": stamp} for child in value} if isinstance(value, dict)
+                  else {"timestamp": stamp})
+            for key, value in fields.items()
+        })
+
+    def test_v2_reads_reported_counts_mode_and_debounce(self):
+        self.bind()
+        self.report_parking()
+        for intent, expected in {
+            "ConsultarDisponiblesIntent": "2 espacios disponibles de 4",
+            "ConsultarOcupadosIntent": "un espacio ocupado de 4",
+            "ConsultarModoIntent": "modo reportado es manual",
+            "ConsultarAntirreboteIntent": "120 milisegundos",
+        }.items():
+            with self.subTest(intent=intent):
+                self.assertIn(expected, self.invoke(intent))
+        self.data.update_thing_shadow.assert_not_called()
+
+    def test_v2_reads_each_slot_and_rejects_invalid_numbers(self):
+        self.bind()
+        self.report_parking()
+        for spot, expected in enumerate(("está libre", "está ocupado", "lectura confirmada", "está libre"), 1):
+            with self.subTest(spot=spot):
+                self.assertIn(expected, self.invoke("ConsultarEstacionamientoIntent", slots={
+                    "espacio": {"name": "espacio", "value": str(spot)}}))
+        self.data.get_thing_shadow.reset_mock()
+        for supplied in ("0", "5", "2.5", "dos", None):
+            slots = {"espacio": {"name": "espacio", "value": supplied}} if supplied else {}
+            self.assertIn("del uno al cuatro", self.invoke("ConsultarEstacionamientoIntent", slots=slots))
+        self.data.get_thing_shadow.assert_not_called()
+
+    def test_v2_writes_precise_patches_and_uses_each_users_binding(self):
+        self.bind()
+        other_thing = "otro-parqueo"
+        self.items[OTHER_USER] = {"userId": {"S": OTHER_USER}, "thingName": {"S": other_thing}}
+        for intent, user, thing, desired in (
+            ("ActivarModoAutomaticoIntent", USER, THING, {"modo": "automatico"}),
+            ("ActivarModoManualIntent", OTHER_USER, other_thing, {"modo": "manual"}),
+            ("CambiarAntirreboteIntent", USER, THING, {"parametros_auto": {"antirrebote_ir_ms": 50}}),
+            ("CambiarAntirreboteIntent", USER, THING, {"parametros_auto": {"antirrebote_ir_ms": 1000}}),
+        ):
+            slots = ({"milisegundos": {"name": "milisegundos", "value": str(desired["parametros_auto"]["antirrebote_ir_ms"])}}
+                     if "parametros_auto" in desired else {})
+            with self.subTest(intent=intent, desired=desired):
+                text = self.invoke(intent, user=user, slots=slots)
+                self.assertIn("Solicité", text)
+                self.assertIn("aún debe confirmarlo", text)
+                args = self.data.update_thing_shadow.call_args.kwargs
+                self.assertEqual(args["thingName"], thing)
+                self.assertEqual(json.loads(args["payload"]), {"state": {"desired": desired}})
+        self.data.get_thing_shadow.assert_not_called()
+
+    def test_v2_rejects_out_of_range_debounce_and_unbound_user(self):
+        self.bind()
+        for value in ("49", "1001", "120.5", "-50"):
+            self.assertIn("entre 50 y 1000", self.invoke("CambiarAntirreboteIntent", slots={
+                "milisegundos": {"name": "milisegundos", "value": value}}))
+        for intent in ("ConsultarDisponiblesIntent", "ActivarModoManualIntent"):
+            self.assertIn("No tienes un parqueo vinculado", self.invoke(intent, user=OTHER_USER))
+        self.factory.assert_not_called()
+
+    def test_v2_missing_stale_unavailable_and_failed_write(self):
+        self.bind()
+        self.assertIn("No tengo un dato reportado", self.invoke("ConsultarModoIntent"))
+        self.report_parking()
+        self.document["metadata"]["reported"]["parametros_auto"]["antirrebote_ir_ms"]["timestamp"] -= 3600
+        self.assertIn("desactualizado", self.invoke("ConsultarAntirreboteIntent"))
+        self.assertIn("manual", self.invoke("ConsultarModoIntent"))
+        self.data.get_thing_shadow.side_effect = aws_error("ResourceNotFoundException")
+        self.assertIn("Shadow disponible", self.invoke("ConsultarDisponiblesIntent"))
+        self.data.update_thing_shadow.side_effect = aws_error("ServiceUnavailableException")
+        self.assertIn("No pude comunicarme", self.invoke("ActivarModoAutomaticoIntent"))
+
+    def test_v2_model_keeps_documented_intents_and_has_no_duplicate_samples(self):
+        root = Path(__file__).resolve().parents[2]
+        model = json.loads((root / "alexa/es-US.interaction-model.json").read_text())
+        intents = model["interactionModel"]["languageModel"]["intents"]
+        baseline = (root / "docs/informe.md").read_text().split("**Esqueleto del modelo de interacción.**", 1)[1]
+        legacy = json.loads(baseline.split("```json\n", 1)[1].split("```", 1)[0])
+        self.assertEqual(intents[:12], legacy["interactionModel"]["languageModel"]["intents"])
+        seen = set()
+        for intent in intents:
+            declared = {slot["name"] for slot in intent.get("slots", [])}
+            for sample in intent["samples"]:
+                normalized = sample.casefold().strip()
+                self.assertNotIn(normalized, seen)
+                seen.add(normalized)
+                self.assertLessEqual(set(re.findall(r"{([^}]+)}", sample)), declared)
+        self.assertEqual(len({intent["name"] for intent in intents}), 20)
 
     def linking(self, intent="VincularParqueoIntent", code=CODE):
         return self.invoke(intent, slots={"codigo": {"name": "codigo", "value": code}})

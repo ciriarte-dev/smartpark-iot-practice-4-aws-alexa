@@ -18,7 +18,7 @@ def bound_device(handler_input):
     return backend.shadow, binding.thing_name
 
 
-SESSION_REPROMPT = "Puedes decir abrir, cerrar, consultar estado, consultar distancia, consultar vehículo o salir."
+SESSION_REPROMPT = "Puedes decir abrir, cerrar, consultar estado, consultar distancia, consultar vehículo, consultar espacios libres o salir."
 
 
 def say(handler_input, text, *, keep_open=False, reprompt=SESSION_REPROMPT):

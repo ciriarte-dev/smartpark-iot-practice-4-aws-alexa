@@ -6,7 +6,7 @@ from ask_sdk_core.utils import is_intent_name, is_request_type
 from .common import get_backend, say, user_id
 from services.errors import UserError
 
-HELP = "Dentro de SmartPark puedes decir abrir, cerrar, consultar estado, consultar distancia o consultar vehículo. Para terminar, di salir o cancelar. También puedes vincular tu parqueo con un código autorizado, cambiar la vinculación o desvincularlo."
+HELP = "Dentro de SmartPark puedes decir abrir, cerrar, consultar estado, consultar distancia o consultar vehículo. También puedes consultar plazas libres, el modo o el antirrebote. Para terminar, di salir o cancelar. También puedes vincular tu parqueo con un código autorizado, cambiar la vinculación o desvincularlo."
 
 
 class LaunchHandler(AbstractRequestHandler):

@@ -1,0 +1,166 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "parqueo inteligente",
+      "intents": [
+        {
+          "name": "VincularParqueoIntent",
+          "slots": [
+            {
+              "name": "codigo",
+              "type": "AMAZON.FOUR_DIGIT_NUMBER"
+            }
+          ],
+          "samples": [
+            "vincula mi parqueo con el código {codigo}"
+          ]
+        },
+        {
+          "name": "CambiarVinculacionIntent",
+          "slots": [
+            {
+              "name": "codigo",
+              "type": "AMAZON.FOUR_DIGIT_NUMBER"
+            }
+          ],
+          "samples": [
+            "cambia mi vinculación con el código {codigo}"
+          ]
+        },
+        {
+          "name": "DesvincularParqueoIntent",
+          "samples": [
+            "desvincula mi parqueo"
+          ]
+        },
+        {
+          "name": "AbrirBarreraIntent",
+          "samples": [
+            "abrir",
+            "abre la barrera"
+          ]
+        },
+        {
+          "name": "CerrarBarreraIntent",
+          "samples": [
+            "cerrar",
+            "cierra la barrera"
+          ]
+        },
+        {
+          "name": "EstadoBarreraIntent",
+          "samples": [
+            "consultar estado",
+            "consulta el estado de la barrera"
+          ]
+        },
+        {
+          "name": "ConsultarDistanciaIntent",
+          "samples": [
+            "consultar distancia",
+            "a qué distancia está el vehículo"
+          ]
+        },
+        {
+          "name": "ConsultarVehiculoIntent",
+          "samples": [
+            "consultar vehículo",
+            "hay un vehículo esperando"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "ConsultarDisponiblesIntent",
+          "samples": [
+            "cuántos espacios hay disponibles",
+            "consulta los espacios libres",
+            "cuántas plazas libres quedan"
+          ]
+        },
+        {
+          "name": "ConsultarOcupadosIntent",
+          "samples": [
+            "cuántos espacios están ocupados",
+            "consulta los espacios ocupados",
+            "cuántas plazas están ocupadas"
+          ]
+        },
+        {
+          "name": "ConsultarEstacionamientoIntent",
+          "samples": [
+            "cómo está el estacionamiento {espacio}",
+            "está libre la plaza {espacio}",
+            "consulta el espacio {espacio}"
+          ],
+          "slots": [
+            {
+              "name": "espacio",
+              "type": "AMAZON.NUMBER"
+            }
+          ]
+        },
+        {
+          "name": "ConsultarModoIntent",
+          "samples": [
+            "consulta el modo del parqueo",
+            "en qué modo está el parqueo",
+            "cuál es el modo actual"
+          ]
+        },
+        {
+          "name": "ActivarModoAutomaticoIntent",
+          "samples": [
+            "activa el modo automático",
+            "pon el parqueo en modo automático",
+            "cambia a modo automático"
+          ]
+        },
+        {
+          "name": "ActivarModoManualIntent",
+          "samples": [
+            "activa el modo manual",
+            "pon el parqueo en modo manual",
+            "cambia a modo manual"
+          ]
+        },
+        {
+          "name": "ConsultarAntirreboteIntent",
+          "samples": [
+            "consulta el antirrebote",
+            "cuántos milisegundos tiene el antirrebote",
+            "cuál es el valor del antirrebote"
+          ]
+        },
+        {
+          "name": "CambiarAntirreboteIntent",
+          "samples": [
+            "ajusta el antirrebote a {milisegundos} milisegundos",
+            "cambia el antirrebote a {milisegundos}",
+            "configura {milisegundos} milisegundos de antirrebote"
+          ],
+          "slots": [
+            {
+              "name": "milisegundos",
+              "type": "AMAZON.NUMBER"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
