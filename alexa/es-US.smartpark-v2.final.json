@@ -1,0 +1,206 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "parqueo inteligente",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AbrirBarreraIntent",
+          "slots": [],
+          "samples": [
+            "sube",
+            "abrir",
+            "permite el ingreso",
+            "abre la entrada",
+            "levanta la barrera",
+            "abrir barrera",
+            "abre la barrera"
+          ]
+        },
+        {
+          "name": "CerrarBarreraIntent",
+          "slots": [],
+          "samples": [
+            "baja",
+            "cerrar",
+            "bloquea el ingreso",
+            "cierra la entrada",
+            "baja la barrera",
+            "cerrar barrera",
+            "cierra la barrera"
+          ]
+        },
+        {
+          "name": "ConsultarDistanciaIntent",
+          "slots": [],
+          "samples": [
+            "consultar distancia",
+            "consulta la distancia",
+            "que distancia detecta el sensor",
+            "dime la distancia",
+            "a que distancia esta el auto",
+            "cual es la distancia del auto"
+          ]
+        },
+        {
+          "name": "ConsultarVehiculoIntent",
+          "slots": [],
+          "samples": [
+            "consultar auto",
+            "consulta si hay un auto",
+            "hay un auto frente a la barrera",
+            "hay un auto en la entrada",
+            "detectas algun auto",
+            "hay un auto esperando"
+          ]
+        },
+        {
+          "name": "EstadoBarreraIntent",
+          "slots": [],
+          "samples": [
+            "consulta el estado de la barrera",
+            "la barrera esta cerrada",
+            "dime el estado de la barrera",
+            "cual es el estado de la barrera",
+            "la barrera esta abierta"
+          ]
+        },
+        {
+          "name": "VincularParqueoIntent",
+          "slots": [
+            {
+              "name": "codigo",
+              "type": "AMAZON.FOUR_DIGIT_NUMBER"
+            }
+          ],
+          "samples": [
+            "vincular parqueo con el codigo {codigo}",
+            "conecta mi parqueo con el codigo {codigo}",
+            "asocia mi parqueo con el codigo {codigo}",
+            "registra mi parqueo con el codigo {codigo}",
+            "vincula mi parqueo con el codigo {codigo}"
+          ]
+        },
+        {
+          "name": "CambiarVinculacionIntent",
+          "slots": [
+            {
+              "name": "codigo",
+              "type": "AMAZON.FOUR_DIGIT_NUMBER"
+            }
+          ],
+          "samples": [
+            "actualiza mi vinculación con el codigo {codigo}",
+            "reemplaza mi parqueo con el codigo {codigo}",
+            "vincula otro parqueo con el codigo {codigo}",
+            "cambiar mi parqueo con el codigo {codigo}",
+            "cambia mi vinculacion con el código {codigo}"
+          ]
+        },
+        {
+          "name": "DesvincularParqueoIntent",
+          "slots": [],
+          "samples": [
+            "desvincular parqueo",
+            "quita mi dispositivo",
+            "desconecta mi parqueo",
+            "elimina mi vinculacion",
+            "desvincula mi parqueo"
+          ]
+        },
+        {
+          "name": "ConsultarDisponiblesIntent",
+          "samples": [
+            "cuántos espacios hay disponibles",
+            "consulta los espacios libres",
+            "cuántas plazas libres quedan"
+          ]
+        },
+        {
+          "name": "ConsultarOcupadosIntent",
+          "samples": [
+            "cuántos espacios están ocupados",
+            "consulta los espacios ocupados",
+            "cuántas plazas están ocupadas"
+          ]
+        },
+        {
+          "name": "ConsultarEstacionamientoIntent",
+          "samples": [
+            "cómo está el estacionamiento {espacio}",
+            "está libre la plaza {espacio}",
+            "consulta el espacio {espacio}"
+          ],
+          "slots": [
+            {
+              "name": "espacio",
+              "type": "AMAZON.NUMBER"
+            }
+          ]
+        },
+        {
+          "name": "ConsultarModoIntent",
+          "samples": [
+            "consulta el modo del parqueo",
+            "en qué modo está el parqueo",
+            "cuál es el modo actual"
+          ]
+        },
+        {
+          "name": "ActivarModoAutomaticoIntent",
+          "samples": [
+            "activa el modo automático",
+            "pon el parqueo en modo automático",
+            "cambia a modo automático"
+          ]
+        },
+        {
+          "name": "ActivarModoManualIntent",
+          "samples": [
+            "activa el modo manual",
+            "pon el parqueo en modo manual",
+            "cambia a modo manual"
+          ]
+        },
+        {
+          "name": "ConsultarAntirreboteIntent",
+          "samples": [
+            "consulta el antirrebote",
+            "cuántos milisegundos tiene el antirrebote",
+            "cuál es el valor del antirrebote"
+          ]
+        },
+        {
+          "name": "CambiarAntirreboteIntent",
+          "samples": [
+            "ajusta el antirrebote a {milisegundos} milisegundos",
+            "cambia el antirrebote a {milisegundos}",
+            "configura {milisegundos} milisegundos de antirrebote"
+          ],
+          "slots": [
+            {
+              "name": "milisegundos",
+              "type": "AMAZON.NUMBER"
+            }
+          ]
+        }
+      ],
+      "types": []
+    }
+  }
+}
