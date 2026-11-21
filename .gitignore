@@ -1,6 +1,8 @@
 # ============================================================
-# Secrets and credentials 
+# Secrets and credentials (never commit these)
 # ============================================================
+include/secrets.h
+include/config.h
 firmware/include/secrets.h
 firmware/include/config.h
 *.pem
@@ -8,7 +10,10 @@ firmware/include/config.h
 *.crt
 *.cert
 *.csr
+*.p12
+*.pfx
 certs/
+.aws/
 .env
 .env.*
 !.env.example
@@ -21,10 +26,10 @@ aws-credentials*
 .pio/
 .pioenvs/
 .piolibdeps/
-firmware/.pio/
 *.elf
 *.bin
 *.map
+compile_commands.json
 
 # ============================================================
 # Cloud (Python / AWS Lambda)
@@ -39,6 +44,8 @@ htmlcov/
 *.egg-info/
 
 # Lambda build output
+lambda/build/
+lambda/dist/
 cloud/lambdas/**/build/
 cloud/lambdas/**/dist/
 cloud/lambdas/**/*.zip
@@ -48,10 +55,12 @@ cloud/lambdas/**/package/
 # Editors and IDEs
 # ============================================================
 .idea/
-.vscode/*
+.vscode/
 !.vscode/extensions.json
 *.iml
 *.swp
+.codex/
+.agents/
 
 # ============================================================
 # Operating system files
@@ -68,40 +77,6 @@ tmp/
 temp/
 
 # ============================================================
-# LOCAL agent guidelines 
+# LOCAL agent guidelines
 # ============================================================
 AGENTS.md
-
-
-# Credenciales y configuración privada
-/include/secrets.h
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-*.p12
-*.pfx
-.aws/
-
-# PlatformIO y configuración local del editor
-.pio/
-.vscode/
-.idea/
-.codex/
-.agents/
-
-# Entornos Python y archivos generados
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-lambda/build/
-lambda/dist/
-
-# Archivos del sistema
-.DS_Store
-Thumbs.db
-/include/config.h
-/docs/evidencias/
