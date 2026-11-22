@@ -7,4 +7,8 @@ Respalda RNF9 (Edge). Procedimiento, resultado esperado y criterio: [PNF-04 en 4
 | `ir-led.mp4` | Video a ≥ 30 fps durante PF-06, desde que el vehículo cubre el IR hasta el cambio del LED. Si supera 100 MB, guardar su enlace en `video.md`. |
 | `cuadros.md` | Tabla con los cuadros de inicio y fin de cada una de las 5 ocupaciones y t = Δcuadros / fps. |
 
+## Texto esperado en la LCD 16×2
+
+La fila 0 sigue cada ocupación (`Libres:3/4 Oc:1` … `Libres:0/4 Oc:4`). Con la 4.ª ocupación en `automatico` y con la nueva ocupación de la plaza 4, la fila 1 muestra `APERTURA BLOQ.`.
+
 Las rutas con `../` apuntan a archivos compartidos con otras pruebas. Esta carpeta se completa durante la sesión de banco; no contiene resultados todavía.
