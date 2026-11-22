@@ -9,16 +9,63 @@
 #include <Wire.h>
 void setup();
 void loop();
-static std::string lcdText() {
-    std::string text;
+// Pantalla HD44780 reconstruida a partir de las tramas I2C (un nibble por trama, RS en P0).
+struct LcdScreen {
+    std::string rows[LCD_ROWS];
+    bool valid = true; // Solo direcciones 0x00/0x40 y ninguna fila de mas de LCD_COLUMNS.
+};
+
+static LcdScreen lcdScreen() {
+    constexpr size_t initFrames = 4 + 2 * 5; // 3, 3, 3, 2 y luego 0x28 0x08 0x06 0x0c 0x01.
+    LcdScreen screen;
+    for (auto& row : screen.rows) row.assign(LCD_COLUMNS, ' ');
     const auto& frames = Wire.transmissions;
-    for (size_t i = 0; i + 1 < frames.size(); ++i) {
-        if (!frames[i].empty() && !frames[i + 1].empty() && (frames[i][0] & 1) && (frames[i + 1][0] & 1)) {
-            text += static_cast<char>((frames[i][0] & 0xf0) | (frames[i + 1][0] >> 4));
-            ++i;
+    auto isData = [&](size_t i) { return (frames[i][0] & 1) != 0; };
+    auto nibble = [&](size_t i) { return static_cast<uint8_t>(frames[i][0] >> 4); };
+    int row = -1;
+    size_t column = 0;
+    for (size_t i = 0; i < frames.size();) {
+        size_t end = i;
+        while (end < frames.size() && isData(end) == isData(i)) ++end;
+        if (!isData(i)) {
+            size_t count = end - i;
+            if (count >= initFrames) {
+                for (auto& text : screen.rows) text.assign(LCD_COLUMNS, ' ');
+                row = -1;
+                i += initFrames;
+                count -= initFrames;
+            }
+            if (count == 2) {
+                const uint8_t command = static_cast<uint8_t>((nibble(i) << 4) | nibble(i + 1));
+                row = command == 0x80 ? 0 : (command == 0xc0 ? 1 : -1);
+                column = 0;
+                if (row < 0) screen.valid = false;
+            } else if (count != 0) {
+                screen.valid = false;
+            }
+        } else {
+            if ((end - i) % 2 || row < 0) screen.valid = false;
+            for (size_t j = i; row >= 0 && j + 1 < end; j += 2) {
+                if (column >= LCD_COLUMNS) {
+                    screen.valid = false;
+                    break;
+                }
+                screen.rows[row][column++] = static_cast<char>((nibble(j) << 4) | nibble(j + 1));
+            }
         }
+        i = end;
     }
-    return text;
+    return screen;
+}
+
+static std::string padded(const std::string& text) {
+    assert(text.size() <= LCD_COLUMNS);
+    return text + std::string(LCD_COLUMNS - text.size(), ' ');
+}
+
+static void assertRows(const std::string& first, const std::string& second) {
+    const auto screen = lcdScreen();
+    assert(screen.valid && screen.rows[0] == padded(first) && screen.rows[1] == padded(second));
 }
 
 static void testParkingAndDisplay() {
@@ -44,10 +91,24 @@ static void testParkingAndDisplay() {
             display.update(Fake::now, parking.state(), barrier);
         }
     };
+    // Fila 1 sin aviso: modo en las ventanas pares de 2 s y barrera en las impares.
+    constexpr uint32_t alternateMs = 2000;
+    auto modeWindow = [&] { return (Fake::now / alternateMs) % 2 == 0; };
+    auto startWindow = [&](bool mode) {
+        while (modeWindow() == mode) advance(IR_SAMPLE_MS);
+        while (modeWindow() != mode) advance(IR_SAMPLE_MS);
+        advance(3 * IR_SAMPLE_MS); // Una fila por llamada: ambas filas quedan escritas.
+    };
     advance(IR_DEBOUNCE_DEFAULT_MS);
     assert(parking.state().available == 0);
     advance(IR_SAMPLE_MS);
     assert(parking.state().available == 4 && parking.state().occupied == 0);
+    startWindow(true);
+    assertRows("Libres:4/4 Oc:0", "Modo: manual");
+    while ((Fake::now + 2 * IR_SAMPLE_MS) % alternateMs != 0) advance(IR_SAMPLE_MS);
+    assertRows("Libres:4/4 Oc:0", "Modo: manual"); // 20 ms antes del cambio de ventana.
+    advance(4 * IR_SAMPLE_MS);
+    assertRows("Libres:4/4 Oc:0", "Barrera: ---"); // Servo sin posicion estimada.
     for (uint8_t i = 0; i < Parking::capacity; ++i) {
         const auto& pin = SLOT_PINS[i];
         assert(Fake::levels[pin.green] == HIGH && Fake::levels[pin.red] == LOW);
@@ -62,14 +123,20 @@ static void testParkingAndDisplay() {
         assert(Fake::levels[pin.red] == HIGH && Fake::levels[pin.green] == LOW);
     }
     assert(parking.state().full() && !parking.state().openingBlocked());
+    // Lleno en manual: el aviso reemplaza la alternancia en ambas ventanas.
+    startWindow(true);
+    assertRows("Libres:0/4 Oc:4", "PARQUEO LLENO");
+    startWindow(false);
+    assertRows("Libres:0/4 Oc:4", "PARQUEO LLENO");
     parking.configure(Parking::Mode::Automatic, IR_DEBOUNCE_MIN_MS);
     advance(100);
     assert(parking.state().openingBlocked());
-    const auto screen = lcdText();
-    assert(Wire.address == LCD_I2C_ADDRESS && screen.find("Ocup:4 Libres:0/4") != std::string::npos);
-    assert(screen.find("Modo: automatico") != std::string::npos);
-    assert(screen.find("Barrera:sin estimar") != std::string::npos);
-    assert(screen.find("PARQUEO LLENO") != std::string::npos);
+    // Bloqueo > lleno.
+    assert(Wire.address == LCD_I2C_ADDRESS);
+    startWindow(true);
+    assertRows("Libres:0/4 Oc:4", "APERTURA BLOQ.");
+    startWindow(false);
+    assertRows("Libres:0/4 Oc:4", "APERTURA BLOQ.");
     Wire.connected = false;
     Fake::levels[SLOT_PINS[0].ir] = !IR_OCCUPIED_LEVEL;
     advance(IR_DEBOUNCE_MIN_MS + IR_SAMPLE_MS);
@@ -78,13 +145,35 @@ static void testParkingAndDisplay() {
     Wire.connected = true;
     Wire.transmissions.clear();
     advance(250);
-    assert(lcdText().find("Ocup:3 Libres:1/4") != std::string::npos);
+    // Recuperacion I2C: reinicializa y reescribe ambas filas.
+    const auto recovered = lcdScreen();
+    assert(recovered.valid && recovered.rows[0] == padded("Libres:1/4 Oc:3"));
+    assert(recovered.rows[1] == padded(modeWindow() ? "Modo: automatico" : "Barrera: ---"));
+    startWindow(true);
+    assertRows("Libres:1/4 Oc:3", "Modo: automatico");
+    // Estado de la barrera en la ventana impar.
+    assert(barrier.open() && barrier.moving());
+    startWindow(false);
+    assertRows("Libres:1/4 Oc:3", "Barrera: mueve");
+    Fake::now += SERVO_TRAVEL_MS;
+    barrier.update();
+    startWindow(false);
+    assertRows("Libres:1/4 Oc:3", "Barrera: abierta");
+    assert(barrier.close());
+    Fake::now += SERVO_TRAVEL_MS;
+    barrier.update();
+    startWindow(false);
+    assertRows("Libres:1/4 Oc:3", "Barrera: cerrada");
     Fake::levels[SLOT_PINS[0].ir] = 2;
     advance(IR_SAMPLE_MS);
     assert(parking.state().available == 0 && parking.state().openingBlocked());
     assert(Fake::levels[SLOT_PINS[0].red] == LOW && Fake::levels[SLOT_PINS[0].green] == LOW);
+    // Plaza desconocida: bloqueo sin parqueo lleno.
+    assert(!parking.state().full());
+    advance(3 * IR_SAMPLE_MS);
+    assertRows("Libres:0/4 Oc:3", "APERTURA BLOQ.");
     Wire.transmissions.clear();
-    std::cout << "PASS: cuatro sensores IR, rebotes, conteos, LEDs y LCD con fallo y recuperacion I2C\n";
+    std::cout << "PASS: cuatro sensores IR, rebotes, conteos, LEDs y LCD 16x2 (filas, prioridad bloqueo > lleno > alternancia de 2 s, maximo 16 columnas y recuperacion I2C)\n";
 }
 
 int main() {
