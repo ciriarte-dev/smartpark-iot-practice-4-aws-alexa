@@ -42,7 +42,7 @@ Caso de uso, actores y ampliación respecto a la Práctica 3: [sección 1.1 del 
 | Sensor ultrasónico HC-SR04 | 1 | Distancia y presencia de un vehículo frente a la barrera |
 | Servo SG90 | 1 | Barrera (0° cerrada, 90° abierta) |
 | LED rojo y LED verde | 8 (2 por plaza) | Indicación local de ocupación |
-| LCD 20×4 con adaptador I²C PCF8574 | 1 | Resumen de ocupación, modo, barrera y bloqueo |
+| LCD 16×2 con adaptador I²C PCF8574 | 1 | Resumen de ocupación, modo, barrera y bloqueo |
 
 Pines, adaptación de niveles y alimentación: [sección 2.3 del informe](docs/informe-practica-4.md#23-diagrama-de-circuito) y [`include/config.example.h`](include/config.example.h). La justificación de cada componente está en la [sección 1.2](docs/informe-practica-4.md#12-justificación-de-los-sensores-y-actuadores).
 
