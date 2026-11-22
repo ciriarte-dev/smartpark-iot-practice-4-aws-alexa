@@ -1,0 +1,107 @@
+classDiagram
+    direction LR
+    class main {
+        <<sketch Arduino>>
+        +setup()
+        +loop()
+        -execute(Command)
+    }
+    class UltrasonicSensor {
+        -Measurement last_
+        -Presence presence_
+        +begin()
+        +measure() Measurement
+        +lastMeasurement() Measurement
+        +presence() Presence
+    }
+    class BarrierServo {
+        -Servo servo_
+        -State commanded_
+        -bool moving_
+        -uint32_t commandTime_
+        +open() bool
+        +close() bool
+        +update()
+        +positionEstimated() bool
+    }
+    class Parking {
+        +capacity = PARKING_CAPACITY
+        -State state_
+        -Slot candidate_[capacity]
+        -uint32_t candidateSince_[capacity]
+        +begin()
+        +update(now)
+        +configure(Mode, debounceMs)
+        +state() State
+    }
+    class ParkingState {
+        <<struct Parking::State>>
+        +Slot slots[capacity]
+        +Mode mode
+        +uint16_t debounceMs
+        +uint8_t occupied
+        +uint8_t available
+        +full() bool
+        +openingBlocked() bool
+    }
+    class ParkingDisplay {
+        -Init init_
+        -char displayed_[4][21]
+        +begin()
+        +probe() uint8_t
+        +update(now, State, BarrierServo)
+    }
+    class SerialCommands {
+        -char buffer_[COMMAND_CAPACITY]
+        +feed(char) Command
+    }
+    class AwsIoTManager {
+        -WiFiClientSecure tls_
+        -PubSubClient mqtt_
+        -Preferences prefs_
+        -QueueHandle_t snapshots_, commands_, statuses_
+        -OrderLedger ledger_
+        +begin(Parking) bool
+        +applyPending(BarrierServo, Parking, serialPending)
+        +tick(BarrierServo, UltrasonicSensor, Parking)
+        +noteSerialCommand(open, blocked, available, moved)
+        +observeBarrier(BarrierServo)
+        +printStatus()
+        -run()
+        -step()
+        -connectStep(now)
+        -receive(topic, payload, length)
+        -applyDesired(desired, metadata, get)
+        -report(Kind)
+    }
+    class ShadowBudget {
+        +ShadowBudgetRecord record
+        +total() uint32_t
+        +advance(day) bool
+        +allows(Kind, limit, reserved) bool
+    }
+    class HistoryPublisher {
+        -QueueHandle_t queues_[3]
+        -uint32_t bootId_[4]
+        -uint64_t sequence_
+        +begin()
+        +enableClock()
+        +observeParking(State, UltrasonicSensor, now)
+        +motionStarted(Origin, requestId)
+        +observeBarrier(BarrierServo)
+        +publish(PubSubClient, now)
+        +stats() Stats
+    }
+    main *-- UltrasonicSensor
+    main *-- BarrierServo
+    main *-- Parking
+    main *-- ParkingDisplay
+    main *-- SerialCommands
+    main *-- AwsIoTManager
+    Parking *-- ParkingState
+    AwsIoTManager *-- ShadowBudget
+    AwsIoTManager *-- HistoryPublisher
+    AwsIoTManager ..> Parking : configure()
+    AwsIoTManager ..> BarrierServo : open() / close()
+    HistoryPublisher ..> ParkingState : lee
+    ParkingDisplay ..> ParkingState : lee
