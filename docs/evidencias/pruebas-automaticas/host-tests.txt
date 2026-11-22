@@ -1,0 +1,12 @@
+Fecha: 2026-11-21 23:02:41 -0400
+Comando: SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh
+Compilador: g++.exe (Rev4, Built by MSYS2 project) 16.2.0
+Entorno: Windows 11, MSYS2
+
+PASS: cuatro sensores IR, rebotes, conteos, LEDs y LCD con fallo y recuperacion I2C
+PASS: sensor, histeresis, servo, parser e integracion del loop (simulados)
+PASS: AWS con dobles: GET unico, comandos, espera, reported, deduplicacion, versiones, distancia, presencia, periodo, cuota/reserva/NVS, backoff y demo
+Shadow JSON reporte/GET/delta/accepted: 476/2458/672/1887; MQTT GET: 2518 bytes
+PASS: modos, lleno, prioridad Serial y deduplicacion V1/V2 tras reconexion o reinicio
+PASS: publicacion MQTT, reloj, prioridad, reconexion, reintentos, cuota independiente y desborde. Historico JSON max observado: 347 B; MQTT: 394 B
+PASS: 12 cargas MQTT del firmware aceptadas por la Lambda; reintento conserva la clave.

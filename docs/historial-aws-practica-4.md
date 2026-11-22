@@ -1,6 +1,6 @@
 # SmartPark V2 · Historial AWS
 
-Preparación local de la Fase 3. Las plantillas de [`aws/history`](../aws/history/) requieren sustituir `<REGION>` y `<ACCOUNT_ID>` antes del despliegue manual. El informe de Práctica 3 se conserva en [`docs/informe.md`](informe.md).
+Preparación local de la Fase 3. Las plantillas de [`aws/history`](../aws/history/) requieren sustituir `<REGION>` y `<ACCOUNT_ID>` antes del despliegue manual. Esta práctica extiende la Práctica 3: [repositorio de la Práctica 3](https://github.com/HenryRiveraM/smartpark-practica-3).
 
 ## Trazabilidad del enunciado
 

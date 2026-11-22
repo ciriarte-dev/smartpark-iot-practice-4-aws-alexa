@@ -118,7 +118,7 @@ Valores declarados, método y prueba. Los RNF1–RNF6 heredan los de la P3 y se 
 | RNF8 | Latencia de almacenamiento | ≤ 5 s desde la llegada a AWS IoT (`receivedAt`) hasta el fin del `PutItem` (registro `REPORT` en CloudWatch). Complementario: `receivedAt − occurredAt` ≤ 15 s (cola del ESP32 de hasta 10 s + red). | Atributos del ítem y hora de CloudWatch, ≥ 20 eventos. | PNF-06 |
 | RNF9 | Respuesta de la lógica automática | Edge: ≤ 0,3 s desde que el vehículo cubre el IR hasta el cambio de LED (antirrebote de 120 ms + muestreo de 10 ms + ciclo de `loop()`). Nube: no aplica (2.6). | Video ≥ 30 fps. | PNF-05 |
 | RNF10 | Operación sin conexión | E1–E4 siguen operando; los eventos de histórico se encolan en RAM (8 de barrera, 16 de plazas, 1 muestra) y se envían al reconectar; se pierden si la cola se llena o el ESP32 se reinicia. | Corte de 2 min; conteo de transiciones frente a ítems. | PNF-10 |
-| RNF11 | Costo | Consumo mensual dentro de la capa gratuita; cota sin capa gratuita < 0,20 USD/mes para un Thing. | Cálculo con las frecuencias del código. | 5.6 |
+| RNF11 | Costo | Criterio principal: consumo mensual de un Thing dentro de la capa gratuita. Cota sin capa gratuita: < 0,30 USD/mes, que cubre el peor caso calculado (≈ 0,23 USD/mes con el Shadow facturado por bloques de 1 KB del documento completo). | Cálculo con las frecuencias del código. | 5.6 |
 | RNF12 | Seguridad | Sin certificados, claves ni *access keys* en el repositorio; TLS mutuo X.509; políticas por recurso (3.2). | Revisión de `.gitignore` y plantillas; pruebas de aislamiento. | PA-03 |
 
 Justificación de los valores: 3 s es el tiempo que un usuario espera tras la respuesta de Alexa antes de repetir la orden; 0,3 s es imperceptible para el conductor que mira el LED; 5 s de latencia de almacenamiento es la referencia del enunciado y basta para reportes que se consultan después; el límite de 60/70 s de RNF6 sale del *backoff* del código (2.10).
@@ -869,9 +869,9 @@ Cuatro reportes para el administrador del parqueo. Los valores dibujados son ilu
 | Elemento | Atributos | Consulta |
 |---|---|---|
 | Barras apiladas por día y origen | `occurredAt`, `origin`, `data.actual` | `Query` A2; filtro `eventType = barrier_changed AND data.actual = abierta`; agrupar por día y `origin` |
-| KPIs (total, % por origen) | `origin` | misma consulta |
+| KPIs (total, % voz/`legado` y % `edge`, día con más aperturas) | `origin`, `occurredAt` | misma consulta |
 
-En la implementación actual las órdenes de la skill usan el formato V1 (`desired.barrera`) y se registran con `origin = legado`; el origen `voz` lo produce el formato V2 `orden_barrera`, que la skill aún no emite (5.5). La serie `nube` queda en cero mientras no existan reglas de Nube.
+En la implementación actual las órdenes de la skill usan el formato V1 (`desired.barrera`) y se registran con `origin = legado`; el origen `voz` lo produce el formato V2 `orden_barrera`, que la skill aún no emite (5.5). El mockup solo muestra los orígenes voz/`legado` y `edge`: el diseño no tiene lógica de control en la Nube (2.6), por lo que no hay aperturas con `origin = nube`. Si se agregara una regla de Nube (7.2), sus aperturas formarían una tercera serie.
 
 **M3 — Saturación: parqueo lleno y aperturas bloqueadas.** Decisión: si la capacidad es insuficiente.
 
@@ -955,7 +955,7 @@ Las plantillas usan `<REGION>`/`<ACCOUNT_ID>` ([`aws/history/`](../aws/history/)
 | Roles | Confianza `lambda.amazonaws.com` ([`execution-role-trust.example.json`](../lambda/iam/execution-role-trust.example.json)) + una política por Lambda |
 | Logs | `/aws/lambda/SmartParkHistoryProcessor` creado de antemano con retención (por ejemplo 14 días) |
 
-Memoria y *timeout* de `SmartParkAlexaBackend` y `SmartParkPairingAdmin` no están en el repositorio: se toman de la consola en la sesión de despliegue (8.4).
+`SmartParkAlexaBackend` y `SmartParkPairingAdmin` se configuran con x86_64, 128 MB y *timeout* de 10 s ([`lambda/README.md`](../lambda/README.md#L122)); la captura de la consola en la sesión de despliegue confirma esos valores (8.4).
 
 **Permisos.**
 
@@ -1093,15 +1093,15 @@ Guía de diagnóstico preparada a partir del código:
 
 ### 4.5 Pruebas automáticas
 
-Ejecutadas el 2026-11-21 sobre el commit `876be` de la rama `docs/report-generation`. Salidas completas, con fecha y comando, en [`docs/evidencias/pruebas-automaticas/`](evidencias/pruebas-automaticas/).
+Ejecutadas el 2026-11-21: PA-03 sobre el commit `876be` de la rama `docs/report-generation`; PA-01 y PA-02 en Windows 11 con PlatformIO y MSYS2 (g++ 16.2.0), con `include/config.h` e `include/secrets.h` copiados de las plantillas. Salidas completas, con fecha y comando, en [`docs/evidencias/pruebas-automaticas/`](evidencias/pruebas-automaticas/).
 
 | ID | Suite | Comando | Pruebas | Resultado | Evidencia |
 |---|---|---|---|---|---|
-| PA-01 | Compilación del firmware | `pio run` | — | Las 7 unidades de `src/` compilan sin errores ni advertencias; el enlazado falla en este equipo por `ld: cannot find -lc` (paquete `toolchain-xtensa-esp32` local incompleto). Se compiló en una copia limpia del commit con las plantillas, porque `include/config.h` no existe en el árbol de trabajo. | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) |
-| PA-02 | Firmware con dobles (host) + contrato del histórico | `sh test/run_host_tests.sh` (con `SMARTPARK_HISTORY_PYTHON` para el contrato) | — | No ejecutado: el equipo no tiene compilador C++ de host. | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) |
+| PA-01 | Compilación del firmware | `pio run` | — | **SUCCESS** en 30,4 s (`espressif32@7.1.0`, `toolchain-xtensa-esp32` 8.4.0): compila las 7 unidades de `src/`, enlaza `firmware.elf` y genera `firmware.bin`. **RAM 49 960 / 327 680 B (15,2 %)**; **Flash 964 425 / 1 310 720 B (73,6 %)**. | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) |
+| PA-02 | Firmware con dobles (host) + contrato del histórico | `SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh` | 5 suites + contrato | **5/5 PASS + contrato PASS**: IR, rebotes, conteos, LEDs y LCD con fallo I²C; sensor, histéresis, servo, parser y `loop`; AWS con dobles (GET, comandos, `reported`, versiones, cuota/NVS, *backoff*, demo); modos, lleno y deduplicación V1/V2 tras reconexión o reinicio; publicación del histórico (reloj, prioridad, reintentos, desborde). Tamaños medidos: Shadow reporte/GET/delta/accepted 476/2458/672/1887 B, GET MQTT 2518 B; histórico máx. 347 B (MQTT 394 B). Contrato firmware → Lambda ([`check_history_contract.py`](../test/check_history_contract.py)): **12 cargas MQTT generadas por el firmware aceptadas por `SmartParkHistoryProcessor`**, y el reintento conserva la misma clave (`eventKey`). | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) |
 | PA-03 | Lambdas | `AWS_EC2_METADATA_DISABLED=true python -m unittest discover -s tests` (en `lambda/`) | 102 | **102 OK** (con `PYTHONUTF8=1`; sin esa variable, Windows cp1252 provoca 1 error de lectura del modelo de Alexa) | [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) |
 
-Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_isolation`), backend de la skill incluido RF14 (`test_backend`, `test_v2_*`), sesión (`test_session`) e histórico (`test_history`: lectura y capacidad reducida, orígenes y transiciones de barrera, inválidos sin inicializar el SDK, duplicado y reintento, coherencia de plantillas). PA-02, cuando se ejecute, cubre `Parking`, la LCD, la cuota, la reconexión con `desired` pendiente, la prioridad de control y el contrato firmware → Lambda ([`test/README`](../test/README)).
+Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_isolation`), backend de la skill incluido RF14 (`test_backend`, `test_v2_*`), sesión (`test_session`) e histórico (`test_history`: lectura y capacidad reducida, orígenes y transiciones de barrera, inválidos sin inicializar el SDK, duplicado y reintento, coherencia de plantillas). PA-02 cubre `Parking`, la LCD, la cuota, la reconexión con `desired` pendiente, la prioridad de control, la publicación del histórico y el contrato firmware → Lambda ([`test/README`](../test/README)). Los tamaños de PA-02 confirman que el GET del Shadow cabe en `MQTT_BUFFER_SIZE = 3072` y que cada mensaje se factura como uno solo en IoT Core (< 5 KB) y cada ítem del histórico como 1 WRU en DynamoDB (< 1 KB) (5.6).
 
 ---
 
@@ -1109,22 +1109,24 @@ Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_i
 
 ### 5.1 Resumen de cumplimiento
 
+**Pruebas automáticas (4.5):** PA-01 compila y enlaza el firmware (RAM 15,2 %, Flash 73,6 %); PA-02 pasa 5/5 suites con dobles y el contrato firmware → Lambda (12 cargas aceptadas); PA-03 pasa 102/102 pruebas de las Lambdas. Las pruebas en vivo de cada RF se ejecutan en la sesión de 4.1.
+
 | RF | Prueba en vivo | Prueba automática | Resultado | Estado |
 |---|---|---|---|---|
-| RF1 | PF-01, PF-11 | PA-02 | Pendiente de ejecución | Pendiente de ejecución |
-| RF2 | PF-01 | PA-02 | Pendiente de ejecución | Pendiente de ejecución |
-| RF3 | PF-02, PF-15 | PA-02 | Pendiente de ejecución | Pendiente de ejecución |
-| RF4 | PF-03 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF5 | PF-02 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF6 | PF-03 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF7 | PF-04 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF8 | PF-04 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF9 | PF-05 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF10 | PF-06 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF11 | PF-07, PF-08, PF-09 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF12 | PF-10 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
-| RF13 | PF-11 a PF-14 | PA-02 | Pendiente de ejecución | Pendiente de ejecución |
-| RF14 | PF-15, PF-16 | PA-03 | Pendiente de ejecución | Pendiente de ejecución |
+| RF1 | PF-01, PF-11 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
+| RF2 | PF-01 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
+| RF3 | PF-02, PF-15 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
+| RF4 | PF-03 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF5 | PF-02 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF6 | PF-03 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF7 | PF-04 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF8 | PF-04 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF9 | PF-05 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF10 | PF-06 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF11 | PF-07, PF-08, PF-09 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF12 | PF-10 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
+| RF13 | PF-11 a PF-14 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
+| RF14 | PF-15, PF-16 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
 | RF15 | PF-17 | — | Pendiente de ejecución | Pendiente de ejecución |
 
 | RNF | Valor declarado | Valor medido | Estado |
@@ -1140,7 +1142,7 @@ Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_i
 | RNF9 Lógica automática Edge | ≤ 0,3 s | Pendiente de ejecución | Pendiente de ejecución |
 | RNF9 Lógica automática Nube | No aplica | No aplica | No aplica |
 | RNF10 Operación sin conexión | E1–E4 operan; histórico encolado | Pendiente de ejecución | Pendiente de ejecución |
-| RNF11 Costo | Dentro de la capa gratuita; < 0,20 USD/mes sin ella | ≈ 0,15 USD/mes sin capa gratuita (cálculo, 5.6) | Cumple por cálculo |
+| RNF11 Costo | Dentro de la capa gratuita; < 0,30 USD/mes sin ella | Dentro de la capa gratuita en todos los conceptos excepto las escrituras bajo demanda de DynamoDB (≈ 0,01 USD/mes); sin capa gratuita ≈ 0,15 USD/mes (caso base) y ≈ 0,23 USD/mes (peor caso, Shadow por bloques de 1 KB), con tarifas verificadas de `us-east-1` (5.6) | Cumple por cálculo; se contrasta con la facturación de la sesión (8.4) |
 | RNF12 Seguridad | Sin secretos; mínimo privilegio | Plantillas sin secretos y permisos de 3.2; PA-03 OK | Pendiente de ejecución (revisión final del repositorio) |
 
 ### 5.2 Resultados de las pruebas no funcionales
@@ -1207,15 +1209,14 @@ La Nube aporta lo que el Edge no puede: **persistencia validada** del histórico
 | 2 | Las órdenes rechazadas por E2 no se publican en el histórico. | M3 no puede contar aperturas rechazadas. | Evento `order_rejected` (7.1). |
 | 3 | El firmware no imprime la causa del último reinicio ni la memoria libre. | Un reinicio en PNF-01 no se puede diagnosticar solo con el serie. | Cambio recomendado (7.1). |
 | 4 | La prueba automática del modelo de Alexa valida `alexa/es-US.interaction-model.json`, no el modelo final `es-US.smartpark-v2.final.json`. | El modelo que se importa a la consola no tiene prueba automática. | Unificar el archivo (7.1). |
-| 5 | PA-01 no enlazó y PA-02 no se ejecutó por limitaciones del equipo de prueba (4.5). | Sin evidencia de binario ni de pruebas host en este commit. | Reejecutar en un equipo con la cadena completa antes de entregar. |
-| 6 | El firmware no registra la hora de publicación de cada evento del histórico. | RNF8 se mide desde la llegada a AWS (`receivedAt`), no desde la publicación. | Cambio recomendado (7.1). |
-| 7 | <!-- PENDIENTE: completar con resultados de 4.4 --> Desviaciones de la sesión de pruebas | Pendiente de ejecución | Pendiente de ejecución |
+| 5 | El firmware no registra la hora de publicación de cada evento del histórico. | RNF8 se mide desde la llegada a AWS (`receivedAt`), no desde la publicación. | Cambio recomendado (7.1). |
+| 6 | <!-- PENDIENTE: completar con resultados de 4.4 --> Desviaciones de la sesión de pruebas | Pendiente de ejecución | Pendiente de ejecución |
 
 ### 5.6 Costo mensual estimado
 
-Escenario: un Thing, 30 días, **conexión continua** (cota superior; con el límite de demostración de 60 min por arranque el consumo real es mucho menor). Frecuencias del código: tope de 1000 solicitudes Shadow/día con su respuesta `accepted`; histórico de ≈ 570 eventos/día (288 muestras + 240 transiciones de plazas + 40 de barrera, 2.10); 50 interacciones de voz/día, 20 de ellas con escritura en `desired`. Lambda del histórico: 128 MB y 0,1 s supuestos; backend: 128 MB y 1 s supuestos.
+Escenario: un Thing, 30 días, **conexión continua** (cota superior; con el límite de demostración de 60 min por arranque el consumo real es mucho menor). Frecuencias del código: tope de 1000 solicitudes Shadow/día con su respuesta `accepted`; histórico de ≈ 570 eventos/día (288 muestras + 240 transiciones de plazas + 40 de barrera, 2.10); 50 interacciones de voz/día, 20 de ellas con escritura en `desired`. Lambda del histórico: 128 MB y 0,1 s supuestos; backend: 128 MB (configuración de [`lambda/README.md`](../lambda/README.md#L122)) y 1 s de duración supuesta.
 
-| Servicio | Uso mensual | Capa gratuita | Costo sin capa gratuita (USD, tarifas de referencia) |
+| Servicio | Uso mensual | Capa gratuita | Costo sin capa gratuita (USD, tarifa `us-east-1` verificada) |
 |---|---|---|---|
 | IoT Core — mensajes | Shadow 30 000 + `accepted` 30 000 + histórico 17 100 + `delta` 600 ≈ 77 700 | 500 000/mes (12 meses) | 1,00/M → 0,078 |
 | IoT Core — operaciones de Shadow | 30 000 (ESP32) + 1500 (Lambda) = 31 500 | 225 000/mes (registro + Shadow) | 1,25/M → 0,039 |
@@ -1226,9 +1227,13 @@ Escenario: un Thing, 30 días, **conexión continua** (cota superior; con el lí
 | DynamoDB — escrituras bajo demanda | 17 100 WRU (ítems < 1 KB) | No cubiertas (la capa gratuita cubre capacidad aprovisionada) | 0,625/M → 0,011 |
 | DynamoDB — lecturas | 1500 RRU (vinculación) + consultas de reportes | No cubiertas | 0,125/M → < 0,001 |
 | DynamoDB — almacenamiento | ≈ 10 MB acumulados el primer mes (≈ 0,6 KB/ítem) | 25 GB (siempre) | < 0,01 |
-| **Total** | | | **≈ 0,15 USD/mes**; con capa gratuita ≈ 0,01 USD/mes (escrituras bajo demanda) |
+| **Total** | | | **≈ 0,15 USD/mes** (peor caso ≈ 0,23 USD/mes, ver «Medición por tamaño»); con capa gratuita ≈ 0,01 USD/mes (escrituras bajo demanda) |
 
-Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 200/mes) los mensajes siguen bajo 500 000, pero las reglas superarían por poco las 250 000 gratuitas. Las cuentas creadas desde el 15 de julio de 2025 reciben créditos de capa gratuita en lugar de la asignación de 12 meses de IoT Core. Fuentes y fecha de consulta en 8.2; las tarifas por unidad son de referencia para `us-east-1` y deben confirmarse en AWS Pricing Calculator.
+Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 200/mes) los mensajes siguen bajo 500 000, pero las reglas superarían por poco las 250 000 gratuitas. Las cuentas creadas desde el 15 de julio de 2025 reciben créditos de capa gratuita en lugar de la asignación de 12 meses de IoT Core.
+
+**Verificación de tarifas.** Las tarifas por unidad se contrastaron el 2026-11-21 con la AWS Price List API para `us-east-1` (archivos publicados el 2026-10-03 para IoT Core, el 2026-11-20 para Lambda y el 2026-11-11 para DynamoDB) y con las páginas de precios (8.2). Coinciden todas: mensajes 1,00 USD/M (primeros 1000 M al mes), operaciones de Shadow y registro 1,25 USD/M, conectividad 0,08 USD/M min, reglas 0,15 USD/M y acciones 0,15 USD/M, Lambda 0,20 USD/M solicitudes y 0,0000166667 USD/GB-s (x86, primer tramo), DynamoDB bajo demanda 0,625 USD/M WRU y 0,125 USD/M RRU, y almacenamiento 0,25 USD/GB-mes más allá de los primeros 25 GB. No hubo que corregir ningún cálculo.
+
+**Medición por tamaño.** IoT Core mide mensajes, reglas y acciones en incrementos de 5 KB, y el Shadow en incrementos de 1 KB del documento. Con los tamaños medidos en PA-02 (4.5), cada mensaje cuenta como uno y cada ítem del histórico como 1 WRU. El reporte del Shadow ocupa 476 B, pero el documento completo devuelto por GET ocupa 2458 B: si AWS factura cada actualización por el documento completo (3 operaciones), las operaciones de Shadow suben a 94 500/mes (0,118 USD) y el total sin capa gratuita a ≈ 0,23 USD/mes, aún dentro de las 225 000 operaciones gratuitas y bajo la cota de 0,30 USD/mes de RNF11 (1.4). La facturación de la sesión de pruebas (8.4) confirma cuál de los dos casos aplica.
 
 ---
 
@@ -1305,7 +1310,8 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 - Documentos técnicos de la V2: [`firmware-v2.md`](firmware-v2.md), [`historial-aws-practica-4.md`](historial-aws-practica-4.md), [`alexa-practica-4.md`](alexa-practica-4.md), [`lambda/README.md`](../lambda/README.md).
 - AWS IoT Core, precios y capa gratuita (consultado el 2026-11-21): <https://aws.amazon.com/iot-core/pricing/>.
 - AWS Lambda, precios (consultado el 2026-11-21): <https://aws.amazon.com/lambda/pricing/>.
-- Amazon DynamoDB, precios (consultado el 2026-11-21): <https://aws.amazon.com/dynamodb/pricing/>.
+- Amazon DynamoDB, precios bajo demanda (consultado el 2026-11-21): <https://aws.amazon.com/dynamodb/pricing/on-demand/>.
+- AWS Price List API, ofertas vigentes para `us-east-1` (consultado el 2026-11-21): [AWS IoT](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSIoT/current/us-east-1/index.json), [AWS Lambda](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSLambda/current/us-east-1/index.json), [Amazon DynamoDB](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonDynamoDB/current/us-east-1/index.json).
 - Documento del Device Shadow: <https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-document.html>.
 - Funciones SQL de AWS IoT: <https://docs.aws.amazon.com/iot/latest/developerguide/iot-sql-functions.html>.
 - Variables de política del Thing: <https://docs.aws.amazon.com/iot/latest/developerguide/thing-policy-variables.html>.
@@ -1318,7 +1324,7 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 | Evidencia | Ubicación | Estado |
 |---|---|---|
 | Hojas de registro | [`evidencias/hojas-registro/`](evidencias/hojas-registro/) | Preparadas |
-| Salidas de las pruebas automáticas | [`evidencias/pruebas-automaticas/`](evidencias/pruebas-automaticas/) | PA-03 OK; PA-01 y PA-02 con la causa documentada |
+| Salidas de las pruebas automáticas | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt), [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt), [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) | PA-01 SUCCESS; PA-02 5/5 PASS y contrato PASS (12 cargas); PA-03 102 OK |
 | Evidencia por prueba (videos, capturas, CSV) | `docs/evidencias/pruebas/<ID>/` (una carpeta por PF-xx y PNF-xx) | Pendiente de ejecución |
 | Muestra exportada de `SmartParkHistory` | `docs/evidencias/pruebas/PF-07/` | Pendiente de ejecución |
 
@@ -1332,6 +1338,7 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 | Tablas `SmartParkBindings` y `SmartParkHistory` en estado `ACTIVE` | Pendiente de ejecución |
 | Modelo de interacción construido y endpoint en la Alexa Developer Console | Pendiente de ejecución |
 | Fotografías del montaje | Pendiente de ejecución |
+| Facturación del mes de la sesión (Billing o Cost Explorer: mensajes, operaciones de Shadow, reglas y escrituras de DynamoDB), para contrastar 5.6 | Pendiente de ejecución |
 
 ### 8.5 Configuraciones exportadas
 
