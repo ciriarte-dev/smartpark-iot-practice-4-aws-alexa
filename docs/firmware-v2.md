@@ -1,20 +1,33 @@
 # Firmware SmartPark V2
 
-## Cableado previsto
+## Cableado del montaje
 
 | Señal | GPIO |
 |---|---:|
 | HC-SR04 TRIG / ECHO | 32 / 35 |
 | SG90 PWM | 18 |
-| LCD I²C SDA / SCL | 21 / 22 |
+| LCD 16×2 I²C SDA / SCL | 21 / 22 |
 | Slot 1 IR / rojo / verde | 34 / 17 / 13 |
 | Slot 2 IR / rojo / verde | 36 / 14 / 19 |
 | Slot 3 IR / rojo / verde | 39 / 23 / 25 |
 | Slot 4 IR / rojo / verde | 33 / 26 / 27 |
 
-El mapa aplica al objetivo PlatformIO `esp32doit-devkit-v1`. Antes de cablear, comprobar el número de parte del módulo, que GPIO 17 esté libre de PSRAM y que los GPIO 36 y 39 estén expuestos (pueden figurar como VP y VN). Los GPIO 34, 35, 36 y 39 solo admiten entrada y carecen de resistencias internas de polarización. Los IR deben entregar niveles digitales válidos de 3,3 V. Para una salida de colector abierto, usar polarización externa a 3,3 V. Si el módulo solo funciona a 5 V y su salida alcanza esa tensión, adaptar el nivel antes del GPIO. Verificar que el módulo es activo bajo o ajustar `IR_OCCUPIED_LEVEL`. Adaptar ECHO a 3,3 V antes de GPIO 35. [GPIO del ESP32](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html)
+El mapa aplica al objetivo PlatformIO `esp32doit-devkit-v1`. Antes de cablear, comprobar el número de parte del módulo, que GPIO 17 esté libre de PSRAM y que los GPIO 36 y 39 estén expuestos (pueden figurar como VP y VN). Los GPIO 34, 35, 36 y 39 solo admiten entrada y carecen de resistencias internas de polarización. Los IR deben entregar niveles digitales válidos de 3,3 V. Para una salida de colector abierto, usar polarización externa a 3,3 V. Si el módulo solo funciona a 5 V y su salida alcanza esa tensión, adaptar el nivel antes del GPIO. Verificar que el módulo es activo bajo o ajustar `IR_OCCUPIED_LEVEL`. [GPIO del ESP32](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html)
 
-El firmware usa un backpack PCF8574 con dirección inicial `0x27`, datos en P4–P7 y RS/RW/EN en P0/P1/P2. El adaptador controla solo la LCD. Confirmar su dirección, polaridad de luz y correspondencia de pines. Si el backpack trabaja a 5 V, usar un traductor bidireccional I²C con pull-ups adecuados del lado de cada tensión. Cada LED necesita su propia resistencia. Para un objetivo inicial de 2 mA, calcularla con `R = (3,3 V − Vf) / 0,002 A` y elegir el valor comercial superior. [Ficha PCF8574](https://www.ti.com/product/PCF8574)
+El firmware usa un backpack PCF8574 con dirección inicial `0x27`, datos en P4–P7 y RS/RW/EN en P0/P1/P2. El adaptador controla solo la LCD. Confirmar su dirección, polaridad de luz y correspondencia de pines. Cada LED necesita su propia resistencia. Para un objetivo inicial de 2 mA, calcularla con `R = (3,3 V − Vf) / 0,002 A` y elegir el valor comercial superior. En el montaje hay 4 resistencias de 220 Ω y 4 de 330 Ω, una en serie con cada LED; no está registrado qué valor lleva cada color. [Ficha PCF8574](https://www.ti.com/product/PCF8574)
+
+**Montaje real.** Todo se alimenta por el USB del ESP32. El HC-SR04 y la LCD (backpack a 5 V) toman 5 V del pin VIN; los cuatro IR y el servo SG90, 3,3 V del pin 3V3. ECHO llega directo a GPIO 35 y SDA/SCL directos a GPIO 21/22. Todas las masas están unidas al GND del ESP32. Diagrama: [`03-circuito.png`](diagrams/03-circuito.png).
+
+**Recomendaciones para una versión real.** Divisor de voltaje en ECHO, porque GPIO 35 trabaja a 3,3 V y el HC-SR04 a 5 V entrega pulsos de 5 V. Traductor de nivel bidireccional I²C para el backpack a 5 V, con pull-ups del lado de cada tensión. SG90 a 5 V con una fuente aparte y GND común: su rango nominal es 4,8–6 V y a 3,3 V tiene menos torque y puede tardar más que `SERVO_TRAVEL_MS`.
+
+## LCD 16×2
+
+`ParkingDisplay` controla una LCD 16×2 (HD44780 en modo de 4 bits por el PCF8574; filas en las direcciones DDRAM 0x00 y 0x40). Escribe una fila por llamada y solo si su texto cambió, sin bloquear `loop()`. Ante un error I²C reinicia la inicialización y reescribe ambas filas. El tamaño está en `LCD_COLUMNS = 16` y `LCD_ROWS = 2`, con valor por defecto en [`ParkingDisplay.h`](../include/ParkingDisplay.h).
+
+| Fila | Contenido |
+|---|---|
+| 0 | Plazas libres/capacidad y ocupadas: `Libres:3/4 Oc:1`. |
+| 1 | Por prioridad: `APERTURA BLOQ.` si la apertura está bloqueada (modo automático sin plaza confirmada libre); si no, `PARQUEO LLENO` si las cuatro plazas están ocupadas; si no, alterna cada 2 s entre el modo (`Modo: manual` / `Modo: automatico`) y la barrera (`Barrera: abierta`, `Barrera: cerrada`, `Barrera: mueve` durante el recorrido o `Barrera: ---` sin posición estimada). |
 
 ## Diagnóstico físico de una plaza
 
@@ -22,7 +35,7 @@ Para un LED discreto con resistencia hacia GND, evita GPIO 15 como primera opci�
 
 1. Para el ensayo con GPIO 4, en tu `include/config.h` local establece `PARKING_CAPACITY = 1` y cambia solo la primera entrada de `SLOT_PINS` a `{34, 4, 13}`. Con la placa apagada, pasa el LED rojo a D4 y usa una resistencia en serie. Mantén las señales del IR compatibles con 3,3 V.
 2. Carga el firmware y abre el monitor serie a 115200, con terminación de línea. Envía `SLOT1` con el sensor sin obstáculo y luego con un obstáculo. Con el IR activo bajo, tras estabilizarse la lectura se espera `1 / LIBRE / rojo OFF / verde ON` y `0 / OCUPADO / rojo ON / verde OFF`, respectivamente. Retira el obstáculo y comprueba que vuelve a libre. El comando muestra la lectura cruda y el estado filtrado, que pueden diferir durante el antirrebote.
-3. Confirma visualmente los LEDs y que la LCD pasa entre `Ocup:0 Libres:1/1` y `Ocup:1 Libres:0/1`. El diagnóstico muestra si la dirección I²C configurada responde y si el controlador completó la inicialización. La respuesta I²C por sí sola no verifica el texto ni el contraste. Si usas Wi-Fi durante el ensayo, la configuración normal del firmware podría reportar el estado de una plaza al Shadow.
+3. Confirma visualmente los LEDs y que la fila 0 de la LCD pasa entre `Libres:1/1 Oc:0` y `Libres:0/1 Oc:1`. El diagnóstico muestra si la dirección I²C configurada responde y si el controlador completó la inicialización. La respuesta I²C por sí sola no verifica el texto ni el contraste. Si usas Wi-Fi durante el ensayo, la configuración normal del firmware podría reportar el estado de una plaza al Shadow.
 
 ## Presupuesto de corriente y pruebas de banco
 
