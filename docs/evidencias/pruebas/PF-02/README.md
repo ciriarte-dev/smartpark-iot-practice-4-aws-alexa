@@ -2,10 +2,19 @@
 
 Respalda RF3, RF4, RF5, RF6. Procedimiento, resultado esperado y criterio: [PF-02 en 4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Los valores se anotan primero en la [hoja de registro](../../hojas-registro/hoja-pruebas-funcionales.md).
 
-| Archivo esperado | Cómo obtenerlo |
-|---|---|
-| `simulador-*.png` | Capturas del simulador de Alexa (**Test → Development**) con la respuesta y el panel **JSON Input** de cada frase. |
-| `update-accepted.png` | Captura del cliente de prueba MQTT de AWS IoT suscrito a `$aws/things/smartpark-grupo9-01/shadow/update/accepted` tras la última orden de barrera. |
-| `../serial-sesion.txt` (log común de la sesión) | Log del monitor serie de toda la sesión: `pio device monitor -f time \| tee docs/evidencias/pruebas/serial-sesion.txt` en Git Bash, iniciado en el bloque 0 (4.1). |
+## Evidencia adjunta
 
-Las rutas con `../` apuntan a archivos compartidos con otras pruebas. Esta carpeta se completa durante la sesión de banco; no contiene resultados todavía.
+- [Video de tres aperturas y tres cierres por Alexa](<WhatsApp Video 2026-11-22 at 19.32.45 (3).mp4>)
+
+## Resultado registrado
+
+| Paso | Hora | Resultado observado | ¿Cumple? |
+|---|---|---|---|
+| Abrir y cerrar tres veces por voz | 19:32:12 (UTC-04:00) | La barrera se abre y se cierra con las órdenes de Alexa | Sí |
+| *"consulta la distancia"* | — | Pendiente de registro | — |
+| *"hay un auto esperando"* | — | Pendiente de registro | — |
+| *"consulta el estado de la barrera"* | — | Pendiente de registro | — |
+
+## Estado
+
+**Parcialmente ejecutada:** el control abierto/cerrado quedó demostrado. Las tres consultas por voz continúan pendientes.
