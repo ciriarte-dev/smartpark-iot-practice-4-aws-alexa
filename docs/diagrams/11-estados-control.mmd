@@ -1,0 +1,12 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Manual : primer arranque (valor por defecto)
+    Manual --> Automatico : desired.modo = automatico
+    Automatico --> Manual : desired.modo = manual
+    state Automatico {
+        [*] --> AperturaPermitida
+        AperturaPermitida --> AperturaBloqueada : disponibles == 0
+        AperturaBloqueada --> AperturaPermitida : una plaza confirmada libre
+    }
+    note right of Manual : abrir y cerrar aceptados
+    note right of Automatico : cerrar siempre aceptado

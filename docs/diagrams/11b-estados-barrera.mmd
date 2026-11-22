@@ -1,0 +1,9 @@
+stateDiagram-v2
+    direction LR
+    [*] --> SinEstimar : arranque, sin PWM
+    SinEstimar --> Moviendo : primera orden explícita
+    Moviendo --> AbiertaEstimada : 700 ms, objetivo abierta
+    Moviendo --> CerradaEstimada : 700 ms, objetivo cerrada
+    CerradaEstimada --> Moviendo : abrir aceptada
+    AbiertaEstimada --> Moviendo : cerrar aceptada
+    CerradaEstimada --> CerradaEstimada : abrir bloqueada o vencida
