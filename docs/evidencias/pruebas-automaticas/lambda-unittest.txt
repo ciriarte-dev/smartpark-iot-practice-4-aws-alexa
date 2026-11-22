@@ -1,5 +1,5 @@
-Fecha: 2026-11-22 17:04:47 -0400
-Commit: 304a5 (rama fix/alexa-barrier-order-v2, con cambios sin confirmar en lambda/services/shadow_service.py, lambda/tests/test_backend.py y las pruebas nuevas test_barrier_order.py y test_alexa_model.py)
+Fecha: 2026-11-22 19:37:16 -0400
+Commit: 4c71c (rama chore/restore-v1-barrier-orders, con cambios sin confirmar: lambda/services/shadow_service.py y lambda/tests/test_backend.py restaurados a 304a5, y eliminadas las pruebas del formato V2 de la orden de barrera)
 Directorio: lambda/
 Comando: AWS_EC2_METADATA_DISABLED=true PYTHONUTF8=1 .venv/Scripts/python.exe -m unittest discover -s tests -v
 Python: Python 3.13.0 en lambda/.venv
@@ -96,10 +96,6 @@ test_valid_binding_and_one_use_code (test_backend.BackendTests.test_valid_bindin
 test_valid_distance_reported_not_desired (test_backend.BackendTests.test_valid_distance_reported_not_desired) ... ok
 test_wrong_record_type_prevents_control (test_backend.BackendTests.test_wrong_record_type_prevents_control) ... ok
 test_wrong_skill_or_missing_config (test_backend.BackendTests.test_wrong_skill_or_missing_config) ... ok
-test_consecutive_orders_have_distinct_ids_and_increasing_issued_time (test_barrier_order.BarrierOrderTests.test_consecutive_orders_have_distinct_ids_and_increasing_issued_time) ... ok
-test_invalid_target_raises_without_updating_shadow (test_barrier_order.BarrierOrderTests.test_invalid_target_raises_without_updating_shadow) ... ok
-test_issued_matches_clock_and_validity_within_ttl (test_barrier_order.BarrierOrderTests.test_issued_matches_clock_and_validity_within_ttl) ... ok
-test_v2_format_with_voice_origin_and_valid_id (test_barrier_order.BarrierOrderTests.test_v2_format_with_voice_origin_and_valid_id) ... ok
 test_barrier_origins_and_actual_transitions (test_history.HistoryTest.test_barrier_origins_and_actual_transitions) ... ok
 test_invalid_never_initializes_sdk (test_history.HistoryTest.test_invalid_never_initializes_sdk) ... ok
 test_put_conditional_duplicate_and_retry (test_history.HistoryTest.test_put_conditional_duplicate_and_retry) ... ok
@@ -125,7 +121,7 @@ ok
 test_unbound_user_error_closes_without_physical_action (test_session.SessionTests.test_unbound_user_error_closes_without_physical_action) ... ok
 
 ----------------------------------------------------------------------
-Ran 109 tests in 0.439s
+Ran 105 tests in 0.464s
 
 OK
 Código de salida: 0
