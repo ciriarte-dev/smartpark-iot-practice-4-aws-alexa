@@ -1,0 +1,36 @@
+flowchart LR
+    subgraph PWR["Alimentación"]
+        USB["USB 5 V<br/>(ESP32, LCD, IR, HC-SR04)"]
+        EXT["Fuente regulada 5 V<br/>(solo SG90)"]
+        GND(("GND común"))
+    end
+    subgraph SENS["Sensores"]
+        US["HC-SR04<br/>TRIG GPIO 32 · ECHO GPIO 35<br/>(divisor 5 V → 3,3 V)"]
+        IR["4 sensores IR, uno por plaza<br/>GPIO 34 · 36 · 39 · 33"]
+    end
+    subgraph MCU["ESP32 DOIT DevKit V1 · Thing smartpark-grupo9-01"]
+        LOOP["loop(): Parking · UltrasonicSensor<br/>BarrierServo · ParkingDisplay · SerialCommands"]
+        TASK["Tarea FreeRTOS smartpark-aws<br/>AwsIoTManager + HistoryPublisher"]
+        NVS[("NVS<br/>modo, antirrebote,<br/>cuota diaria, órdenes")]
+        LOOP <-- "colas de 1 elemento<br/>(snapshot, comando, estado)" --> TASK
+        TASK --- NVS
+    end
+    subgraph ACT["Actuadores e indicadores"]
+        SERVO["Servo SG90 (barrera)<br/>PWM 50 Hz · GPIO 18"]
+        LEDS["8 LEDs: rojo/verde por plaza<br/>17/13 · 14/19 · 23/25 · 26/27"]
+        LCD["LCD 20x4 + PCF8574 (0x27)<br/>SDA GPIO 21 · SCL GPIO 22"]
+    end
+    CLOUD["AWS IoT Core<br/>MQTT sobre TLS 8883"]
+    PC["Monitor serie 115200 baudios<br/>OPEN · CLOSE · STATUS · DISTANCE · SLOT1 · HELP"]
+
+    US --> LOOP
+    IR --> LOOP
+    LOOP --> SERVO
+    LOOP --> LEDS
+    LOOP --> LCD
+    TASK <-- "Wi-Fi" --> CLOUD
+    PC <--> LOOP
+    USB --> MCU
+    EXT --> SERVO
+    GND --- MCU
+    GND --- SERVO
