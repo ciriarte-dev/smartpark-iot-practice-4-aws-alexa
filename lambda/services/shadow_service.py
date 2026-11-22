@@ -2,7 +2,6 @@
 import json
 import math
 import time
-import uuid
 
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -13,8 +12,6 @@ from .validation import validate_thing
 IR_DEBOUNCE_MIN_MS = 50
 IR_DEBOUNCE_MAX_MS = 1000
 PARKING_MODES = ("manual", "automatico")
-# Mantener en sincronía con AWS_ORDER_TTL_S del firmware (vigencia máxima de una orden V2).
-BARRIER_ORDER_TTL_S = 30
 
 
 class ShadowService:
@@ -79,16 +76,7 @@ class ShadowService:
     def set_barrier(self, thing, state):
         if state not in {"abierta", "cerrada"}:
             raise ValueError("Unsupported barrier target")
-        issued_ms = int(self.clock() * 1000)
-        order = {
-            "id": uuid.uuid4().hex,
-            "objetivo": state,
-            "origen": "voz",
-            "solicitada_ms": issued_ms,
-            "vence_s": issued_ms // 1000 + BARRIER_ORDER_TTL_S,
-        }
-        # "barrera": None elimina una orden V1 que pudiera quedar en desired.
-        self._update_desired(thing, {"barrera": None, "orden_barrera": order})
+        self._update_desired(thing, {"barrera": state})
 
     def set_mode(self, thing, mode):
         if mode not in PARKING_MODES:

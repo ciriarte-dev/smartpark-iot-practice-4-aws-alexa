@@ -418,11 +418,7 @@ class BackendTests(unittest.TestCase):
             self.assertIn("Solicité " + action, self.invoke(intent))
             args = self.data.update_thing_shadow.call_args.kwargs
             self.assertEqual(args["thingName"], THING)
-            desired = json.loads(args["payload"])["state"]["desired"]
-            self.assertIn("barrera", desired)
-            self.assertIsNone(desired["barrera"])
-            self.assertEqual(desired["orden_barrera"]["objetivo"], state)
-            self.assertEqual(desired["orden_barrera"]["origen"], "voz")
+            self.assertEqual(json.loads(args["payload"]), {"state": {"desired": {"barrera": state}}})
         self.data.get_thing_shadow.assert_not_called()
         self.assertEqual(self.data.update_thing_shadow.call_count, 2)
 
