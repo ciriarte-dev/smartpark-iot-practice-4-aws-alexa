@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant LA as SmartParkAlexaBackend
+    participant SH as Device Shadow
+    participant NET as ESP32 tarea smartpark-aws
+    participant LP as ESP32 loop()
+    U->>LA: "ajusta el antirrebote a 200 milisegundos"
+    LA->>LA: number_slot(milisegundos, 50, 1000)
+    alt valor fuera de 50–1000
+        LA-->>U: "Dime un valor entero entre 50 y 1000 milisegundos." (sin escribir el Shadow)
+    else válido
+        LA->>SH: UpdateThingShadow desired.parametros_auto.antirrebote_ir_ms = 200
+        LA-->>U: "Solicité 200 milisegundos de antirrebote. El dispositivo aún debe confirmarlo."
+        SH->>NET: update/delta
+        NET->>NET: applyDesired(): valida rango y guarda {modo, antirrebote} en NVS "parking"
+        NET->>LP: cola commands_ (configure = true)
+        LP->>LP: Parking::configure(): nueva ventana de estabilidad
+        NET->>SH: reported.parametros_auto.antirrebote_ir_ms = 200 (clase Control)
+    end
+    U->>LA: "consulta el antirrebote"
+    LA->>SH: GetThingShadow
+    LA-->>U: "El antirrebote reportado es de 200 milisegundos."

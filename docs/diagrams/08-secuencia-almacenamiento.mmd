@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    participant LP as ESP32 loop()
+    participant HP as HistoryPublisher (colas RAM)
+    participant NET as Tarea smartpark-aws
+    participant BRK as AWS IoT Core (broker)
+    participant RULE as Regla SmartParkHistoryIngest
+    participant LH as SmartParkHistoryProcessor
+    participant TH as DynamoDB SmartParkHistory
+    participant CW as CloudWatch Logs
+    LP->>HP: observeParking() / observeBarrier()
+    HP->>HP: enqueue(): exige hora UTC válida, occurredAt = gettimeofday (ms)
+    Note over HP: colas FIFO: barrera 8 · plazas 16 · muestra 1<br/>cola llena → se descarta el evento nuevo
+    NET->>HP: publish() como máximo cada 10 s, prioridad barrera > plazas > muestra
+    HP->>BRK: PUBLISH QoS 0 smartpark/smartpark-grupo9-01/history/v1
+    BRK->>RULE: mensaje del tópico
+    RULE->>RULE: agrega thingName = topic(2), schemaVersion = topic(4), receivedAt = timestamp()
+    RULE->>LH: invocación asíncrona
+    LH->>LH: validate_event(): tipos, rangos, conteos, origen, occurredAt ≤ receivedAt + 300 s
+    alt evento inválido
+        LH->>CW: WARNING history_invalid field=...
+        LH-->>RULE: {"status":"invalid"} (no se almacena, sin reintento)
+    else válido
+        LH->>TH: PutItem eventKey = occurredAt(13 dígitos)#eventId<br/>condición attribute_not_exists
+        alt primera escritura
+            TH-->>LH: OK → {"status":"stored"}
+        else mismo eventId y occurredAt
+            TH-->>LH: ConditionalCheckFailed → {"status":"duplicate"}
+        end
+    end

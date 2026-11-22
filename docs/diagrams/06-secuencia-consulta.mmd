@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant AX as Skill Alexa
+    participant LA as SmartParkAlexaBackend
+    participant TB as DynamoDB SmartParkBindings
+    participant SH as Device Shadow
+    U->>AX: "cuántos espacios hay disponibles"
+    AX->>LA: IntentRequest ConsultarDisponiblesIntent + userId
+    LA->>LA: valida ALEXA_SKILL_ID, edad de la solicitud (-30 a 150 s) y userId
+    LA->>TB: GetItem(userId) ConsistentRead
+    TB-->>LA: thingName = smartpark-grupo9-01
+    LA->>SH: GetThingShadow(thingName)
+    SH-->>LA: state.reported + metadata.reported
+    alt timestamp de disponibles y capacidad con antigüedad ≤ 180 s
+        LA-->>AX: "El último reporte indica 2 espacios disponibles de 4."
+    else dato desactualizado o ausente
+        LA-->>AX: "El último dato del dispositivo está desactualizado..."
+    end
+    AX-->>U: respuesta hablada

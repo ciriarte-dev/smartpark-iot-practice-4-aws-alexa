@@ -1,0 +1,72 @@
+classDiagram
+    direction TB
+    namespace SmartParkAlexaBackend {
+        class lambda_function {
+            <<módulo>>
+            +lambda_handler(event, context)
+            -_safe_response(message)
+        }
+        class handlers {
+            <<paquete>>
+            barrier_handlers: Abrir, Cerrar, EstadoBarrera
+            binding_handlers: Vincular, CambiarVinculacion, Desvincular
+            sensor_handlers: ConsultarDistancia, ConsultarVehiculo
+            parking_handlers: Disponibles, Ocupados, Estacionamiento, Modo, Antirrebote
+            system_handlers: Launch, Help, Exit, SessionEnded, Fallback, SafeException
+        }
+        class ShadowService {
+            +describe_thing(thing)
+            +get_reported_fields(thing, paths) tuple
+            +set_barrier(thing, state)
+            +set_mode(thing, mode)
+            +set_debounce(thing, ms)
+            -_update_desired(thing, patch)
+        }
+        class DynamoDBService {
+            +get_binding(user_id) Binding
+            +authorize_code(user_id, code) PairingAuthorization
+            +save_binding(user_id, authorization, previous)
+            +delete_binding(user_id) bool
+        }
+        class runtime {
+            <<módulo>>
+            +get_backend() Backend
+        }
+    }
+    namespace SmartParkPairingAdmin {
+        class admin_lambda_function {
+            <<módulo>>
+            +lambda_handler(event, context)
+        }
+        class PairingAdminService {
+            +generate(user_id, thing) dict
+        }
+    }
+    namespace SmartParkHistoryProcessor {
+        class history_lambda_function {
+            <<módulo>>
+            +lambda_handler(event, context)
+            +validate_event(event) dict
+            +validate_snapshot(data, transition) dict
+            +validate_barrier(data) dict
+            -dynamodb() client
+        }
+        class InvalidEvent {
+            <<excepción>>
+        }
+    }
+    class validation {
+        <<módulo compartido>>
+        +validate_user(value)
+        +validate_thing(value)
+        +pairing_key(value)
+    }
+    lambda_function --> handlers : SkillBuilder
+    handlers --> runtime
+    runtime --> ShadowService
+    runtime --> DynamoDBService
+    handlers ..> validation
+    DynamoDBService ..> validation
+    admin_lambda_function --> PairingAdminService
+    PairingAdminService ..> validation
+    history_lambda_function ..> InvalidEvent : lanza

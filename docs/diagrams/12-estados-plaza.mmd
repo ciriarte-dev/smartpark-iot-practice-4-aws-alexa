@@ -1,0 +1,11 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Desconocido : arranque (LEDs apagados)
+    Desconocido --> Libre : lectura HIGH estable ≥ debounceMs
+    Desconocido --> Ocupado : lectura LOW estable ≥ debounceMs
+    Libre --> Ocupado : LOW estable ≥ debounceMs
+    Ocupado --> Libre : HIGH estable ≥ debounceMs
+    Libre --> Desconocido : lectura digital inválida
+    Ocupado --> Desconocido : lectura digital inválida
+    note right of Libre : LED verde ON
+    note right of Ocupado : LED rojo ON

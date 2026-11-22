@@ -1,0 +1,26 @@
+erDiagram
+    SmartParkBindings {
+        string userId PK "amzn1.ask.account... | PAIR#sha256 | PAIRUSER#sha256"
+        string recordType "binding | pairing | pairing_window"
+        string thingName
+        string revision "uuid (binding)"
+        string fechaVinculacion "ISO 8601 (binding)"
+        string allowedUserId "pairing"
+        number expiresAt "epoch s (pairing, pairing_window)"
+        string generation "uuid"
+        string pairKey "pairing_window"
+        number remainingAttempts "pairing_window"
+        string status "active | consumed"
+    }
+    SmartParkHistory {
+        string thingName PK "clave de partición"
+        string eventKey PK "clave de ordenamiento: occurredAt 13 dígitos # eventId"
+        string schemaVersion "v1"
+        string eventId
+        number occurredAt "epoch ms, reloj del ESP32"
+        number receivedAt "epoch ms, timestamp() de la regla"
+        string eventType "sample | occupancy_changed | barrier_changed"
+        string origin "edge | voz | nube | legado"
+        map data "instantánea o transición"
+    }
+    SmartParkBindings ||--o{ SmartParkHistory : "thingName (relación lógica, sin clave foránea)"
