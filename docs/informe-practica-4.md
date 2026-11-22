@@ -108,16 +108,16 @@ Valores declarados, método y prueba. Los RNF1–RNF6 heredan los de la P3 y se 
 
 | ID | Atributo | Valor declarado | Método de medición (origen de tiempo) | Prueba |
 |---|---|---|---|---|
-| RNF1 | Estabilidad | ≥ 15 min conectado con uso normal: 0 reinicios, 0 bloqueos, 0 reconexiones no provocadas. | Monitor serie con marca del PC; banner `=== SmartPark V2` y `reconexiones=` de `STATUS`. | PNF-01 |
-| RNF2 | Exactitud HC-SR04 | Error absoluto máximo ≤ 1 cm entre 5 y 50 cm. | Regla + 5 lecturas `DISTANCE` por distancia. | PNF-02 |
-| RNF3 | Exactitud IR | ≥ 95 % de transiciones correctas (≥ 76 de 80: 10 entradas y 10 salidas por plaza). | Conteo manual frente a `SLOT1`, LEDs y `reported.slots`. | PNF-03 |
-| RNF4 | Tiempo de respuesta por voz | ≤ 3,0 s desde el fin de la frase hasta el fin del movimiento estimado del servo. | Video ≥ 30 fps, conteo de cuadros. | PNF-04 |
-| RNF5 | Frecuencia de reporte | Shadow: por evento y respaldo cada 30 s; separación mínima 10 s salvo control y presencia; ≤ 1000 solicitudes/día (200 reservadas a control y recuperación). Histórico: muestra cada 300 s y ≤ 1 publicación cada 10 s. | Cliente MQTT de prueba y contadores de `STATUS`; ítems `sample` en DynamoDB. | PNF-08, PA-02 |
-| RNF6 | Reconexión y sincronización | Con un corte de 30 s, MQTT reconecta en ≤ 60 s y el `desired.modo` escrito durante el corte se refleja en `reported` en ≤ 70 s, ambos desde que vuelve la red. | Monitor serie + `update/accepted` en el cliente MQTT. | PNF-09 |
-| RNF7 | Integridad del almacenamiento | ≥ 99 % de los eventos publicados (contador `Historico: MQTT local`) quedan en `SmartParkHistory` en una ventana de 10 min; 100 % de los inválidos descartados. | Contador serie frente a ítems con `receivedAt` en la ventana; CloudWatch. | PNF-07 |
-| RNF8 | Latencia de almacenamiento | ≤ 5 s desde la llegada a AWS IoT (`receivedAt`) hasta el fin del `PutItem` (registro `REPORT` en CloudWatch). Complementario: `receivedAt − occurredAt` ≤ 15 s (cola del ESP32 de hasta 10 s + red). | Atributos del ítem y hora de CloudWatch, ≥ 20 eventos. | PNF-06 |
-| RNF9 | Respuesta de la lógica automática | Edge: ≤ 0,3 s desde que el vehículo cubre el IR hasta el cambio de LED (antirrebote de 120 ms + muestreo de 10 ms + ciclo de `loop()`). Nube: no aplica (2.6). | Video ≥ 30 fps. | PNF-05 |
-| RNF10 | Operación sin conexión | E1–E4 siguen operando; los eventos de histórico se encolan en RAM (8 de barrera, 16 de plazas, 1 muestra) y se envían al reconectar; se pierden si la cola se llena o el ESP32 se reinicia. | Corte de 2 min; conteo de transiciones frente a ítems. | PNF-10 |
+| RNF1 | Estabilidad | ≥ 15 min conectado con uso normal: 0 reinicios, 0 bloqueos, 0 reconexiones no provocadas. | Log serie de la sesión con la hora del PC; banner `=== SmartPark V2` y `reconexiones=` de `STATUS`. | PNF-01 |
+| RNF2 | Exactitud HC-SR04 | Error absoluto máximo ≤ 1 cm a 10, 20 y 30 cm (zona de espera frente a la barrera, alrededor del umbral de 15 cm). | Regla + 5 lecturas `DISTANCE` por distancia. | PNF-02 |
+| RNF3 | Exactitud IR | ≥ 95 % de transiciones correctas (≥ 38 de 40: 5 entradas y 5 salidas por plaza). | Conteo frente a los LEDs y a los ítems `occupancy_changed`. | PNF-02 |
+| RNF4 | Tiempo de respuesta por voz | ≤ 3,0 s desde el fin de la frase hasta el fin del movimiento estimado del servo. | Video ≥ 30 fps, conteo de cuadros. | PNF-03 |
+| RNF5 | Frecuencia de reporte | Shadow: por evento y respaldo cada 30 s; separación mínima 10 s salvo control y presencia; ≤ 1000 solicitudes/día (200 reservadas a control y recuperación). Histórico: muestra cada 300 s y ≤ 1 publicación cada 10 s. | Log serie: intervalo entre `AWS UPDATE clase=0`; intervalo entre ítems `sample` en DynamoDB ([`analizar_pruebas.py`](../tools/analizar_pruebas.py)). | PNF-05, PA-02 |
+| RNF6 | Reconexión y sincronización | Con un corte de 45 s, MQTT reconecta en ≤ 60 s y el `desired.modo` escrito durante el corte se refleja en `reported` en ≤ 70 s, ambos desde que vuelve la red. | Log serie (`STATUS` al restaurar → `AWS MQTT/TLS conectado` → primer `AWS UPDATE`) + `update/accepted` en el cliente MQTT. | PNF-06 |
+| RNF7 | Integridad del almacenamiento | ≥ 99 % de los eventos publicados (contador `Historico: MQTT local`) quedan en `SmartParkHistory` en una ventana de 10 min; 100 % de los inválidos descartados. | Contador serie frente a ítems con `receivedAt` en la ventana; CloudWatch ([`analizar_pruebas.py`](../tools/analizar_pruebas.py)). | PNF-05, PF-05 |
+| RNF8 | Latencia de almacenamiento | ≤ 5 s desde la llegada a AWS IoT (`receivedAt`) hasta el fin del `PutItem` (registro `REPORT` en CloudWatch). Complementario: `receivedAt − occurredAt` ≤ 15 s (cola del ESP32 de hasta 10 s + red). | Atributos del ítem y hora de CloudWatch, ≥ 20 eventos ([`analizar_pruebas.py`](../tools/analizar_pruebas.py)). | PNF-05 |
+| RNF9 | Respuesta de la lógica automática | Edge: ≤ 0,3 s desde que el vehículo cubre el IR hasta el cambio de LED (antirrebote de 120 ms + muestreo de 10 ms + ciclo de `loop()`). Nube: no aplica (2.6). | Video ≥ 30 fps. | PNF-04 |
+| RNF10 | Operación sin conexión | E1–E4 siguen operando; los eventos de histórico se encolan en RAM (8 de barrera, 16 de plazas, 1 muestra) y se envían al reconectar; se pierden si la cola se llena o el ESP32 se reinicia. | Dos cortes de 45 s; transiciones durante el corte frente a ítems recibidos al reconectar. | PNF-06 |
 | RNF11 | Costo | Criterio principal: consumo mensual de un Thing dentro de la capa gratuita. Cota sin capa gratuita: < 0,30 USD/mes, que cubre el peor caso calculado (≈ 0,23 USD/mes con el Shadow facturado por bloques de 1 KB del documento completo). | Cálculo con las frecuencias del código. | 5.6 |
 | RNF12 | Seguridad | Sin certificados, claves ni *access keys* en el repositorio; TLS mutuo X.509; políticas por recurso (3.2). | Revisión de `.gitignore` y plantillas; pruebas de aislamiento. | PA-03 |
 
@@ -127,18 +127,18 @@ Justificación de los valores: 3 s es el tiempo que un usuario espera tras la re
 
 | Req. | Componente / clase / archivo | Diagrama | Prueba |
 |---|---|---|---|
-| RF1 | `UltrasonicSensor`, `Parking` | 2.1, 2.4.1, 2.6 | PF-01, PF-11, PNF-02, PNF-03, PA-02 |
-| RF2 | `AwsIoTManager::report()` | 2.5.1, 2.7 | PF-01, PNF-08, PA-02 |
-| RF3 | `AwsIoTManager::applyDesired()` / `applyPending()` | 2.5.1 | PF-02, PF-15, PA-02 |
-| RF4–RF6 | `sensor_handlers`, `barrier_handlers`, `ShadowService` | 2.4.2, 2.5.1 | PF-02, PF-03, PA-03 |
-| RF7–RF9 | `binding_handlers`, `DynamoDBService`, `SmartParkPairingAdmin` | 2.2, 2.8 | PF-04, PF-05, PA-03 |
-| RF10 | `HistoryPublisher`, regla `SmartParkHistoryIngest` | 2.2, 2.5.2, 2.9 | PF-06, PA-03 (`test_templates_keep_rule_identity_and_table_keys_aligned`) |
-| RF11 | `history_lambda_function.validate_event()` | 2.5.2, 2.8 | PF-07, PF-08, PF-09, PNF-07, PA-03 (`test_snapshot_item_and_reduced_capacity`, `test_invalid_never_initializes_sdk`, `test_put_conditional_duplicate_and_retry`) |
-| RF12 | `HistoryPublisher::observeBarrier()`, `validate_barrier()` | 2.5.2 | PF-10, PA-03 (`test_barrier_origins_and_actual_transitions`) |
-| RF13 | `Parking::State::openingBlocked()`, `applyPending()`, `main.cpp` | 2.5.3, 2.6 | PF-11 a PF-14, PNF-05, PNF-10, PA-02 |
-| RF14 | `parking_handlers`, `ShadowService.set_mode/set_debounce`, `applyDesired()` | 2.5.1, 2.7, 2.11 | PF-15, PF-16, PA-03 (`test_v2_*`) |
-| RF15 | `SmartParkHistory` y patrones de acceso | 2.8, 2.12 | PF-17 |
-| RNF1–RNF12 | ver 1.4 | 2.6, 2.10 | PNF-01 a PNF-10, 5.6, PA-01 a PA-03 |
+| RF1 | `UltrasonicSensor`, `Parking` | 2.1, 2.4.1, 2.6 | PF-01, PNF-02, PA-02 |
+| RF2 | `AwsIoTManager::report()` | 2.5.1, 2.7 | PF-01, PNF-05, PA-02 |
+| RF3 | `AwsIoTManager::applyDesired()` / `applyPending()` | 2.5.1 | PF-02, PF-07, PA-02 |
+| RF4–RF6 | `sensor_handlers`, `barrier_handlers`, `ShadowService` | 2.4.2, 2.5.1 | PF-02, PA-03 (`test_stale_per_field_even_when_document_is_new`) |
+| RF7–RF9 | `binding_handlers`, `DynamoDBService`, `SmartParkPairingAdmin` | 2.2, 2.8 | PF-03, PA-03 (`test_existing_thing_required`, `test_thing_not_found`) |
+| RF10 | `HistoryPublisher`, regla `SmartParkHistoryIngest` | 2.2, 2.5.2, 2.9 | PF-04, PA-02 (contrato), PA-03 (`test_templates_keep_rule_identity_and_table_keys_aligned`) |
+| RF11 | `history_lambda_function.validate_event()` | 2.5.2, 2.8 | PF-04, PF-05, PNF-05, PA-03 (`test_snapshot_item_and_reduced_capacity`, `test_invalid_never_initializes_sdk`, `test_put_conditional_duplicate_and_retry`) |
+| RF12 | `HistoryPublisher::observeBarrier()`, `validate_barrier()` | 2.5.2 | PF-04, PA-03 (`test_barrier_origins_and_actual_transitions`) |
+| RF13 | `Parking::State::openingBlocked()`, `applyPending()`, `main.cpp` | 2.5.3, 2.6 | PF-06 (E1–E3), PNF-04, PNF-06 (E4), PA-02 |
+| RF14 | `parking_handlers`, `ShadowService.set_mode/set_debounce`, `applyDesired()` | 2.5.1, 2.7, 2.11 | PF-06, PF-07, PNF-06, PA-03 (`test_v2_*`) |
+| RF15 | `SmartParkHistory` y patrones de acceso | 2.8, 2.12 | PF-08 |
+| RNF1–RNF12 | ver 1.4 | 2.6, 2.10 | PNF-01 a PNF-06, PF-05, 5.6, PA-01 a PA-03 |
 
 ---
 
@@ -823,7 +823,7 @@ El Shadow refleja el **estado actual** (lo que consulta Alexa) y el tópico de h
 
 **Mensajes por día (un Thing).** Shadow: como máximo 1000 solicitudes (`AWS_MAX_SHADOW_UPDATES_PER_DAY`), cada una con su respuesta `accepted`. En una sesión de 60 min en reposo: 120 respaldos + eventos. Histórico: 288 muestras/día con conexión continua más las transiciones; con 30 ingresos por plaza al día (240 transiciones) y 40 movimientos de barrera, ≈ 570 eventos/día. Cota física: 8640 publicaciones/día por el intervalo de 10 s. Costo en 5.6.
 
-**Reconexión (base de RNF6).** Tras una falla, el reintento espera 5 s y duplica la espera hasta 300 s (`AWS_RETRY_MAX_MS`), con *jitter* de 0–1 s y un máximo de 10 intentos consecutivos sin un GET válido ([`failedAttempt()`](../src/AwsIoTManager.cpp#L172), [`connectStep()`](../src/AwsIoTManager.cpp#L183)). Los intentos ocurren ≈ 5, 15, 35 y 75 s después de detectar la caída, así que con un corte de 30 s la red vuelve antes del intento de 35 s o del de 75 s: la reconexión queda entre unos segundos y ≈ 50 s después de restaurar la red, según en qué momento se detectó la caída. Un corte mayor a ≈ 20 min agota los 10 intentos y deja al objeto en modo local hasta reiniciar.
+**Reconexión (base de RNF6).** Tras una falla, el reintento espera 5 s y duplica la espera hasta 300 s (`AWS_RETRY_MAX_MS`), con *jitter* de 0–1 s y un máximo de 10 intentos consecutivos sin un GET válido ([`failedAttempt()`](../src/AwsIoTManager.cpp#L172), [`connectStep()`](../src/AwsIoTManager.cpp#L183)). Los intentos ocurren ≈ 5, 15, 35 y 75 s después de detectar la caída, así que con un corte de 45 s la red vuelve entre el intento de 35 s y el de 75 s: si la caída se detecta al iniciar el corte, la reconexión ocurre ≈ 30 s después de restaurar la red; una detección tardía desplaza los intentos y el peor caso queda en ≈ 40 s, más el saludo TLS. Un corte mayor a ≈ 20 min agota los 10 intentos y deja al objeto en modo local hasta reiniciar.
 
 ### 2.11 Diseño de la skill de Alexa
 
@@ -996,82 +996,111 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 
 ### 4.1 Plan de pruebas y hojas de registro
 
-**Enfoque.** Tres niveles: pruebas automáticas con dobles (4.5), pruebas funcionales en vivo (una por RF como mínimo, 4.2) y pruebas no funcionales con valores medidos frente a lo declarado en 1.4 (4.3). Si un resultado no cumple, se aplica 4.4 y se vuelve a medir.
+**Enfoque.** Tres niveles: pruebas automáticas con dobles, ya ejecutadas (4.5); ocho pruebas funcionales en vivo que cubren RF1–RF15 (4.2); y seis pruebas no funcionales que miden cada valor declarado en 1.4 (4.3). Las pruebas comparten montajes y grabaciones, de modo que la sesión de banco dura ≈ 75 min. Si un resultado no cumple, se aplica 4.4 y se vuelve a medir.
 
-**Entorno.** ESP32 DOIT DevKit V1 con el circuito de 2.3; firmware del commit evaluado; AWS `us-east-1` con los recursos de 3.2; simulador de Alexa en **Test → Development**; un PC con PlatformIO; un celular que grabe a ≥ 30 fps; cinta métrica.
+| Exigencia del enunciado | Pruebas |
+|---|---|
+| Cada RF con una prueba en vivo | PF-01 a PF-08 (matriz en 5.1) |
+| Frases de la skill: todos los intents del modelo [`es-US.smartpark-v2.final.json`](../alexa/es-US.smartpark-v2.final.json) | PF-02, PF-03, PF-06 y PF-07 |
+| Almacenamiento en DynamoDB | PF-04, PF-05 y PNF-05 |
+| Cada regla de control | E1–E3 en PF-06; E4 en PNF-06 |
+| Cada valor declarado en los RNF | PNF-01 a PNF-06; RNF11 por cálculo (5.6); RNF12 con PA-03 (4.5) |
+
+**Entorno.** ESP32 DOIT DevKit V1 con el circuito de 2.3; firmware del commit evaluado; recursos de AWS `us-east-1` desplegados antes de la sesión según 3.2; simulador de Alexa en **Test → Development**; PC con PlatformIO y Git Bash; celular que grabe a ≥ 30 fps sobre un trípode; regla; vehículo de maqueta; cronómetro. El ESP32 se conecta a un punto de acceso propio (por ejemplo, el de un celular) y el PC a otra red, para que en PNF-06 se corte solo la red del objeto.
+
+**Roles.** Tres integrantes: *maqueta* (plazas, objeto frente al HC-SR04, punto de acceso), *consola* (monitor serie, simulador de Alexa, cliente MQTT) y *registro* (cámara, cronómetro, hojas de registro y consolas de DynamoDB y CloudWatch).
+
+**Evidencia en texto.** Se prioriza la evidencia que se lee sin abrir videos. Todo se guarda en `docs/evidencias/pruebas/`, con una carpeta por prueba (`<ID>/`) que se crea durante la sesión.
+
+| Tipo | Cómo se obtiene | Archivo |
+|---|---|---|
+| Log completo del monitor serie | `pio device monitor -f time \| tee docs/evidencias/pruebas/serial-sesion.txt` en Git Bash, desde el bloque 0 hasta el final | `serial-sesion.txt` |
+| Exportación CSV de DynamoDB | Consola → `SmartParkHistory` → *Query* (`thingName` y rango de `eventKey`) → *Download results to CSV* | `<ID>/*.csv` |
+| Exportación de CloudWatch Logs | Logs Insights sobre `/aws/lambda/SmartParkHistoryProcessor` con `fields @timestamp, @message \| sort @timestamp asc` → *Export results* → CSV | `<ID>/cloudwatch.csv` |
+| Capturas PNG | Simulador de Alexa (respuesta y **JSON Input**), cliente MQTT de prueba y consola de AWS | `<ID>/*.png` |
+| Video ≥ 30 fps | Solo PNF-03 y PNF-04, donde el tiempo se mide por cuadros; si supera 100 MB, se guarda su enlace en `<ID>/video.md` | `<ID>/*.mp4` |
+
+**Marcas de tiempo en el log.** El comando `STATUS` se envía en cada instante que debe quedar registrado (inicio y fin de la ventana de PNF-05, corte y restauración de la red en PNF-06). Su respuesta queda en el log con la hora del PC e incluye los contadores `reconexiones=` y `Historico: MQTT local=`.
 
 **Orígenes de tiempo.**
 
 | Código | Fuente | Resolución |
 |---|---|---|
-| S | Monitor serie con marca del PC: `pio device monitor -f time` (PC sincronizado por NTP) | 1 ms (llegada al PC) |
+| S | Log serie con la hora del PC (`-f time`, PC sincronizado por NTP) | 1 ms (llegada al PC) |
 | V | Video ≥ 30 fps contado por cuadros | 33 ms a 30 fps |
 | R | `receivedAt` del ítem (`timestamp()` de la regla) | 1 ms |
 | O | `occurredAt` del ítem (reloj NTP del ESP32) | 1 ms |
-| C | Hora de `REPORT`/`END` en CloudWatch Logs (UTC) | 1 ms |
+| C | `@timestamp` del registro `REPORT` en CloudWatch Logs (UTC) | 1 ms |
 
-**Criterios de aceptación.** Una prueba funcional se aprueba si el valor observado coincide con el esperado en todas sus repeticiones. Una no funcional, si el indicador cumple el valor de 1.4.
+**Criterios de aceptación.** Una prueba funcional se aprueba si el valor observado coincide con el esperado en todas sus repeticiones. Una no funcional, si el indicador cumple el criterio de 4.3, que traduce el valor de 1.4.
 
-**Hojas de registro** (imprimir antes de medir): [`hoja-pruebas-funcionales.md`](evidencias/hojas-registro/hoja-pruebas-funcionales.md) y [`hoja-pruebas-no-funcionales.md`](evidencias/hojas-registro/hoja-pruebas-no-funcionales.md). La evidencia de cada prueba se guarda en `docs/evidencias/pruebas/<ID>/`.
+**Hojas de registro** (se imprimen antes de medir): [`hoja-pruebas-funcionales.md`](evidencias/hojas-registro/hoja-pruebas-funcionales.md) y [`hoja-pruebas-no-funcionales.md`](evidencias/hojas-registro/hoja-pruebas-no-funcionales.md).
 
-**Orden de ejecución (sesión de ≈ 2 h, reutilizando montajes).**
+**Orden de ejecución (≈ 75 min).** Cada bloque reutiliza el montaje del anterior. PF-03 se reparte en tres partes porque la ventana de un PIN impide generar otro para el mismo usuario durante 300 s, aunque ya se haya consumido (`test_consumed_window_still_blocks_regeneration`).
 
-| Bloque | Pruebas | Montaje y grabación compartidos | Tiempo |
+| Bloque | Minutos | Pruebas | Montaje compartido |
 |---|---|---|---|
-| 0 | Preparación | Despliegue según 3.2; habilitar la regla; PC con `pio device monitor -f time`; cliente MQTT suscrito a `$aws/things/smartpark-grupo9-01/shadow/update/accepted` y a `smartpark/+/history/v1`; consola de DynamoDB y CloudWatch abiertas | 15 min |
-| 1 | PNF-01 (se mide durante los bloques 2–4), PF-01, PNF-02, PNF-03, PF-11, PNF-05 | Cámara fija sobre las plazas y los LEDs | 30 min |
-| 2 | PF-04, PF-05, PF-03, PF-15, PF-02, PF-12, PF-13, PF-16, PNF-04 | Cámara fija con la pantalla del simulador y el servo en el mismo cuadro | 30 min |
-| 3 | PNF-07 (ventana de 10 min) + PF-06, PF-07, PF-10, PNF-06, PNF-08 | Consola de DynamoDB y CloudWatch | 15 min |
-| 4 | PF-08, PF-09 | Cliente MQTT de prueba | 5 min |
-| 5 | PNF-09, PF-14, PNF-10 | Router con el monitor serie visible | 15 min |
-| 6 | PF-17 y exportación de muestra de DynamoDB | Consola de DynamoDB | 10 min |
+| 0. Preparación | 0–8 | Inicio del log serie y `STATUS` (inicio de PNF-01); cliente MQTT suscrito a `$aws/things/smartpark-grupo9-01/shadow/update/accepted` y a `smartpark/+/history/v1`; consolas de DynamoDB, CloudWatch Logs Insights y simulador abiertas | PC y cliente MQTT |
+| 1. Vinculación y voz | 8–23 | PF-03 parte A; PF-02 con el video de PNF-03; `OPEN` y `CLOSE` para PF-04 | Cámara con el simulador y el servo en el mismo cuadro |
+| 2. Sensores e histórico | 23–38 | Ventana de PNF-05 (10 min) con PF-01 y PNF-02; al cerrar la ventana, PF-05 | Maqueta de plazas, regla y cliente MQTT |
+| 3. Lógica Edge y skill | 38–53 | PF-06 con el video de PNF-04; PF-03 parte B; PF-07 | Cámara sobre plazas, LEDs, LCD y servo |
+| 4. Sin conexión | 53–65 | PNF-06 (dos cortes de 45 s) | Punto de acceso del ESP32 y log serie |
+| 5. Cierre | 65–75 | Reposo de ≥ 3 min (respaldos del Shadow para PNF-05); PF-04 (verificación y exportaciones); PF-08; PF-03 parte C; `STATUS` final (fin de PNF-01) | Consolas de DynamoDB y CloudWatch |
+
+**Análisis posterior (PNF-05).** [`tools/analizar_pruebas.py`](../tools/analizar_pruebas.py) (Python 3.9+, solo biblioteca estándar) calcula los indicadores de PNF-05 a partir de las exportaciones y genera la tabla de 5.2:
+
+```sh
+python tools/analizar_pruebas.py docs/evidencias/pruebas/PF-04/historial-sesion.csv \
+  --serial docs/evidencias/pruebas/serial-sesion.txt \
+  --cloudwatch docs/evidencias/pruebas/PF-04/cloudwatch.csv \
+  --inicio AAAA-MM-DDThh:mm:ss-04:00 --fin AAAA-MM-DDThh:mm:ss-04:00 \
+  > docs/evidencias/pruebas/PNF-05/analisis.md
+```
+
+- `--inicio` y `--fin` son las horas de los dos `STATUS` que delimitan la ventana, con la zona del PC.
+- **Integridad:** N es la diferencia del contador `Historico: MQTT local` entre esos dos `STATUS` (o `--n` si se cuenta a mano); M, los ítems con `receivedAt` dentro de la ventana más 5 s.
+- **Latencia:** Δ0 = `receivedAt` − `occurredAt` de cada ítem de la ventana; Δ1 = `REPORT` − `receivedAt`, emparejando cada ítem con el primer `REPORT` libre posterior (los eventos llegan separados ≥ 10 s). Mínimo, promedio, máximo y P95 (P95 solo con n ≥ 20).
+- **Frecuencia:** intervalo entre ítems `sample` de toda la sesión y entre líneas consecutivas `AWS UPDATE clase=0` (respaldo periódico del Shadow) del log serie.
+- Con datos ficticios: `python tools/analizar_pruebas.py tools/ejemplo-historial.csv --inicio 2026-11-24T10:00:00-04:00 --fin 2026-11-24T10:10:00-04:00 --n 43` ([`ejemplo-historial.csv`](../tools/ejemplo-historial.csv) no contiene resultados de la sesión).
 
 ### 4.2 Pruebas funcionales
 
-"Resultado obtenido", "Evidencia" y "Estado" se completan con la hoja de registro.
+Las rutas de "Evidencia esperada" son relativas a `docs/evidencias/pruebas/`. "Resultado obtenido" y "Estado" se completan con la hoja de registro.
 
-| ID | RF | Procedimiento | Resultado esperado | Resultado obtenido | Evidencia | Estado |
+| ID | RF | Procedimiento | Resultado esperado | Evidencia esperada | Resultado obtenido | Estado |
 |---|---|---|---|---|---|---|
-| PF-01 | RF1, RF2 | Enviar `DISTANCE` y `SLOT1`; cubrir un IR; observar el cliente MQTT. | Distancia y plaza correctas en serie; `update/accepted` con `slots`, `ocupados`, `disponibles`, `distancia_cm`. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-02 | RF3, RF5 | En `manual`: *"abre la barrera"*, luego *"cierra la barrera"*. | `desired.barrera` cambia; el servo se mueve una vez; `reported.barrera` igual al pedido; `ultima_orden.resultado = aceptada`; sin `delta` pendiente. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-03 | RF4, RF6 | *"consulta la distancia"*, *"hay un auto esperando"*, *"consulta el estado de la barrera"*; repetir con el ESP32 apagado > 180 s. | Respuestas iguales a `reported`; con dato viejo: *"…está desactualizado…"*. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-04 | RF7, RF8 | Abrir la skill sin vinculación; generar PIN con `SmartParkPairingAdmin`; *"vincula mi parqueo con el codigo …"*; cerrar y reabrir. | Sin vinculación: instrucción de vincular. Con PIN: fila `userId → smartpark-grupo9-01` en `SmartParkBindings` y bienvenida de usuario vinculado. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-05 | RF9 | Generar PIN para un Thing inexistente; *"cambia mi vinculacion con el código …"*; *"desvincula mi parqueo"*. | PIN rechazado (*"El Thing solicitado no existe."*); cambio con revisión nueva; fila eliminada. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-06 | RF10 | Cubrir y liberar una plaza; ver CloudWatch del procesador. | Una invocación (`START`/`END`/`REPORT`) por mensaje publicado. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-07 | RF11 | Consulta en DynamoDB: `thingName = smartpark-grupo9-01` y `eventKey` entre los últimos 15 min; exportar a CSV. | Ítems `sample` y `occupancy_changed` con `thingName`, `schemaVersion`, `receivedAt`, `data` coherente. CSV en `docs/evidencias/pruebas/PF-07/`. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-08 | RF11 | Desde el cliente MQTT, publicar en `smartpark/smartpark-grupo9-01/history/v1` 4 inválidos: `distancia_cm: 999`, `capacidad: 5`, `eventType: "door_opened"`, `origin: "voz"` en `sample`. | 4 líneas `history_invalid field=…` en CloudWatch; 0 ítems nuevos. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-09 | RF11 | Publicar dos veces el mismo evento válido (mismo `eventId` y `occurredAt`). | Un solo ítem. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-10 | RF12 | Abrir por voz, cerrar por voz, abrir con `OPEN` y cerrar con `CLOSE`. | 4 ítems `barrier_changed` con `anterior`/`actual` correctos; `origin = legado` para voz (formato V1, 5.5) y `edge` para Serial. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-11 | RF13 (E1) | Cubrir y liberar cada plaza. | LED rojo al ocupar, verde al liberar; LCD y `reported` actualizados; ítem `occupancy_changed` por transición. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-12 | RF13 (E2) | *"activa el modo automático"*; ocupar las 4 plazas; *"abre la barrera"* y luego `OPEN` por Serial. | Barrera inmóvil; `ultima_orden.resultado = bloqueada`; LCD `APERTURA BLOQUEADA`; `bloqueo_apertura: true`; Serial *"Apertura bloqueada: sin plazas confirmadas"*; sin ítem `barrier_changed`. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-13 | RF13 (E2, E3) | Con el parqueo lleno en `automatico`: *"cierra la barrera"*; liberar una plaza y *"abre la barrera"*; pasar a `manual` con el parqueo lleno y *"abre la barrera"*. | Cierre aceptado; apertura aceptada al liberar una plaza; en `manual` apertura aceptada aunque esté lleno. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-14 | RF13 (E4) | Desconectar la red; *"abre la barrera"*; restablecer después de 60 s. | La barrera no se mueve al reconectar (orden con más de 30 s). | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-15 | RF14 | Probar en el simulador cada frase de la hoja (24 frases de 8 intents + 4 valores límite: 49, 1000, 1001 y plaza 5), revisando **JSON Input**, la respuesta y el Shadow. | Intent y slot correctos; consultas iguales a `reported`; cambios en `desired` y luego en `reported`; valores fuera de rango rechazados sin escribir el Shadow. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-16 | RF14, convivencia | En `automatico` con 4 plazas ocupadas: *"abre la barrera"*, *"consulta el estado de la barrera"*, *"en qué modo está el parqueo"*, *"activa el modo manual"*, *"abre la barrera"*. | Primer pedido bloqueado y barrera `cerrada`; modo `automático`; tras pasar a manual, apertura aceptada. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PF-17 | RF15 | Ejecutar en la consola de DynamoDB las consultas de M1–M4 (2.12) sobre los datos de la sesión. | Cada consulta devuelve los ítems y atributos necesarios para su mockup. | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
+| PF-01 | RF1, RF2 | Enviar `DISTANCE` y `SLOT1`; cubrir el IR de la plaza 1 y liberarlo; observar el cliente MQTT. | Serial: `Distancia: X cm` y `Slot 1: … estado=…`; `update/accepted` con `slots`, `ocupados`, `disponibles` y `distancia_cm` iguales a lo observado. | `serial-sesion.txt`; `PF-01/update-accepted.png` | Pendiente de ejecución | Pendiente de ejecución |
+| PF-02 | RF3, RF4, RF5, RF6 | En `manual` (si no lo está, *"activa el modo manual"*): *"abre la barrera"* y *"cierra la barrera"* tres veces cada una (video de PNF-03); *"consulta la distancia"*, *"hay un auto esperando"* y *"consulta el estado de la barrera"*. | Un movimiento del servo por orden; `reported.barrera` igual al pedido; `ultima_orden.resultado = aceptada`; sin `delta` pendiente; las consultas repiten `distancia_cm`, `vehiculo_detectado` y `barrera` de `reported`. | `PF-02/simulador-*.png` (respuesta y JSON Input); `PF-02/update-accepted.png`; `serial-sesion.txt` | Pendiente de ejecución | Pendiente de ejecución |
+| PF-03 | RF7, RF8, RF9 | **A** (bloque 1): abrir la skill sin vinculación; generar el PIN con `SmartParkPairingAdmin`; *"vincula mi parqueo con el codigo …"*; cerrar y reabrir la skill. **B** (bloque 3, ≥ 300 s después del primer PIN): generar otro PIN; *"cambia mi vinculacion con el código …"*. **C** (bloque 5): *"desvincula mi parqueo"*; *"consulta la distancia"*. | A: sin vinculación, la skill pide vincular; con el PIN, ítem `userId → smartpark-grupo9-01` en `SmartParkBindings` y bienvenida al reabrir. B: *"Ese parqueo ya está vinculado a tu usuario. El código fue consumido."* y `revision` nueva. C: *"Desvinculé tu parqueo."*, ítem eliminado y la consulta pide vincular. | `PF-03/simulador-*.png`; `PF-03/bindings-*.png` (ítem en cada parte) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-04 | RF10, RF11, RF12 | Usa los eventos de los bloques 1–3 (aperturas y cierres por voz de PF-02, `OPEN`/`CLOSE`, transiciones de PNF-02). En el bloque 5: contar en CloudWatch los `START` de `SmartParkHistoryProcessor` dentro de la ventana de PNF-05; consultar `SmartParkHistory` por `thingName` y el rango de la sesión; exportar el CSV y los logs. | Una invocación por mensaje publicado (`START` = N de PNF-05); ítems con `thingName`, `eventKey`, `schemaVersion = v1`, `occurredAt`, `receivedAt` y `data` coherente; `barrier_changed` con `anterior`/`actual` correctos, `origin = legado` para la voz (formato V1, 5.5) y `edge` para `OPEN`/`CLOSE`. | `PF-04/historial-sesion.csv`; `PF-04/cloudwatch.csv` | Pendiente de ejecución | Pendiente de ejecución |
+| PF-05 | RF11 | Copiar del cliente MQTT un mensaje `sample` real de la sesión y publicarlo en `smartpark/smartpark-grupo9-01/history/v1` cuatro veces, cada una con un campo inválido: `distancia_cm: 999`, `capacidad: 5`, `eventType: "door_opened"` y `origin: "voz"`. Publicar dos veces el mensaje real sin cambios (duplicado). | 4 líneas `history_invalid field=…` y ningún ítem nuevo por los inválidos; el duplicado no crea un segundo ítem (escritura condicional). | `PF-05/mensajes.txt` (cuerpos publicados); `PF-04/cloudwatch.csv`; `PF-04/historial-sesion.csv` | Pendiente de ejecución | Pendiente de ejecución |
+| PF-06 | RF13 (E1–E3), RF14, convivencia con la voz | Con la barrera cerrada y las 4 plazas libres: *"activa el modo automático"*; ocupar las plazas 1 a 4; *"abre la barrera"* y `OPEN`; *"cierra la barrera"*; liberar la plaza 4 y *"abre la barrera"*; `CLOSE`; volver a ocupar la plaza 4; *"activa el modo manual"* y *"abre la barrera"*. Video para PNF-04. | E1: LED, LCD y `reported.slots` siguen a cada plaza. E2: con 4 ocupadas en `automatico`, barrera inmóvil, `ultima_orden.resultado = bloqueada`, `bloqueo_apertura: true`, LCD `APERTURA BLOQUEADA` y Serial *"Apertura bloqueada: sin plazas confirmadas"*. E3: cierre `aceptada`. Con una plaza libre, apertura `aceptada`. En `manual`, apertura `aceptada` con el parqueo lleno. | `serial-sesion.txt`; `PF-06/update-accepted-*.png`; `PF-06/simulador-*.png` | Pendiente de ejecución | Pendiente de ejecución |
+| PF-07 | RF14, RF3 | Con el estado final de PF-06 (`manual`, 4 plazas ocupadas): *"cuántos espacios hay disponibles"*, *"cuántas plazas están ocupadas"*, *"está libre la plaza 2"*, *"está libre la plaza 5"*, *"en qué modo está el parqueo"*, *"consulta el antirrebote"*, *"ajusta el antirrebote a 200 milisegundos"*, *"ajusta el antirrebote a 1001 milisegundos"*, *"ajusta el antirrebote a 120 milisegundos"*, *"ayuda"* y *"cancela"*; reabrir la skill y *"detente"*. Revisar el intent y el slot en **JSON Input**. | Consultas iguales a `reported` (0 disponibles, 4 ocupadas, plaza 2 ocupada, modo manual, 120 ms). 200 y 120 pasan por `desired` y luego por `reported.parametros_auto.antirrebote_ir_ms`. Plaza 5: *"Dime un número de estacionamiento del uno al cuatro."*; 1001: *"Dime un valor entero entre 50 y 1000 milisegundos."*; ninguno de los dos escribe el Shadow. Ayuda mantiene la sesión; cancelar y detener responden *"Hasta luego."*. | `PF-07/simulador-*.png`; `PF-07/update-accepted.png` | Pendiente de ejecución | Pendiente de ejecución |
+| PF-08 | RF15 | Ejecutar en la consola de DynamoDB las consultas de M1–M4 (2.12) sobre el rango de la sesión. | Cada consulta devuelve los ítems y atributos que necesita su mockup. | `PF-08/M1.csv` a `PF-08/M4.csv` | Pendiente de ejecución | Pendiente de ejecución |
 
-**Multiusuario (RF7–RF9).** PF-04 se repite con una segunda cuenta de desarrollador vinculada a otro Thing si está disponible; la separación por usuario también la cubren `test_v2_writes_precise_patches_and_uses_each_users_binding` y las pruebas de aislamiento (4.5).
+**Intents cubiertos.** PF-02: `AbrirBarreraIntent`, `CerrarBarreraIntent`, `ConsultarDistanciaIntent`, `ConsultarVehiculoIntent`, `EstadoBarreraIntent`. PF-03: `VincularParqueoIntent`, `CambiarVinculacionIntent`, `DesvincularParqueoIntent`. PF-06: `ActivarModoAutomaticoIntent`, `ActivarModoManualIntent`. PF-07: `ConsultarDisponiblesIntent`, `ConsultarOcupadosIntent`, `ConsultarEstacionamientoIntent`, `ConsultarModoIntent`, `ConsultarAntirreboteIntent`, `CambiarAntirreboteIntent`, `AMAZON.HelpIntent`, `AMAZON.CancelIntent` y `AMAZON.StopIntent`. `AMAZON.NavigateHomeIntent` está declarado en el modelo sin frases propias y no se prueba por voz.
+
+**Respaldo automático de PF-03 (PA-03, 4.5).** Thing inexistente: `test_admin.AdminTests.test_existing_thing_required` y `test_backend.BackendTests.test_thing_not_found`. Datos de más de 180 s (RF4): `test_backend.BackendTests.test_stale_per_field_even_when_document_is_new` y `test_session.SessionTests.test_stale_or_invalid_data_closes_without_reprompt`. Separación entre usuarios: `test_backend.BackendTests.test_v2_writes_precise_patches_and_uses_each_users_binding` y las pruebas de aislamiento.
 
 ### 4.3 Pruebas no funcionales
 
-| ID | RNF | Procedimiento | Rep. | Indicador | Criterio (1.4) | Resultado obtenido | Evidencia | Estado |
+Las rutas de "Evidencia esperada" son relativas a `docs/evidencias/pruebas/`.
+
+| ID | RNF | Procedimiento | Rep. | Indicador | Criterio (1.4) | Evidencia esperada | Resultado obtenido | Estado |
 |---|---|---|---|---|---|---|---|---|
-| PNF-01 | RNF1 | Conectado durante los bloques 1–4 (≥ 15 min) con uso normal; registrar `STATUS` al inicio y al fin. | 1 | reinicios, bloqueos, reconexiones | 0 / 0 / 0 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-02 | RNF2 | Objeto plano a 5, 10, 15, 20, 30 y 50 cm; 5 lecturas `DISTANCE` por distancia. | 30 | e = max\|dᵢ − d_real\| | ≤ 1 cm | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-03 | RNF3 | 10 entradas y 10 salidas por plaza con un vehículo de maqueta. | 80 | aciertos / 80 × 100 | ≥ 95 % | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-04 | RNF4 | Video con simulador y servo en cuadro; 5 *"abre"* y 5 *"cierra"*; desde el último cuadro de la frase hasta el cuadro en que la barrera se detiene. | 10 | t = Δcuadros / fps; máximo y promedio | máx ≤ 3,0 s | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-05 | RNF9 | Video del IR y su LED: desde el cuadro en que el vehículo cubre el IR hasta el cambio del LED (7 rep.); desde que la 4.ª plaza queda cubierta hasta `APERTURA BLOQUEADA` en la LCD (3 rep.). | 10 | t = Δcuadros / fps | máx ≤ 0,3 s | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-06 | RNF8 | Para ≥ 20 eventos: `occurredAt` (O) y `receivedAt` (R) del ítem; hora de `REPORT` (C) de la invocación correspondiente (los eventos están separados ≥ 10 s, así que se emparejan por orden). Δ1 = C − R mide regla → invocación asíncrona → validación → `PutItem`; Δ0 = R − O mide la cola del ESP32, la red y el desfase NTP. | ≥ 20 | mín, promedio, máx y P95 de Δ1 y Δ0 | Δ1 máx ≤ 5 s; Δ0 máx ≤ 15 s | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-07 | RNF7 | Ventana de 10 min con uso normal: N = diferencia de `Historico: MQTT local` (serie, cada 30 s) entre inicio y fin; M = ítems con `receivedAt` en la ventana (+5 s). Además, los 4 inválidos de PF-08. | 1 ventana | M / N × 100; inválidos descartados / 4 | ≥ 99 %; 4/4 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-08 | RNF5 | 5 min en reposo con el cliente MQTT suscrito a `update/accepted`; 15 min de ítems `sample`. | 1 | intervalo medio entre `update/accepted`; muestras cada ≈ 300 s | 30 s ± 1 s; 3 muestras en 15 min | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-09 | RNF6 | Apagar el punto de acceso 30 s (cronometrado con S); durante el corte, *"activa el modo manual"* (o automático); encender. Medir hasta `AWS MQTT/TLS conectado` y hasta el `update/accepted` con el nuevo `modo`. | 3 | t_rec = conectado − encendido; t_sinc = reported − encendido | t_rec ≤ 60 s; t_sinc ≤ 70 s | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-10 | RNF10 | Corte de 2 min: ocupar/liberar plazas, probar E2 con `OPEN` y `CLOSE`; contar transiciones; tras reconectar, contar ítems y tiempo de drenado. | 1 | reglas operativas; ítems / transiciones | E1–E3 operan; ítems = transiciones si ≤ 16 de plazas y ≤ 8 de barrera | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución |
-| — | RNF9 (Nube) | No aplica: no hay reglas de control en la Nube (2.6). | — | — | — | No aplica | — | No aplica |
+| PNF-01 | RNF1 | Log serie de toda la sesión (≈ 75 min, ≥ 15 min conectado); `STATUS` en el bloque 0 y al final del bloque 5. | 1 | Reinicios (banner `=== SmartPark V2`), reconexiones no provocadas (`reconexiones=` y `AWS: conexion perdida` fuera de PNF-06), bloqueos (`STATUS` sin respuesta) | 0 / 0 / 0 | `serial-sesion.txt` | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-02 | RNF2, RNF3 | HC-SR04: objeto plano a 10, 20 y 30 cm medidos con regla; 5 lecturas `DISTANCE` por distancia. IR: 5 entradas y 5 salidas por plaza con el vehículo de maqueta, una transición cada 15 s dentro de la ventana de PNF-05; anotar si el LED y el estado coinciden con la realidad. | 15 + 40 | e = max\|dᵢ − d_real\|; aciertos IR / 40 | e ≤ 1 cm; ≥ 38/40 (95 %) | `serial-sesion.txt` (líneas `Distancia:`); `PF-04/historial-sesion.csv` (ítems `occupancy_changed`) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-03 | RNF4 | Video durante PF-02 con el simulador y el servo en el mismo cuadro; 3 *"abre"* y 3 *"cierra"*; desde el cuadro en que la frase aparece enviada en el simulador hasta el cuadro en que la barrera se detiene. | 6 | t = Δcuadros / fps; máximo y promedio | máx ≤ 3,0 s | `PNF-03/voz-servo.mp4`; `PNF-03/cuadros.md` (cuadros anotados) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-04 | RNF9 (Edge) | Video durante PF-06: desde el cuadro en que el vehículo cubre el IR hasta el cambio del LED (4 ocupaciones y la nueva ocupación de la plaza 4). | 5 | t = Δcuadros / fps | máx ≤ 0,3 s | `PNF-04/ir-led.mp4`; `PNF-04/cuadros.md` | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-05 | RNF5, RNF7, RNF8 | Ventana de 10 min (bloque 2) entre dos `STATUS`, con las 40 transiciones IR de PNF-02 (≥ 20 eventos). El reposo del bloque 5 aporta los respaldos del Shadow. Cálculo después de la sesión con `analizar_pruebas.py` (4.1). | 1 ventana | M / N; Δ1 y Δ0 (mín, promedio, máx, P95); mediana del intervalo entre `sample` y entre `AWS UPDATE clase=0` | ≥ 99 %; Δ1 máx ≤ 5 s; Δ0 máx ≤ 15 s; 300 ± 10 s; 30 ± 1 s | `PNF-05/analisis.md` (salida del script) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-06 | RNF6, RNF10, RF13 (E4) | Antes del primer corte: barrera cerrada, modo `automatico`, plazas libres. En cada corte: `STATUS` y apagar el punto de acceso del ESP32; en los primeros 10 s, *"activa el modo manual"* (segundo corte: *"activa el modo automático"*) y *"abre la barrera"*. Primer corte: ocupar las 4 plazas, `OPEN` y `CLOSE`, liberar las 4. Segundo corte: ocupar y liberar las plazas 1 y 2. A los 45 s, `STATUS` y encender. | 2 | t_rec = `AWS MQTT/TLS conectado` − `STATUS` de restauración; t_sinc = primer `AWS UPDATE` posterior con el nuevo `modo` (confirmado en `update/accepted`) − restauración; movimiento de la barrera; ítems / transiciones | t_rec ≤ 60 s; t_sinc ≤ 70 s; barrera inmóvil (orden de más de 30 s, E4); E1 y E2 operan sin red; ítems = transiciones (8 y 4) | `serial-sesion.txt`; `PNF-06/update-accepted-*.png`; `PF-04/historial-sesion.csv` | Pendiente de ejecución | Pendiente de ejecución |
+| — | RNF9 (Nube) | No aplica: no hay reglas de control en la Nube (2.6). | — | — | — | — | No aplica | No aplica |
 | — | RNF11 | Cálculo (5.6). | — | — | — | — | — | — |
+| — | RNF12 | PA-03 (4.5) y revisión de `.gitignore` y de las plantillas. | — | — | — | — | — | — |
 
 **Fórmulas.** Promedio x̄ = Σxᵢ/n; P95 = valor en la posición ⌈0,95·n⌉ de la muestra ordenada (solo con n ≥ 20); integridad = M/N·100.
 
-**Operación sin conexión según el código.** Siguen activos E1–E4, LEDs, LCD, comandos Serial y el modo guardado en NVS. Los eventos del histórico se siguen capturando si el reloj ya se sincronizó antes del corte, en colas de 8 (barrera), 16 (plazas) y 1 (muestra); con la cola llena se descarta el evento nuevo (`cola_llena`). Al volver MQTT y sincronizar el Shadow se drenan a razón de uno cada 10 s (25 eventos como máximo ≈ 250 s). El Shadow no encola estados intermedios: al reconectar publica el estado actual. Un reinicio pierde las colas ([`historial-aws-practica-4.md`](historial-aws-practica-4.md#publicador-integrado-en-el-firmware)).
+**Operación sin conexión según el código.** Siguen activos E1–E4, LEDs, LCD, comandos Serial y el modo guardado en NVS. Los eventos del histórico se siguen capturando si el reloj ya se sincronizó antes del corte, en colas de 8 (barrera), 16 (plazas) y 1 (muestra); con la cola llena se descarta el evento nuevo (`cola_llena`). Al volver MQTT y sincronizar el Shadow se drenan a razón de uno cada 10 s (25 eventos como máximo ≈ 250 s). El Shadow no encola estados intermedios: al reconectar publica el estado actual. Un reinicio pierde las colas ([`historial-aws-practica-4.md`](historial-aws-practica-4.md#publicador-integrado-en-el-firmware)). Las 8 transiciones del primer corte de PNF-06 caben en la cola de plazas.
 
 ### 4.4 Análisis de fallas y correcciones
 
@@ -1098,7 +1127,7 @@ Ejecutadas el 2026-11-21: PA-03 sobre el commit `876be` de la rama `docs/report-
 | ID | Suite | Comando | Pruebas | Resultado | Evidencia |
 |---|---|---|---|---|---|
 | PA-01 | Compilación del firmware | `pio run` | — | **SUCCESS** en 30,4 s (`espressif32@7.1.0`, `toolchain-xtensa-esp32` 8.4.0): compila las 7 unidades de `src/`, enlaza `firmware.elf` y genera `firmware.bin`. **RAM 49 960 / 327 680 B (15,2 %)**; **Flash 964 425 / 1 310 720 B (73,6 %)**. | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) |
-| PA-02 | Firmware con dobles (host) + contrato del histórico | `SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh` | 5 suites + contrato | **5/5 PASS + contrato PASS**: IR, rebotes, conteos, LEDs y LCD con fallo I²C; sensor, histéresis, servo, parser y `loop`; AWS con dobles (GET, comandos, `reported`, versiones, cuota/NVS, *backoff*, demo); modos, lleno y deduplicación V1/V2 tras reconexión o reinicio; publicación del histórico (reloj, prioridad, reintentos, desborde). Tamaños medidos: Shadow reporte/GET/delta/accepted 476/2458/672/1887 B, GET MQTT 2518 B; histórico máx. 347 B (MQTT 394 B). Contrato firmware → Lambda ([`check_history_contract.py`](../test/check_history_contract.py)): **12 cargas MQTT generadas por el firmware aceptadas por `SmartParkHistoryProcessor`**, y el reintento conserva la misma clave (`eventKey`). | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) |
+| PA-02 | Firmware con dobles (host) + contrato del histórico | `SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh` | 6 suites (5 + contrato) | **6/6 PASS**: IR, rebotes, conteos, LEDs y LCD con fallo I²C; sensor, histéresis, servo, parser y `loop`; AWS con dobles (GET, comandos, `reported`, versiones, cuota/NVS, *backoff*, demo); modos, lleno y deduplicación V1/V2 tras reconexión o reinicio; publicación del histórico (reloj, prioridad, reintentos, desborde). Tamaños medidos: Shadow reporte/GET/delta/accepted 476/2458/672/1887 B, GET MQTT 2518 B; histórico máx. 347 B (MQTT 394 B). Contrato firmware → Lambda ([`check_history_contract.py`](../test/check_history_contract.py)): **12 cargas MQTT generadas por el firmware aceptadas por `SmartParkHistoryProcessor`**, y el reintento conserva la misma clave (`eventKey`). | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) |
 | PA-03 | Lambdas | `AWS_EC2_METADATA_DISABLED=true python -m unittest discover -s tests` (en `lambda/`) | 102 | **102 OK** (con `PYTHONUTF8=1`; sin esa variable, Windows cp1252 provoca 1 error de lectura del modelo de Alexa) | [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) |
 
 Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_isolation`), backend de la skill incluido RF14 (`test_backend`, `test_v2_*`), sesión (`test_session`) e histórico (`test_history`: lectura y capacidad reducida, orígenes y transiciones de barrera, inválidos sin inicializar el SDK, duplicado y reintento, coherencia de plantillas). PA-02 cubre `Parking`, la LCD, la cuota, la reconexión con `desired` pendiente, la prioridad de control, la publicación del histórico y el contrato firmware → Lambda ([`test/README`](../test/README)). Los tamaños de PA-02 confirman que el GET del Shadow cabe en `MQTT_BUFFER_SIZE = 3072` y que cada mensaje se factura como uno solo en IoT Core (< 5 KB) y cada ítem del histórico como 1 WRU en DynamoDB (< 1 KB) (5.6).
@@ -1109,72 +1138,88 @@ Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_i
 
 ### 5.1 Resumen de cumplimiento
 
-**Pruebas automáticas (4.5):** PA-01 compila y enlaza el firmware (RAM 15,2 %, Flash 73,6 %); PA-02 pasa 5/5 suites con dobles y el contrato firmware → Lambda (12 cargas aceptadas); PA-03 pasa 102/102 pruebas de las Lambdas. Las pruebas en vivo de cada RF se ejecutan en la sesión de 4.1.
+**Pruebas automáticas (ejecutadas, 4.5).**
+
+| ID | Suite | Resultado | Detalle | Evidencia | Estado |
+|---|---|---|---|---|---|
+| PA-01 | Compilación del firmware (`pio run`) | SUCCESS | RAM 49 960 / 327 680 B (15,2 %); Flash 964 425 / 1 310 720 B (73,6 %) | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) | ✅ |
+| PA-02 | Firmware con dobles y contrato del histórico (`sh test/run_host_tests.sh`) | 6/6 suites PASS | 5 suites del firmware + contrato firmware → Lambda (12 cargas aceptadas) | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) | ✅ |
+| PA-03 | Lambdas (`python -m unittest discover -s tests`) | 102/102 OK | Vinculación y PIN, skill (incluido RF14), sesión e histórico | [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) | ✅ |
+
+**Requerimientos funcionales.**
 
 | RF | Prueba en vivo | Prueba automática | Resultado | Estado |
 |---|---|---|---|---|
-| RF1 | PF-01, PF-11 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
-| RF2 | PF-01 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
-| RF3 | PF-02, PF-15 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
-| RF4 | PF-03 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF5 | PF-02 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF6 | PF-03 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF7 | PF-04 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF8 | PF-04 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF9 | PF-05 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF10 | PF-06 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF11 | PF-07, PF-08, PF-09 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF12 | PF-10 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF13 | PF-11 a PF-14 | PA-02 (PASS) | Pendiente de ejecución | Pendiente de ejecución |
-| RF14 | PF-15, PF-16 | PA-03 (OK) | Pendiente de ejecución | Pendiente de ejecución |
-| RF15 | PF-17 | — | Pendiente de ejecución | Pendiente de ejecución |
+| RF1 | PF-01, PNF-02 | PA-02 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF2 | PF-01 | PA-02 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF3 | PF-02, PF-07 | PA-02 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF4 | PF-02 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF5 | PF-02 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF6 | PF-02 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF7 | PF-03 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF8 | PF-03 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF9 | PF-03 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF10 | PF-04 | PA-02 ✅, PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF11 | PF-04, PF-05 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF12 | PF-04 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF13 | PF-06 (E1–E3), PNF-06 (E4) | PA-02 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF14 | PF-06, PF-07 | PA-03 ✅ | Pendiente de ejecución | Pendiente de ejecución |
+| RF15 | PF-08 | — | Pendiente de ejecución | Pendiente de ejecución |
 
-| RNF | Valor declarado | Valor medido | Estado |
-|---|---|---|---|
-| RNF1 Estabilidad | 15 min, 0 reinicios / 0 bloqueos / 0 reconexiones | Pendiente de ejecución | Pendiente de ejecución |
-| RNF2 Exactitud HC-SR04 | ≤ 1 cm (5–50 cm) | Pendiente de ejecución | Pendiente de ejecución |
-| RNF3 Exactitud IR | ≥ 95 % | Pendiente de ejecución | Pendiente de ejecución |
-| RNF4 Respuesta por voz | ≤ 3,0 s | Pendiente de ejecución | Pendiente de ejecución |
-| RNF5 Frecuencia de reporte | 30 s; muestras cada 300 s | Pendiente de ejecución | Pendiente de ejecución |
-| RNF6 Reconexión | ≤ 60 s / ≤ 70 s (corte de 30 s) | Pendiente de ejecución | Pendiente de ejecución |
-| RNF7 Integridad | ≥ 99 %; 4/4 inválidos | Pendiente de ejecución | Pendiente de ejecución |
-| RNF8 Latencia de almacenamiento | Δ1 ≤ 5 s; Δ0 ≤ 15 s | Pendiente de ejecución | Pendiente de ejecución |
-| RNF9 Lógica automática Edge | ≤ 0,3 s | Pendiente de ejecución | Pendiente de ejecución |
-| RNF9 Lógica automática Nube | No aplica | No aplica | No aplica |
-| RNF10 Operación sin conexión | E1–E4 operan; histórico encolado | Pendiente de ejecución | Pendiente de ejecución |
-| RNF11 Costo | Dentro de la capa gratuita; < 0,30 USD/mes sin ella | Dentro de la capa gratuita en todos los conceptos excepto las escrituras bajo demanda de DynamoDB (≈ 0,01 USD/mes); sin capa gratuita ≈ 0,15 USD/mes (caso base) y ≈ 0,23 USD/mes (peor caso, Shadow por bloques de 1 KB), con tarifas verificadas de `us-east-1` (5.6) | Cumple por cálculo; se contrasta con la facturación de la sesión (8.4) |
-| RNF12 Seguridad | Sin secretos; mínimo privilegio | Plantillas sin secretos y permisos de 3.2; PA-03 OK | Pendiente de ejecución (revisión final del repositorio) |
+**Requerimientos no funcionales.**
+
+| RNF | Prueba | Valor declarado | Valor medido | Estado |
+|---|---|---|---|---|
+| RNF1 Estabilidad | PNF-01 | ≥ 15 min: 0 reinicios / 0 reconexiones no provocadas / 0 bloqueos | Pendiente de ejecución | Pendiente de ejecución |
+| RNF2 Exactitud HC-SR04 | PNF-02 | ≤ 1 cm (10, 20 y 30 cm) | Pendiente de ejecución | Pendiente de ejecución |
+| RNF3 Exactitud IR | PNF-02 | ≥ 95 % (≥ 38/40) | Pendiente de ejecución | Pendiente de ejecución |
+| RNF4 Respuesta por voz | PNF-03 | ≤ 3,0 s | Pendiente de ejecución | Pendiente de ejecución |
+| RNF5 Frecuencia de reporte | PNF-05 | Respaldo del Shadow cada 30 s; muestra cada 300 s | Pendiente de ejecución | Pendiente de ejecución |
+| RNF6 Reconexión | PNF-06 | ≤ 60 s / ≤ 70 s (corte de 45 s) | Pendiente de ejecución | Pendiente de ejecución |
+| RNF7 Integridad | PNF-05, PF-05 | ≥ 99 %; 4/4 inválidos descartados | Pendiente de ejecución | Pendiente de ejecución |
+| RNF8 Latencia de almacenamiento | PNF-05 | Δ1 ≤ 5 s; Δ0 ≤ 15 s | Pendiente de ejecución | Pendiente de ejecución |
+| RNF9 Lógica automática Edge | PNF-04 | ≤ 0,3 s | Pendiente de ejecución | Pendiente de ejecución |
+| RNF9 Lógica automática Nube | — | No aplica | No aplica | No aplica |
+| RNF10 Operación sin conexión | PNF-06 | E1–E4 operan; ítems = transiciones | Pendiente de ejecución | Pendiente de ejecución |
+| RNF11 Costo | 5.6 | Dentro de la capa gratuita; < 0,30 USD/mes sin ella | Dentro de la capa gratuita en todos los conceptos excepto las escrituras bajo demanda de DynamoDB (≈ 0,01 USD/mes); sin capa gratuita ≈ 0,15 USD/mes (caso base) y ≈ 0,23 USD/mes (peor caso, Shadow por bloques de 1 KB), con tarifas verificadas de `us-east-1` (5.6) | Cumple por cálculo; se contrasta con la facturación de la sesión (8.4) |
+| RNF12 Seguridad | PA-03 | Sin secretos; mínimo privilegio | Plantillas sin secretos y permisos de 3.2; PA-03 ✅ | Pendiente de ejecución (revisión final del repositorio) |
 
 ### 5.2 Resultados de las pruebas no funcionales
 
-Tablas para completar con las hojas de registro.
+**PNF-05: almacenamiento y frecuencia de reporte.** Misma tabla que imprime [`analizar_pruebas.py`](../tools/analizar_pruebas.py) (4.1); salida completa en `docs/evidencias/pruebas/PNF-05/analisis.md`.
 
-**Tiempos.**
-
-| Medición | n | Mínimo (s) | Promedio (s) | Máximo (s) | P95 (s) | Criterio | Estado |
+| Indicador | n | Mínimo (s) | Promedio (s) | Máximo (s) | P95 (s) | Criterio | Estado |
 |---|---|---|---|---|---|---|---|
-| PNF-04 voz → fin de movimiento | 10 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | — (n < 20) | ≤ 3,0 s | Pendiente de ejecución |
-| PNF-05 IR → LED / LCD | 10 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | — (n < 20) | ≤ 0,3 s | Pendiente de ejecución |
-| PNF-06 Δ1 = REPORT − `receivedAt` | ≥ 20 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | ≤ 5 s | Pendiente de ejecución |
-| PNF-06 Δ0 = `receivedAt` − `occurredAt` | ≥ 20 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | ≤ 15 s | Pendiente de ejecución |
-| PNF-09 reconexión MQTT | 3 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | — | ≤ 60 s | Pendiente de ejecución |
-| PNF-09 sincronización de `desired` | 3 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | — | ≤ 70 s | Pendiente de ejecución |
+| Integridad M/N (RNF7) | Pendiente de ejecución | — | Pendiente de ejecución | — | — | ≥ 99 % | Pendiente de ejecución |
+| Δ0 = receivedAt − occurredAt (RNF8) | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | máx ≤ 15 s | Pendiente de ejecución |
+| Δ1 = REPORT − receivedAt (RNF8) | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | máx ≤ 5 s | Pendiente de ejecución |
+| Intervalo entre `sample` (RNF5) | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | mediana 300 ± 10 s | Pendiente de ejecución |
+| Respaldo del Shadow, `AWS UPDATE clase=0` (RNF5) | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | mediana 30 ± 1 s | Pendiente de ejecución |
 
-**Exactitud, estabilidad e integridad.**
+**Tiempos medidos con video y con el log serie.**
+
+| Medición | n | Mínimo (s) | Promedio (s) | Máximo (s) | Criterio | Estado |
+|---|---|---|---|---|---|---|
+| PNF-03 voz → fin de movimiento | 6 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | ≤ 3,0 s | Pendiente de ejecución |
+| PNF-04 IR → LED | 5 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | ≤ 0,3 s | Pendiente de ejecución |
+| PNF-06 t_rec (reconexión MQTT) | 2 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | ≤ 60 s | Pendiente de ejecución |
+| PNF-06 t_sinc (`modo` en `reported`) | 2 | Pendiente de ejecución | Pendiente de ejecución | Pendiente de ejecución | ≤ 70 s | Pendiente de ejecución |
+
+**Exactitud, estabilidad y operación sin conexión.**
 
 | Medición | Resultado | Criterio | Estado |
 |---|---|---|---|
-| PNF-02 error máximo HC-SR04 | Pendiente de ejecución | ≤ 1 cm | Pendiente de ejecución |
-| PNF-03 aciertos IR | Pendiente de ejecución | ≥ 95 % | Pendiente de ejecución |
-| PNF-01 reinicios / bloqueos / reconexiones | Pendiente de ejecución | 0 / 0 / 0 | Pendiente de ejecución |
-| PNF-07 M / N | Pendiente de ejecución | ≥ 99 % | Pendiente de ejecución |
-| PNF-07 inválidos descartados | Pendiente de ejecución | 4 / 4 | Pendiente de ejecución |
-| PNF-08 intervalo entre `update/accepted` | Pendiente de ejecución | 30 s ± 1 s | Pendiente de ejecución |
-| PNF-10 ítems / transiciones durante el corte | Pendiente de ejecución | iguales | Pendiente de ejecución |
+| PNF-01 reinicios / reconexiones no provocadas / bloqueos | Pendiente de ejecución | 0 / 0 / 0 | Pendiente de ejecución |
+| PNF-02 error máximo del HC-SR04 | Pendiente de ejecución | ≤ 1 cm | Pendiente de ejecución |
+| PNF-02 aciertos IR | Pendiente de ejecución | ≥ 38 / 40 | Pendiente de ejecución |
+| PF-05 inválidos descartados (RNF7) | Pendiente de ejecución | 4 / 4 | Pendiente de ejecución |
+| PNF-06 barrera con orden vencida (E4) | Pendiente de ejecución | sin movimiento en 2 / 2 cortes | Pendiente de ejecución |
+| PNF-06 E1 y E2 sin red | Pendiente de ejecución | operan | Pendiente de ejecución |
+| PNF-06 ítems / transiciones de cada corte | Pendiente de ejecución | 8 / 8 y 4 / 4 | Pendiente de ejecución |
 
 ### 5.3 Datos almacenados en DynamoDB
 
-**Muestra de ítems** (exportación CSV de la sesión en `docs/evidencias/pruebas/PF-07/`): Pendiente de ejecución.
+**Muestra de ítems:** exportación de la sesión en `docs/evidencias/pruebas/PF-04/historial-sesion.csv` (Pendiente de ejecución).
 
 **Consultas usadas** (consola de DynamoDB, *Query* sobre `SmartParkHistory`):
 
@@ -1187,9 +1232,9 @@ Tablas para completar con las hojas de registro.
 | Tipo de evento | Ítems | Origen (`barrier_changed`) | Ítems | Plaza (`occupancy_changed`) | Ítems |
 |---|---|---|---|---|---|
 | `sample` | Pendiente de ejecución | `legado` (voz V1) | Pendiente de ejecución | 1 | Pendiente de ejecución |
-| `occupancy_changed` | Pendiente de ejecución | `edge` (Serial) | Pendiente de ejecución | 2 | Pendiente de ejecución |
-| `barrier_changed` | Pendiente de ejecución | `voz` | Pendiente de ejecución | 3 | Pendiente de ejecución |
-| Total | Pendiente de ejecución | `nube` | Pendiente de ejecución | 4 | Pendiente de ejecución |
+| `occupancy_changed` | Pendiente de ejecución | `edge` (`OPEN`/`CLOSE`) | Pendiente de ejecución | 2 | Pendiente de ejecución |
+| `barrier_changed` | Pendiente de ejecución | `voz` (V2, no emitido por la skill) | Pendiente de ejecución | 3 | Pendiente de ejecución |
+| Total | Pendiente de ejecución | Total | Pendiente de ejecución | 4 | Pendiente de ejecución |
 
 ### 5.4 Análisis de la decisión Edge / Nube
 
@@ -1199,7 +1244,7 @@ La Nube aporta lo que el Edge no puede: **persistencia validada** del histórico
 
 **Costo de la decisión.** La lógica en el Edge exige reprogramar el ESP32 para cambiar una regla; por eso los parámetros que conviene ajustar en operación (modo y antirrebote) se exponen por el Shadow y la voz (RF14). Las reglas que requieren histórico o varios objetos son candidatas naturales a la Nube (7.2).
 
-**Confirmación con datos.** <!-- PENDIENTE: completar con resultados de 4.3 (PNF-05 frente a PNF-04 y PNF-06, y PNF-10) --> Tiempo de respuesta del Edge (PNF-05) frente al de un viaje por AWS (PNF-04 y Δ1 de PNF-06) y comportamiento sin conexión (PNF-10): Pendiente de ejecución.
+**Confirmación con datos.** <!-- PENDIENTE: completar con resultados de 4.3 (PNF-04 frente a PNF-03 y PNF-05, y PNF-06) --> Tiempo de respuesta del Edge (PNF-04) frente al de un viaje por AWS (PNF-03 y Δ1 de PNF-05) y comportamiento sin conexión (PNF-06): Pendiente de ejecución.
 
 ### 5.5 Desviaciones y observaciones
 
@@ -1240,9 +1285,9 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 ## 6. Conclusiones
 
 1. La ampliación responde a un caso de uso real y acotado: cuatro sensores IR dan la disponibilidad **por plaza**, que es la información que el encargado necesita, y el HC-SR04 se conserva solo para la pregunta distinta de si hay un vehículo en la barrera. Cada componente se usa en al menos una consulta, una regla o un reporte.
-2. Colocar las cuatro reglas de control en el Edge es coherente con su naturaleza: dependen solo de datos locales, deben responder en decenas de milisegundos y deben seguir operando sin red. <!-- PENDIENTE: completar con resultados de 4.3 (PNF-05 y PNF-10) --> La verificación de ese tiempo y de la operación sin conexión depende de PNF-05 y PNF-10.
+2. Colocar las cuatro reglas de control en el Edge es coherente con su naturaleza: dependen solo de datos locales, deben responder en decenas de milisegundos y deben seguir operando sin red. <!-- PENDIENTE: completar con resultados de 4.3 (PNF-04 y PNF-06) --> La verificación de ese tiempo y de la operación sin conexión depende de PNF-04 y PNF-06.
 3. El Shadow y el tópico de histórico cumplen papeles distintos: el primero guarda el estado actual con cuota diaria y el segundo la secuencia de cambios con su propio presupuesto. Esa separación permite reportes exactos sin gastar la cuota de control.
-4. La cadena de almacenamiento está diseñada para no aceptar datos falsos ni duplicados: la identidad sale del tópico autorizado, la Lambda valida tipos, rangos y coherencia, y la escritura condicional absorbe reintentos. <!-- PENDIENTE: completar con resultados de 4.3 (PNF-06 y PNF-07) --> La integridad y la latencia en AWS se confirman con PNF-06 y PNF-07.
+4. La cadena de almacenamiento está diseñada para no aceptar datos falsos ni duplicados: la identidad sale del tópico autorizado, la Lambda valida tipos, rangos y coherencia, y la escritura condicional absorbe reintentos. <!-- PENDIENTE: completar con resultados de 4.3 (PNF-05) --> La integridad y la latencia en AWS se confirman con PNF-05.
 5. La convivencia entre voz y lógica automática queda resuelta en un solo punto del firmware (`openingBlocked()`): la voz cambia el modo y pide movimientos, y el Edge decide. El costo es que Alexa no informa en la misma respuesta que una apertura fue bloqueada; el usuario lo confirma con una consulta.
 6. El modelo de DynamoDB, con `thingName` y una clave de ordenamiento que empieza por la hora de ocurrencia, resuelve con una sola `Query` por rango todos los reportes diseñados para un Thing; solo un panel de varios Things o el conteo de aperturas rechazadas requieren cambios (7.1).
 7. El costo estimado para un Thing, incluso con conexión continua, es del orden de céntimos de dólar al mes y queda dentro de la capa gratuita salvo las escrituras bajo demanda de DynamoDB.
@@ -1325,8 +1370,10 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 |---|---|---|
 | Hojas de registro | [`evidencias/hojas-registro/`](evidencias/hojas-registro/) | Preparadas |
 | Salidas de las pruebas automáticas | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt), [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt), [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) | PA-01 SUCCESS; PA-02 5/5 PASS y contrato PASS (12 cargas); PA-03 102 OK |
-| Evidencia por prueba (videos, capturas, CSV) | `docs/evidencias/pruebas/<ID>/` (una carpeta por PF-xx y PNF-xx) | Pendiente de ejecución |
-| Muestra exportada de `SmartParkHistory` | `docs/evidencias/pruebas/PF-07/` | Pendiente de ejecución |
+| Log serie de la sesión | `docs/evidencias/pruebas/serial-sesion.txt` | Pendiente de ejecución |
+| Evidencia por prueba (CSV, logs, capturas y los videos de PNF-03 y PNF-04) | `docs/evidencias/pruebas/<ID>/` (PF-01 a PF-08, PNF-01 a PNF-06) | Pendiente de ejecución |
+| Muestra exportada de `SmartParkHistory` | `docs/evidencias/pruebas/PF-04/historial-sesion.csv` | Pendiente de ejecución |
+| Indicadores de PNF-05 | `docs/evidencias/pruebas/PNF-05/analisis.md` ([`analizar_pruebas.py`](../tools/analizar_pruebas.py)) | Pendiente de ejecución |
 
 ### 8.4 Evidencias de arquitectura y configuración
 
