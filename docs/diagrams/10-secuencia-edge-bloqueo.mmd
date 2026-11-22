@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    participant SRC as Origen de la orden<br/>(voz vía Shadow o Serial OPEN)
+    participant LP as loop() / applyPending()
+    participant PK as Parking::State
+    participant SV as BarrierServo
+    participant NET as Tarea smartpark-aws
+    SRC->>LP: orden de apertura
+    LP->>LP: orden remota: ¿now < vence (≤ 30 s)? si no → vencida
+    LP->>PK: openingBlocked() = modo automatico y available == 0
+    alt bloqueada
+        LP-->>SRC: Serial: "Apertura bloqueada: sin plazas confirmadas"
+        LP->>NET: ultima_orden {objetivo: abierta, resultado: bloqueada}
+        Note over SV: sin pulso PWM, sin evento barrier_changed
+    else permitida (modo manual o available ≥ 1)
+        LP->>SV: open()
+        LP->>NET: ultima_orden {resultado: aceptada}
+        Note over SV: tras 700 ms: barrier_changed al histórico
+    end
+    NET->>NET: report(Control) con bloqueo_apertura y ultima_orden

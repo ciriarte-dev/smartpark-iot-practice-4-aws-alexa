@@ -1,0 +1,17 @@
+sequenceDiagram
+    autonumber
+    actor V as Vehículo (maqueta)
+    participant IR as Sensor IR plaza n
+    participant PK as Parking::update()
+    participant LED as LEDs plaza n
+    participant LCD as ParkingDisplay
+    participant HP as HistoryPublisher
+    participant NET as Tarea smartpark-aws
+    V->>IR: cubre la plaza
+    IR-->>PK: digitalRead = IR_OCCUPIED_LEVEL (LOW), muestreo cada 10 ms
+    PK->>PK: candidato estable durante debounceMs (120 ms por defecto)
+    PK->>LED: rojo ON, verde OFF
+    PK->>PK: occupied++, available--
+    LCD->>LCD: "Ocup:x Libres:y/4" y, si available == 0, "PARQUEO LLENO" o "APERTURA BLOQUEADA"
+    PK-->>HP: observeParking(): occupancy_changed (slot, estado_anterior)
+    PK-->>NET: snapshot → reported.slots / ocupados / disponibles / lleno / bloqueo_apertura (clase Sensor)

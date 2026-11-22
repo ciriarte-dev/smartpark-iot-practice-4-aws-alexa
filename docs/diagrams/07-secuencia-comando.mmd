@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant LA as SmartParkAlexaBackend
+    participant SH as Device Shadow
+    participant NET as ESP32 tarea smartpark-aws
+    participant LP as ESP32 loop()
+    participant SV as BarrierServo (SG90)
+    U->>LA: "abre la barrera" (AbrirBarreraIntent)
+    LA->>SH: UpdateThingShadow {"state":{"desired":{"barrera":"abierta"}}}
+    LA-->>U: "Solicité abrir la barrera..."
+    SH->>NET: $aws/things/smartpark-grupo9-01/shadow/update/delta
+    NET->>NET: receive() → applyDesired(): versión, timestamp AWS < 30 s, registro de la orden en NVS
+    NET->>LP: cola commands_ (Command)
+    LP->>LP: applyPending(): ¿orden vencida? ¿openingBlocked()?
+    alt modo automatico y disponibles == 0
+        LP->>LP: ultima_orden.resultado = bloqueada (sin PWM)
+    else permitida
+        LP->>SV: open() → writeMicroseconds(1450 µs)
+        Note over SV: SERVO_TRAVEL_MS = 700 ms (posición estimada)
+        LP->>LP: ultima_orden.resultado = aceptada
+    end
+    LP->>NET: cola snapshots_ (tick)
+    NET->>SH: shadow/update reported {barrera, ultima_orden, ...} (clase Control)
+    SH-->>NET: update/accepted (mismo clientToken)
