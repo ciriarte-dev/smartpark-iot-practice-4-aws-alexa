@@ -1,135 +1,92 @@
 # Hoja de registro — pruebas no funcionales (Práctica 4)
 
-Imprimir antes de medir. Valores declarados y fórmulas: [informe, secciones 1.4 y 4.3](../../informe-practica-4.md#43-pruebas-no-funcionales). Todos los tiempos en segundos con décimas (o milisegundos cuando la fuente los da).
+Imprimir antes de medir. Valores declarados, criterios y fórmulas: [informe, secciones 1.4 y 4.3](../../informe-practica-4.md#43-pruebas-no-funcionales). Tiempos en segundos con décimas, o en milisegundos cuando la fuente los da.
 
 **Orígenes de tiempo**
 
 | Código | Fuente | Resolución | Uso |
 |---|---|---|---|
-| S | Monitor serie con marca del PC (`pio device monitor -f time`), PC sincronizado por NTP | 1 ms (marca de llegada al PC) | eventos del firmware |
+| S | Log serie con la hora del PC (`pio device monitor -f time`), PC sincronizado por NTP | 1 ms (llegada al PC) | `STATUS`, conexión, `AWS UPDATE` |
 | V | Video del celular a ≥ 30 fps, contado por cuadros | 33 ms a 30 fps | voz → servo, IR → LED |
-| R | `receivedAt` del ítem (función `timestamp()` de la regla de AWS IoT) | 1 ms | llegada a AWS IoT Core |
-| O | `occurredAt` del ítem (reloj del ESP32, NTP) | 1 ms | ocurrencia en el objeto |
-| C | Hora del registro `REPORT` / `END` en CloudWatch Logs (UTC) | 1 ms | fin de la ejecución de la Lambda |
+| R | `receivedAt` del ítem (`timestamp()` de la regla de AWS IoT) | 1 ms | llegada a AWS IoT Core |
+| O | `occurredAt` del ítem (reloj NTP del ESP32) | 1 ms | ocurrencia en el objeto |
+| C | `@timestamp` del registro `REPORT` en CloudWatch Logs (UTC) | 1 ms | fin de la ejecución de la Lambda |
 
-- Fecha: ____________  Responsable: ____________________  fps del video: ______  Desfase PC − hora NTP (s): ______
+- Fecha: ____________  Responsables: ______________________________  fps del video: ______
 
-## PNF-01 Estabilidad (≥ 15 min conectado, uso normal)
+## PNF-01 Estabilidad (RNF1, toda la sesión)
 
-| Inicio (S) | Fin (S) | Duración (min) | Reinicios (banner `=== SmartPark V2`) | Desconexiones (`reconexiones=`) | Bloqueos (sin salida serie > 5 s) | `esp_reset_reason` / observación |
-|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |
-
-## PNF-02 Exactitud del HC-SR04 (5 lecturas por distancia, comando `DISTANCE`)
-
-| Distancia real (cm) | L1 | L2 | L3 | L4 | L5 | Error abs. máx. (cm) |
-|---|---|---|---|---|---|---|
-| 5 |  |  |  |  |  |  |
-| 10 |  |  |  |  |  |  |
-| 15 |  |  |  |  |  |  |
-| 20 |  |  |  |  |  |  |
-| 30 |  |  |  |  |  |  |
-| 50 |  |  |  |  |  |  |
-
-## PNF-03 Exactitud de los IR (10 entradas y 10 salidas por plaza)
-
-| Plaza | Entradas correctas / 10 | Salidas correctas / 10 | Estados `desconocido` observados | Observación |
-|---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-
-## PNF-04 Tiempo de respuesta por voz (fin de la frase «abre la barrera» / «cierra la barrera» → fin del movimiento)
-
-| Rep. | Frase | Cuadro fin de frase | Cuadro fin de movimiento | Δ cuadros | Δt (s) = Δ cuadros / fps | Observación |
-|---|---|---|---|---|---|---|
-| 1 | abre la barrera |  |  |  |  |  |
-| 2 | cierra la barrera |  |  |  |  |  |
-| 3 | abre la barrera |  |  |  |  |  |
-| 4 | cierra la barrera |  |  |  |  |  |
-| 5 | abre la barrera |  |  |  |  |  |
-| 6 | cierra la barrera |  |  |  |  |  |
-| 7 | abre la barrera |  |  |  |  |  |
-| 8 | cierra la barrera |  |  |  |  |  |
-| 9 | abre la barrera |  |  |  |  |  |
-| 10 | cierra la barrera |  |  |  |  |  |
-
-## PNF-05 Respuesta de la lógica Edge (IR cubierto → LED cambia; plaza 4 cubierta → LCD `APERTURA BLOQUEADA`)
-
-| Rep. | Regla | Cuadro condición | Cuadro cambio del actuador/indicador | Δt (s) | Antirrebote vigente (ms) | Observación |
-|---|---|---|---|---|---|---|
-| 1 | E1 LED |  |  |  |  |  |
-| 2 | E1 LED |  |  |  |  |  |
-| 3 | E1 LED |  |  |  |  |  |
-| 4 | E1 LED |  |  |  |  |  |
-| 5 | E1 LED |  |  |  |  |  |
-| 6 | E1 LED |  |  |  |  |  |
-| 7 | E1 LED |  |  |  |  |  |
-| 8 | E2 LCD |  |  |  |  |  |
-| 9 | E2 LCD |  |  |  |  |  |
-| 10 | E2 LCD |  |  |  |  |  |
-
-## PNF-06 Latencia de almacenamiento (≥ 20 eventos)
-
-| # | eventKey | occurredAt O (ms) | receivedAt R (ms) | REPORT C (hh:mm:ss.mmm) | Δ0 = R − O (s) | Δ1 = C − R (s) | Observación |
-|---|---|---|---|---|---|---|---|
-| 1 |  |  |  |  |  |  |  |
-| 2 |  |  |  |  |  |  |  |
-| 3 |  |  |  |  |  |  |  |
-| 4 |  |  |  |  |  |  |  |
-| 5 |  |  |  |  |  |  |  |
-| 6 |  |  |  |  |  |  |  |
-| 7 |  |  |  |  |  |  |  |
-| 8 |  |  |  |  |  |  |  |
-| 9 |  |  |  |  |  |  |  |
-| 10 |  |  |  |  |  |  |  |
-| 11 |  |  |  |  |  |  |  |
-| 12 |  |  |  |  |  |  |  |
-| 13 |  |  |  |  |  |  |  |
-| 14 |  |  |  |  |  |  |  |
-| 15 |  |  |  |  |  |  |  |
-| 16 |  |  |  |  |  |  |  |
-| 17 |  |  |  |  |  |  |  |
-| 18 |  |  |  |  |  |  |  |
-| 19 |  |  |  |  |  |  |  |
-| 20 |  |  |  |  |  |  |  |
-
-## PNF-07 Integridad del almacenamiento (ventana de 10 min)
-
-| Inicio ventana (S) | Fin ventana (S) | `Historico: MQTT local` al inicio | al fin | Publicados N | Ítems en DynamoDB con `receivedAt` en la ventana M | M / N (%) | `cola_llena` | `fallos_envio` | `descartes_red` |
-|---|---|---|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |  |  |  |
-
-| Inválido # | JSON publicado desde el cliente MQTT (resumen) | Línea `history_invalid field=` en CloudWatch | ¿Ítem creado? (debe ser No) |
-|---|---|---|---|
-| 1 | `distancia_cm: 999` |  |  |
-| 2 | `capacidad: 5` |  |  |
-| 3 | `eventType: "door_opened"` |  |  |
-| 4 | `origin: "voz"` en `sample` |  |  |
-| 5 | duplicado de un evento válido (mismo `eventId` y `occurredAt`) | (no aplica: se espera 1 solo ítem) |  |
-
-## PNF-08 Frecuencia de reporte (5 min en reposo, cliente MQTT suscrito a `$aws/things/smartpark-grupo9-01/shadow/update/accepted`)
-
-| Inicio (S) | Fin (S) | `update/accepted` recibidos | Intervalo medio (s) | `solicitudesTotales` inicio / fin (`STATUS`) | Muestras `sample` en DynamoDB en 15 min |
+| `STATUS` inicial (S) | `STATUS` final (S) | Duración (min) | Reinicios (banner `=== SmartPark V2`) | Reconexiones no provocadas (fuera de PNF-06) | Bloqueos (`STATUS` sin respuesta) |
 |---|---|---|---|---|---|
 |  |  |  |  |  |  |
 
-## PNF-09 Reconexión y sincronización (corte de 30 s, 3 repeticiones)
+## PNF-02 Exactitud (RNF2 y RNF3)
 
-| Rep. | AP apagado (S) | AP encendido (S) | Duración corte (s) | `desired.modo` escrito durante el corte (hora) | `AWS MQTT/TLS conectado` (S) | `reported.modo` actualizado (hora del `update/accepted`) | t reconexión = conectado − encendido (s) | t sincronización (s) |
-|---|---|---|---|---|---|---|---|---|
-| 1 |  |  |  |  |  |  |  |  |
-| 2 |  |  |  |  |  |  |  |  |
-| 3 |  |  |  |  |  |  |  |  |
+**HC-SR04** (bloque 2; 5 lecturas `DISTANCE` por distancia)
 
-## PNF-10 Operación sin conexión (corte de 2 min)
+| Distancia real (cm) | L1 | L2 | L3 | L4 | L5 | Error abs. máx. (cm) |
+|---|---|---|---|---|---|---|
+| 10 |  |  |  |  |  |  |
+| 20 |  |  |  |  |  |  |
+| 30 |  |  |  |  |  |  |
 
-| Acción durante el corte | ¿Funciona? (S/N) | Observación |
-|---|---|---|
-| Cubrir y liberar plaza 1 (LED y LCD) |  |  |
-| Modo automático con 4 plazas ocupadas + `OPEN` por Serial (debe bloquear) |  |  |
-| `CLOSE` por Serial |  |  |
-| Transiciones generadas durante el corte (contar) |  |  |
-| Ítems de esas transiciones en DynamoDB tras reconectar (contar) |  |  |
-| Tiempo de drenado de la cola tras reconectar (s) |  |  |
+**IR** (dentro de la ventana de PNF-05; una transición cada 15 s; marcar ✓ si el LED y el estado coinciden con la realidad, ✗ si no)
+
+| Plaza | E1 | S1 | E2 | S2 | E3 | S3 | E4 | S4 | E5 | S5 | Aciertos / 10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 |  |  |  |  |  |  |  |  |  |  |  |
+| 2 |  |  |  |  |  |  |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |  |  |  |  |  |
+| 4 |  |  |  |  |  |  |  |  |  |  |  |
+
+Total de aciertos: ______ / 40  (criterio ≥ 38)
+
+## PNF-03 Respuesta por voz (RNF4, video de PF-02)
+
+| Rep. | Orden | Cuadro de la frase enviada | Cuadro en que la barrera se detiene | Δcuadros | t (s) |
+|---|---|---|---|---|---|
+| 1 | abre |  |  |  |  |
+| 2 | cierra |  |  |  |  |
+| 3 | abre |  |  |  |  |
+| 4 | cierra |  |  |  |  |
+| 5 | abre |  |  |  |  |
+| 6 | cierra |  |  |  |  |
+
+## PNF-04 Lógica automática en el Edge (RNF9, video de PF-06)
+
+| Rep. | Plaza | Cuadro en que el vehículo cubre el IR | Cuadro del cambio del LED | Δcuadros | t (s) |
+|---|---|---|---|---|---|
+| 1 | 1 |  |  |  |  |
+| 2 | 2 |  |  |  |  |
+| 3 | 3 |  |  |  |  |
+| 4 | 4 |  |  |  |  |
+| 5 | 4 (nueva ocupación) |  |  |  |  |
+
+## PNF-05 Almacenamiento y frecuencia (RNF5, RNF7 y RNF8)
+
+| Dato | Valor |
+|---|---|
+| `STATUS` de inicio de la ventana (S, hh:mm:ss) |  |
+| `Historico: MQTT local` al inicio |  |
+| `STATUS` de fin de la ventana (S, hh:mm:ss) |  |
+| `Historico: MQTT local` al final |  |
+| N = final − inicio |  |
+| Inicio y fin del reposo del bloque 5 (S) |  |
+
+Cálculo después de la sesión: `python tools/analizar_pruebas.py` con el CSV de PF-04, el log serie y la exportación de CloudWatch ([informe, 4.1](../../informe-practica-4.md#41-plan-de-pruebas-y-hojas-de-registro)). Salida en `docs/evidencias/pruebas/PNF-05/analisis.md`.
+
+## PNF-06 Reconexión y operación sin conexión (RNF6, RNF10 y E4)
+
+Antes del primer corte: barrera cerrada, modo `automatico`, plazas libres.
+
+| Corte | `STATUS` de corte (S) | Frases dichas (hora) | Transiciones IR durante el corte | `OPEN` bloqueado sin red (S/N) | `STATUS` de restauración (S) | `AWS MQTT/TLS conectado` (S) | Primer `AWS UPDATE` con el nuevo `modo` (S) | t_rec (s) | t_sinc (s) | ¿La barrera se movió? | Ítems recibidos / transiciones |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 |  | *"activa el modo manual"*, *"abre la barrera"* |  |  |  |  |  |  |  |  |  / 8 |
+| 2 |  | *"activa el modo automático"*, *"abre la barrera"* |  | — |  |  |  |  |  |  |  / 4 |
+
+## Observaciones y diagnóstico
+
+| ID | Hora | Síntoma | Datos de diagnóstico (`STATUS`, tensión del servo, CloudWatch) | Acción |
+|---|---|---|---|---|
+|  |  |  |  |  |
+|  |  |  |  |  |

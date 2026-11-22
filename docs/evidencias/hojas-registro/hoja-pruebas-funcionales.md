@@ -1,86 +1,69 @@
 # Hoja de registro — pruebas funcionales (Práctica 4)
 
-Imprimir antes de la sesión y completar a mano. Procedimiento y resultado esperado de cada prueba: [informe, sección 4.2](../../informe-practica-4.md#42-pruebas-funcionales).
+Imprimir antes de la sesión y completar a mano. Procedimiento, resultado esperado y orden de los bloques: [informe, secciones 4.1 y 4.2](../../informe-practica-4.md#42-pruebas-funcionales).
 
-- Fecha: ____________  Responsable: ____________________  Testigo: ____________________
+- Fecha: ____________  Responsables (maqueta / consola / registro): ______________________________
 - Firmware (commit): ________  Thing: `smartpark-grupo9-01`  Región: `us-east-1`
-- Reloj de referencia: hora del PC sincronizada por NTP (monitor serie con `pio device monitor -f time`). Anotar la hora con segundos (hh:mm:ss).
-- Evidencia: guardar capturas y videos en `docs/evidencias/pruebas/<ID>/` con el nombre `<ID>-<repetición>-<descripción>`.
+- Log serie: `pio device monitor -f time | tee docs/evidencias/pruebas/serial-sesion.txt` (Git Bash). Hora de inicio del log: ________
+- Hora: la del PC (hh:mm:ss), la misma que aparece en el log serie.
+- Evidencia: `docs/evidencias/pruebas/<ID>/`, con el nombre `<ID>-<paso>-<descripción>`.
 
-## Regresión RF1–RF9 y RF10–RF15
+## Registro por prueba
 
-| ID | Rep. | Fecha | Hora (hh:mm:ss) | Acción realizada | Valor observado (Shadow / DynamoDB / respuesta) | ¿Cumple? (S/N) | Archivo de evidencia | Observación |
-|---|---|---|---|---|---|---|---|---|
-| PF-01 | 1 |  |  |  |  |  |  |  |
-| PF-02 | 1 |  |  |  |  |  |  |  |
-| PF-02 | 2 |  |  |  |  |  |  |  |
-| PF-03 | 1 |  |  |  |  |  |  |  |
-| PF-03 | 2 |  |  |  |  |  |  |  |
-| PF-03 | 3 |  |  |  |  |  |  |  |
-| PF-04 | 1 |  |  |  |  |  |  |  |
-| PF-04 | 2 |  |  |  |  |  |  |  |
-| PF-05 | 1 |  |  |  |  |  |  |  |
-| PF-05 | 2 |  |  |  |  |  |  |  |
-| PF-06 | 1 |  |  |  |  |  |  |  |
-| PF-06 | 2 |  |  |  |  |  |  |  |
-| PF-07 | 1 |  |  |  |  |  |  |  |
-| PF-07 | 2 |  |  |  |  |  |  |  |
-| PF-08 | 1 |  |  |  |  |  |  |  |
-| PF-08 | 2 |  |  |  |  |  |  |  |
-| PF-08 | 3 |  |  |  |  |  |  |  |
-| PF-08 | 4 |  |  |  |  |  |  |  |
-| PF-09 | 1 |  |  |  |  |  |  |  |
-| PF-10 | 1 |  |  |  |  |  |  |  |
-| PF-10 | 2 |  |  |  |  |  |  |  |
-| PF-10 | 3 |  |  |  |  |  |  |  |
-| PF-11 | 1 |  |  |  |  |  |  |  |
-| PF-11 | 2 |  |  |  |  |  |  |  |
-| PF-11 | 3 |  |  |  |  |  |  |  |
-| PF-11 | 4 |  |  |  |  |  |  |  |
-| PF-12 | 1 |  |  |  |  |  |  |  |
-| PF-12 | 2 |  |  |  |  |  |  |  |
-| PF-12 | 3 |  |  |  |  |  |  |  |
-| PF-13 | 1 |  |  |  |  |  |  |  |
-| PF-13 | 2 |  |  |  |  |  |  |  |
-| PF-14 | 1 |  |  |  |  |  |  |  |
-| PF-16 | 1 |  |  |  |  |  |  |  |
-| PF-16 | 2 |  |  |  |  |  |  |  |
-| PF-17 | 1 |  |  |  |  |  |  |  |
-| PF-17 | 2 |  |  |  |  |  |  |  |
-| PF-17 | 3 |  |  |  |  |  |  |  |
-| PF-17 | 4 |  |  |  |  |  |  |  |
+| ID | Bloque | Paso | Hora (hh:mm:ss) | Valor observado (Serial / Shadow / DynamoDB / respuesta) | ¿Cumple? (S/N) | Archivo de evidencia |
+|---|---|---|---|---|---|---|
+| PF-01 | 2 | `DISTANCE` y `SLOT1` |  |  |  |  |
+| PF-01 | 2 | Cubrir y liberar el IR de la plaza 1; `update/accepted` |  |  |  |  |
+| PF-02 | 1 | Abrir / cerrar ×3 (video PNF-03) |  |  |  |  |
+| PF-02 | 1 | *"consulta la distancia"* |  |  |  |  |
+| PF-02 | 1 | *"hay un auto esperando"* |  |  |  |  |
+| PF-02 | 1 | *"consulta el estado de la barrera"* |  |  |  |  |
+| PF-03 | 1 | A: skill sin vinculación |  |  |  |  |
+| PF-03 | 1 | A: PIN 1 generado (hora) y *"vincula mi parqueo con el codigo …"* |  |  |  |  |
+| PF-03 | 1 | A: cerrar y reabrir la skill |  |  |  |  |
+| PF-03 | 3 | B: PIN 2 (≥ 300 s después del PIN 1) y *"cambia mi vinculacion con el código …"* |  |  |  |  |
+| PF-03 | 5 | C: *"desvincula mi parqueo"* y *"consulta la distancia"* |  |  |  |  |
+| PF-04 | 1 | `OPEN` y `CLOSE` por Serial |  |  |  |  |
+| PF-04 | 5 | `START` en CloudWatch dentro de la ventana de PNF-05 = N |  |  |  |  |
+| PF-04 | 5 | Ítems y atributos; `origin` de cada `barrier_changed`; CSV exportado |  |  |  |  |
+| PF-05 | 2 | `distancia_cm: 999` |  |  |  |  |
+| PF-05 | 2 | `capacidad: 5` |  |  |  |  |
+| PF-05 | 2 | `eventType: "door_opened"` |  |  |  |  |
+| PF-05 | 2 | `origin: "voz"` en `sample` |  |  |  |  |
+| PF-05 | 2 | Duplicado publicado dos veces |  |  |  |  |
+| PF-06 | 3 | *"activa el modo automático"*; ocupar plazas 1–4 |  |  |  |  |
+| PF-06 | 3 | *"abre la barrera"* con 4 ocupadas (E2) |  |  |  |  |
+| PF-06 | 3 | `OPEN` con 4 ocupadas (E2) |  |  |  |  |
+| PF-06 | 3 | *"cierra la barrera"* (E3) |  |  |  |  |
+| PF-06 | 3 | Liberar la plaza 4 y *"abre la barrera"* |  |  |  |  |
+| PF-06 | 3 | `CLOSE`; ocupar la plaza 4; *"activa el modo manual"* y *"abre la barrera"* |  |  |  |  |
+| PF-08 | 5 | Consulta M1 |  |  |  |  |
+| PF-08 | 5 | Consulta M2 |  |  |  |  |
+| PF-08 | 5 | Consulta M3 |  |  |  |  |
+| PF-08 | 5 | Consulta M4 |  |  |  |  |
 
-## PF-15 — frases de la skill en el simulador (RF14 y consultas de plazas)
+## PF-07 — frases de RF14 (bloque 3)
 
-En **Test → JSON Input** anotar el intent reconocido y el valor del slot. Con cuenta vinculada y ESP32 conectado.
+Modelo: [`alexa/es-US.smartpark-v2.final.json`](../../../alexa/es-US.smartpark-v2.final.json). Estado inicial: `manual`, 4 plazas ocupadas. En **JSON Input** anotar el intent y el valor del slot.
 
-| # | Frase pronunciada o escrita | Intent esperado | Intent obtenido | Slot obtenido | Respuesta de Alexa (resumen) | Shadow (`desired` / `reported`) | S/N |
+| # | Frase | Intent esperado | Slot | Respuesta / Shadow esperado | Intent y slot observados | Respuesta observada | ¿Cumple? (S/N) |
 |---|---|---|---|---|---|---|---|
-| 1 | cuántos espacios hay disponibles | `ConsultarDisponiblesIntent` |  |  |  |  |  |
-| 2 | consulta los espacios libres | `ConsultarDisponiblesIntent` |  |  |  |  |  |
-| 3 | cuántas plazas libres quedan | `ConsultarDisponiblesIntent` |  |  |  |  |  |
-| 4 | cuántos espacios están ocupados | `ConsultarOcupadosIntent` |  |  |  |  |  |
-| 5 | consulta los espacios ocupados | `ConsultarOcupadosIntent` |  |  |  |  |  |
-| 6 | cuántas plazas están ocupadas | `ConsultarOcupadosIntent` |  |  |  |  |  |
-| 7 | cómo está el estacionamiento dos | `ConsultarEstacionamientoIntent` |  |  |  |  |  |
-| 8 | está libre la plaza cuatro | `ConsultarEstacionamientoIntent` |  |  |  |  |  |
-| 9 | consulta el espacio uno | `ConsultarEstacionamientoIntent` |  |  |  |  |  |
-| 10 | consulta el modo del parqueo | `ConsultarModoIntent` |  |  |  |  |  |
-| 11 | en qué modo está el parqueo | `ConsultarModoIntent` |  |  |  |  |  |
-| 12 | cuál es el modo actual | `ConsultarModoIntent` |  |  |  |  |  |
-| 13 | activa el modo automático | `ActivarModoAutomaticoIntent` |  |  |  |  |  |
-| 14 | pon el parqueo en modo automático | `ActivarModoAutomaticoIntent` |  |  |  |  |  |
-| 15 | cambia a modo automático | `ActivarModoAutomaticoIntent` |  |  |  |  |  |
-| 16 | activa el modo manual | `ActivarModoManualIntent` |  |  |  |  |  |
-| 17 | pon el parqueo en modo manual | `ActivarModoManualIntent` |  |  |  |  |  |
-| 18 | cambia a modo manual | `ActivarModoManualIntent` |  |  |  |  |  |
-| 19 | consulta el antirrebote | `ConsultarAntirreboteIntent` |  |  |  |  |  |
-| 20 | cuántos milisegundos tiene el antirrebote | `ConsultarAntirreboteIntent` |  |  |  |  |  |
-| 21 | cuál es el valor del antirrebote | `ConsultarAntirreboteIntent` |  |  |  |  |  |
-| 22 | ajusta el antirrebote a ciento veinte milisegundos | `CambiarAntirreboteIntent` |  |  |  |  |  |
-| 23 | cambia el antirrebote a doscientos | `CambiarAntirreboteIntent` |  |  |  |  |  |
-| 24 | configura cincuenta milisegundos de antirrebote | `CambiarAntirreboteIntent` |  |  |  |  |  |
-| 25 | cambia el antirrebote a cuarenta y nueve (límite inferior − 1) | `CambiarAntirreboteIntent`: rechazo |  |  |  |  |  |
-| 26 | cambia el antirrebote a mil (límite superior) | `CambiarAntirreboteIntent` |  |  |  |  |  |
-| 27 | cambia el antirrebote a mil uno (límite superior + 1) | `CambiarAntirreboteIntent`: rechazo |  |  |  |  |  |
-| 28 | consulta el espacio cinco (fuera de rango) | `ConsultarEstacionamientoIntent`: rechazo |  |  |  |  |  |
+| 1 | cuántos espacios hay disponibles | `ConsultarDisponiblesIntent` | — | 0 de 4 |  |  |  |
+| 2 | cuántas plazas están ocupadas | `ConsultarOcupadosIntent` | — | 4 de 4 |  |  |  |
+| 3 | está libre la plaza 2 | `ConsultarEstacionamientoIntent` | `espacio` = 2 | ocupado |  |  |  |
+| 4 | está libre la plaza 5 | `ConsultarEstacionamientoIntent` | `espacio` = 5 | *"Dime un número de estacionamiento del uno al cuatro."* |  |  |  |
+| 5 | en qué modo está el parqueo | `ConsultarModoIntent` | — | manual |  |  |  |
+| 6 | consulta el antirrebote | `ConsultarAntirreboteIntent` | — | 120 milisegundos |  |  |  |
+| 7 | ajusta el antirrebote a 200 milisegundos | `CambiarAntirreboteIntent` | `milisegundos` = 200 | `desired` y luego `reported` = 200 |  |  |  |
+| 8 | ajusta el antirrebote a 1001 milisegundos | `CambiarAntirreboteIntent` | `milisegundos` = 1001 | *"Dime un valor entero entre 50 y 1000 milisegundos."*; Shadow sin cambio |  |  |  |
+| 9 | ajusta el antirrebote a 120 milisegundos | `CambiarAntirreboteIntent` | `milisegundos` = 120 | `reported` = 120 |  |  |  |
+| 10 | ayuda | `AMAZON.HelpIntent` | — | ayuda; la sesión sigue abierta |  |  |  |
+| 11 | cancela | `AMAZON.CancelIntent` | — | *"Hasta luego."* |  |  |  |
+| 12 | detente (tras reabrir la skill) | `AMAZON.StopIntent` | — | *"Hasta luego."* |  |  |  |
+
+## Observaciones
+
+| ID | Hora | Observación |
+|---|---|---|
+|  |  |  |
+|  |  |  |
