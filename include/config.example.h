@@ -61,7 +61,7 @@
 #define SERVO_MAX_US              2400
 #define SERVO_TRAVEL_MS           700UL // Estimacion, sin confirmacion fisica.
 
-// ---------- Ocupacion de cuatro plazas y LCD 20x4 ----------
+// ---------- Ocupacion de cuatro plazas y LCD 16x2 ----------
 constexpr uint8_t PARKING_CAPACITY = 4; // Plazas activas, habilitadas desde el slot 1.
 struct ParkingSlotPins { uint8_t ir, red, green; };
 constexpr ParkingSlotPins SLOT_PINS[] = {
@@ -73,6 +73,8 @@ constexpr uint16_t IR_DEBOUNCE_MIN_MS = 50;
 constexpr uint16_t IR_DEBOUNCE_DEFAULT_MS = 120;
 constexpr uint16_t IR_DEBOUNCE_MAX_MS = 1000;
 constexpr uint8_t LCD_SDA_PIN = 21, LCD_SCL_PIN = 22, LCD_I2C_ADDRESS = 0x27;
+// LCD_COLUMNS (16) y LCD_ROWS (2) tienen valor por defecto en ParkingDisplay.h;
+// solo hace falta definirlos aqui (#define) para otra pantalla de 2 filas.
 
 // ---------- Tiempos de reconexion ----------
 #define WIFI_RETRY_INTERVAL_MS    5000UL
