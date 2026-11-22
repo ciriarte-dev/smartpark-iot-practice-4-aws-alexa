@@ -37,4 +37,4 @@ Cada solicitud usa la vinculación del usuario de Alexa en `SmartParkBindings`. 
 
 ## Verificación local
 
-Pasaron 109 pruebas Python sin conexiones AWS, incluidas las de Práctica 3, las comprobaciones de consultas, cambios, aislamiento y vigencia de datos, el formato V2 de la orden de barrera ([`test_barrier_order.py`](../lambda/tests/test_barrier_order.py)) y el modelo final ([`test_alexa_model.py`](../lambda/tests/test_alexa_model.py)). Salida: [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt). El ZIP extraído pasó 80 pruebas adicionales y su handler raíz se pudo importar.
+Pasaron 105 pruebas Python sin conexiones AWS, incluidas las de Práctica 3, las comprobaciones de consultas, cambios, aislamiento y vigencia de datos, la orden de barrera en formato V1 (`desired.barrera`) y el modelo final ([`test_alexa_model.py`](../lambda/tests/test_alexa_model.py)). Salida: [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt). El ZIP extraído pasó 80 pruebas adicionales y su handler raíz se pudo importar.
