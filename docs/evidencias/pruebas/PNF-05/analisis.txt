@@ -1,0 +1,28 @@
+PNF-05 · Cálculo de RNF5, RNF7 y RNF8 con tools/analizar_pruebas.py
+
+Se ejecuta después de la sesión, desde la raíz del repositorio (Python 3.9+, solo
+biblioteca estándar), cuando ya existen las exportaciones de PF-04 y el log serie:
+
+python tools/analizar_pruebas.py docs/evidencias/pruebas/PF-04/historial-sesion.csv \
+  --serial docs/evidencias/pruebas/serial-sesion.txt \
+  --cloudwatch docs/evidencias/pruebas/PF-04/cloudwatch.csv \
+  --inicio AAAA-MM-DDThh:mm:ss-04:00 --fin AAAA-MM-DDThh:mm:ss-04:00 \
+  > docs/evidencias/pruebas/PNF-05/analisis.md
+
+Opciones:
+  historial-sesion.csv  (posicional) Exportación CSV de SmartParkHistory (consola de DynamoDB).
+  --serial      Log de `pio device monitor -f time`. Da N (diferencia del contador
+                "Historico: MQTT local" entre los dos STATUS de la ventana) y el intervalo
+                entre líneas "AWS UPDATE clase=0" (respaldo del Shadow).
+  --cloudwatch  Exportación CSV de CloudWatch Logs Insights (@timestamp, @message) de
+                /aws/lambda/SmartParkHistoryProcessor. Da los REPORT para Δ1.
+  --inicio      Hora del STATUS que abre la ventana de 10 min (bloque 2), ISO 8601 con zona.
+  --fin         Hora del STATUS que la cierra. --inicio y --fin van juntos.
+  --n           Eventos publicados en la ventana, solo si no se toman del log serie.
+
+Salida (analisis.md): tabla Markdown para 5.2 con integridad M/N (≥ 99 %),
+Δ1 = REPORT − receivedAt (máx ≤ 5 s), Δ0 = receivedAt − occurredAt (máx ≤ 15 s),
+mediana entre ítems "sample" (300 ± 10 s) y entre respaldos del Shadow (30 ± 1 s).
+
+Prueba con datos ficticios (no son resultados de la sesión):
+python tools/analizar_pruebas.py tools/ejemplo-historial.csv --inicio 2026-11-24T10:00:00-04:00 --fin 2026-11-24T10:10:00-04:00 --n 43

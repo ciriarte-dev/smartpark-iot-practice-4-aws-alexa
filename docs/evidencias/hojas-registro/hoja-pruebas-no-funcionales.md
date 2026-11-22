@@ -54,6 +54,8 @@ Total de aciertos: ______ / 40  (criterio ≥ 38)
 
 ## PNF-04 Lógica automática en el Edge (RNF9, video de PF-06)
 
+LCD esperada en el video: la fila 0 sigue cada ocupación (`Libres:3/4 Oc:1` … `Libres:0/4 Oc:4`); con la 4.ª ocupación en `automatico`, la fila 1 muestra `APERTURA BLOQ.`.
+
 | Rep. | Plaza | Cuadro en que el vehículo cubre el IR | Cuadro del cambio del LED | Δcuadros | t (s) |
 |---|---|---|---|---|---|
 | 1 | 1 |  |  |  |  |

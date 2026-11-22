@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
+// Fila 1 sin aviso: alterna entre el modo y la barrera.
+constexpr uint32_t LCD_ALTERNATE_MS = 2000;
+
 void ParkingDisplay::begin() {
     Wire.begin(LCD_SDA_PIN, LCD_SCL_PIN, 100000);
     Wire.setTimeOut(5);
@@ -46,30 +49,40 @@ void ParkingDisplay::update(uint32_t now, const Parking::State& parking, const B
             ok = byte(0x28) && byte(0x08) && byte(0x06) && byte(0x0c) && byte(0x01);
             break;
         case Init::Ready: {
-            char line[21];
-            const char* barrierState = !barrier.initialized() ? "sin estimar" :
-                (barrier.moving() ? "moviendo" :
-                    (barrier.commandedState() == BarrierServo::State::Open ? "abierta*" : "cerrada*"));
-            switch (nextRow_) {
-                case 0: snprintf(line, sizeof(line), "Ocup:%u Libres:%u/%u", unsigned(parking.occupied), unsigned(parking.available), unsigned(Parking::capacity)); break;
-                case 1: snprintf(line, sizeof(line), "Modo: %s", parkingMode(parking.mode)); break;
-                case 2: snprintf(line, sizeof(line), "Barrera:%s", barrierState); break;
-                default: snprintf(line, sizeof(line), "%s", parking.full() ? "PARQUEO LLENO" :
-                    (parking.openingBlocked() ? "APERTURA BLOQUEADA" : "SmartPark")); break;
+            // Holgura para tres %u de 10 digitos: snprintf nunca trunca; la fila se recorta despues.
+            char text[48];
+            const char* barrierState = !barrier.initialized() ? "---" :
+                (barrier.moving() ? "mueve" :
+                    (barrier.commandedState() == BarrierServo::State::Open ? "abierta" : "cerrada"));
+            if (nextRow_ == 0) {
+                snprintf(text, sizeof(text), "Libres:%u/%u Oc:%u", unsigned(parking.available),
+                         unsigned(Parking::capacity), unsigned(parking.occupied));
+            } else if (parking.openingBlocked()) {
+                snprintf(text, sizeof(text), "%s", "APERTURA BLOQ.");
+            } else if (parking.full()) {
+                snprintf(text, sizeof(text), "%s", "PARQUEO LLENO");
+            } else if ((now / LCD_ALTERNATE_MS) % 2 == 0) {
+                snprintf(text, sizeof(text), "Modo: %s", parkingMode(parking.mode));
+            } else {
+                snprintf(text, sizeof(text), "Barrera: %s", barrierState);
             }
-            const size_t length = strlen(line);
-            memset(line + length, ' ', 20 - length);
-            line[20] = '\0';
+            char line[LCD_COLUMNS + 1];
+            size_t length = strlen(text);
+            if (length > LCD_COLUMNS) length = LCD_COLUMNS;
+            memcpy(line, text, length);
+            memset(line + length, ' ', LCD_COLUMNS - length);
+            line[LCD_COLUMNS] = '\0';
             if (!memcmp(line, displayed_[nextRow_], sizeof(line))) {
-                nextRow_ = (nextRow_ + 1) % 4;
+                nextRow_ = (nextRow_ + 1) % LCD_ROWS;
                 return;
             }
-            constexpr uint8_t addresses[] = {0x00, 0x40, 0x14, 0x54};
+            // Direcciones DDRAM del HD44780 para 2 filas.
+            constexpr uint8_t addresses[] = {0x00, 0x40};
             ok = byte(0x80 | addresses[nextRow_]);
-            for (uint8_t i = 0; ok && i < 20; ++i) ok = byte(line[i], true);
+            for (uint8_t i = 0; ok && i < LCD_COLUMNS; ++i) ok = byte(line[i], true);
             if (ok) {
                 memcpy(displayed_[nextRow_], line, sizeof(line));
-                nextRow_ = (nextRow_ + 1) % 4;
+                nextRow_ = (nextRow_ + 1) % LCD_ROWS;
                 return;
             }
             break;

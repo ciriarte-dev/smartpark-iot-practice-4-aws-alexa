@@ -31,7 +31,7 @@
 7. [Recomendaciones](#7-recomendaciones)
 8. [Anexos](#8-anexos)
 
-**Estado de la evidencia.** El diseño y la implementación descritos en las secciones 1 a 3 están en el repositorio y se enlazan en cada punto. Las pruebas automáticas se ejecutaron el 2026-11-21 (sección 4.5). El despliegue en AWS, las pruebas con el hardware y las pruebas en el simulador de Alexa se ejecutan en la sesión de banco descrita en 4.1; sus celdas indican *Pendiente de ejecución* hasta que la evidencia esté en [`docs/evidencias/`](evidencias/).
+**Estado de la evidencia.** El diseño y la implementación descritos en las secciones 1 a 3 están en el repositorio y se enlazan en cada punto. Las pruebas automáticas se ejecutaron el 2026-11-22 (sección 4.5). El despliegue en AWS, las pruebas con el hardware y las pruebas en el simulador de Alexa se ejecutan en la sesión de banco descrita en 4.1; sus celdas indican *Pendiente de ejecución* hasta que la evidencia esté en [`docs/evidencias/`](evidencias/).
 
 ---
 
@@ -48,7 +48,7 @@
 | Ámbito | Práctica 3 | Práctica 4 (este repositorio) |
 |---|---|---|
 | Sensores | HC-SR04 | HC-SR04 + **4 sensores IR, uno por plaza** ([`SLOT_PINS`](../include/config.example.h)) |
-| Actuadores e indicadores | SG90 | SG90 + **8 LEDs** (rojo/verde por plaza) + **LCD 20×4 I²C** ([`ParkingDisplay`](../src/ParkingDisplay.cpp)) |
+| Actuadores e indicadores | SG90 | SG90 + **8 LEDs** (rojo/verde por plaza) + **LCD 16×2 I²C** ([`ParkingDisplay`](../src/ParkingDisplay.cpp)) |
 | Lógica de control | Ninguna: la barrera solo se mueve por orden | **Modos `manual` / `automatico`**; en automático el Edge **bloquea la apertura sin plazas confirmadas libres** ([`Parking::State::openingBlocked()`](../include/Parking.h#L15)) |
 | Parámetros remotos | — | `modo` y `parametros_auto.antirrebote_ir_ms`, persistidos en NVS ([`applyDesired()`](../src/AwsIoTManager.cpp#L241)) |
 | Histórico | — | Tópico `smartpark/<thingName>/history/v1` → regla `SmartParkHistoryIngest` → Lambda `SmartParkHistoryProcessor` → tabla `SmartParkHistory` |
@@ -64,7 +64,7 @@
 | Administrador | Genera el PIN de vinculación con `SmartParkPairingAdmin` y consulta los reportes de 2.12. |
 | Objeto inteligente | Thing `smartpark-grupo9-01`: mide, decide en el Edge, actúa y publica estado e histórico. |
 
-**Escenario.** Con el parqueo en `automatico`, el cuarto vehículo ocupa la plaza 4: los IR confirman la ocupación tras el antirrebote, el LED de la plaza pasa a rojo, la LCD muestra `PARQUEO LLENO`/`APERTURA BLOQUEADA` y el Shadow reporta `disponibles: 0` y `bloqueo_apertura: true`. Si alguien pide *"abre la barrera"*, el Edge rechaza la apertura y lo informa en `reported.ultima_orden.resultado = "bloqueada"`. Al liberarse una plaza, la apertura vuelve a permitirse sin intervención. Cada transición queda en `SmartParkHistory` para los reportes.
+**Escenario.** Con el parqueo en `automatico`, el cuarto vehículo ocupa la plaza 4: los IR confirman la ocupación tras el antirrebote, el LED de la plaza pasa a rojo, la LCD muestra `Libres:0/4 Oc:4` en la fila 0 y `APERTURA BLOQ.` en la fila 1, y el Shadow reporta `disponibles: 0` y `bloqueo_apertura: true`. Si alguien pide *"abre la barrera"*, el Edge rechaza la apertura y lo informa en `reported.ultima_orden.resultado = "bloqueada"`. Al liberarse una plaza, la apertura vuelve a permitirse sin intervención. Cada transición queda en `SmartParkHistory` para los reportes.
 
 **Límites.** El SG90 no tiene realimentación: la posición de la barrera es una **estimación temporal** (`SERVO_TRAVEL_MS = 700` ms, `reported.barrera_posicion_estimada`). La barrera no es un dispositivo de seguridad ni detecta obstáculos. Todo el montaje opera a 5 V y 3,3 V (≤ 12 V DC).
 
@@ -74,9 +74,9 @@
 |---|---|---|---|---|
 | Sensor IR de reflexión (salida digital) | 4 (uno por plaza) | Plaza ocupada / libre | La disponibilidad es la información central del caso de uso y se decide **por plaza**; un sensor por plaza permite contar y saber **cuál** está libre (consulta `ConsultarEstacionamientoIntent`). Es digital, barato, sin contacto y de respuesta rápida; el antirrebote por software (`IR_DEBOUNCE_*`) filtra el ruido de entrada. | Contador único en la entrada (pierde la plaza concreta y acumula error si falla una lectura); ultrasónico por plaza (más caro, 2 GPIO por plaza, más lento); sensor magnético en el piso (instalación invasiva). |
 | HC-SR04 (ultrasónico) | 1 (frente a la barrera) | Distancia al vehículo y presencia con histéresis (15 cm / +3 cm) | Se conserva de la P3 porque responde una pregunta distinta de los IR: **si hay un vehículo esperando en la barrera** y a qué distancia (`ConsultarVehiculoIntent`, `ConsultarDistanciaIntent`). Los IR solo ven las plazas. No se usa para la decisión automática. | Un quinto IR en la entrada (sí/no sin distancia ni umbral configurable). |
-| Servo SG90 | 1 | Barrera 0° (cerrada) ↔ 90° (abierta) | Dos posiciones discretas con una señal PWM, a 5 V. Es el actuador que no es LED exigido por el enunciado. | Motor DC con puente H (necesita finales de carrera); solenoide (carrera corta, consumo sostenido). |
+| Servo SG90 | 1 | Barrera 0° (cerrada) ↔ 90° (abierta) | Dos posiciones discretas con una sola señal PWM. En el montaje se alimenta desde el pin 3V3 del ESP32 (2.3, 7.5). Es el actuador que no es LED exigido por el enunciado. | Motor DC con puente H (necesita finales de carrera); solenoide (carrera corta, consumo sostenido). |
 | LED rojo + LED verde | 8 (2 por plaza) | Indicación local de ocupación | El conductor ve desde la entrada qué plaza está libre sin consultar a Alexa. Dos colores permiten un tercer estado visible: ambos apagados = `desconocido`. | LED RGB (más pines por plaza o un driver). |
-| LCD 20×4 con PCF8574 | 1 | Ocupación, modo, barrera y aviso de lleno/bloqueo | Muestra el resumen del parqueo y la razón de un bloqueo en el sitio, también sin conexión. El backpack I²C usa solo 2 GPIO. | LCD 16×2 (no cabe el resumen en 4 líneas). |
+| LCD 16×2 con PCF8574 | 1 | Fila 0: plazas libres y ocupadas (`Libres:3/4 Oc:1`). Fila 1: `APERTURA BLOQ.`, `PARQUEO LLENO` o, sin aviso, modo y barrera alternados cada 2 s | Muestra el estado del parqueo y la razón de un bloqueo en el sitio, también sin conexión, en 2 filas de 16 caracteres. El backpack I²C usa solo 2 GPIO. | LCD de 4 filas (más texto a la vez, pero ocupa más espacio en la maqueta); solo LEDs (no explican la razón de un bloqueo). |
 
 Los pines y su adaptación eléctrica están en 2.3.
 
@@ -98,7 +98,7 @@ Las pruebas `PF-xx` están en 4.2 y las automáticas `PA-xx` en 4.5.
 | RF10 | Disparar la regla `SmartParkHistoryIngest` con cada mensaje de `smartpark/+/history/v1` e invocar `SmartParkHistoryProcessor`. | [`iot-rule.example.json`](../aws/history/iot-rule.example.json), [`HistoryPublisher::publish()`](../src/HistoryPublisher.cpp#L135) |
 | RF11 | Validar tipos, rangos y coherencia; descartar inválidos sin almacenarlos; enriquecer con `thingName`, `schemaVersion` y `receivedAt`; guardar lecturas (`sample`, `occupancy_changed`) en `SmartParkHistory`. | [`validate_event()`](../lambda/history_lambda_function.py#L87), [`lambda_handler`](../lambda/history_lambda_function.py#L115) |
 | RF12 | Registrar cada cambio de estado de la barrera (`barrier_changed`) con su origen: `voz` (órdenes de la skill), `edge` (`OPEN`/`CLOSE`), `nube` o `legado` (solo órdenes V1 de clientes antiguos). | [`HistoryPublisher::observeBarrier()`](../src/HistoryPublisher.cpp#L81), [`validate_barrier()`](../lambda/history_lambda_function.py#L74) |
-| RF13 | Lógica automática en el Edge: (E1) indicación de plaza por LED/LCD; (E2) en `automatico`, bloquear la apertura si no hay plaza confirmada libre; (E3) el cierre siempre se acepta; (E4) una orden remota vencida (> 30 s) no mueve la barrera. | [`Parking`](../src/Parking.cpp), [`applyPending()`](../src/AwsIoTManager.cpp#L29), [`main.cpp`](../src/main.cpp#L62) |
+| RF13 | Lógica automática en el Edge: (E1) indicación de plaza por LED y en la fila 0 de la LCD 16×2 (`Libres:x/4 Oc:y`); (E2) en `automatico`, bloquear la apertura si no hay plaza confirmada libre y mostrar `APERTURA BLOQ.` en la fila 1; (E3) el cierre siempre se acepta; (E4) una orden remota vencida (> 30 s) no mueve la barrera. | [`Parking`](../src/Parking.cpp), [`applyPending()`](../src/AwsIoTManager.cpp#L29), [`main.cpp`](../src/main.cpp#L62), [`ParkingDisplay::update()`](../src/ParkingDisplay.cpp#L35) |
 | RF14 | Reportar `modo` y `parametros_auto.antirrebote_ir_ms` en `reported`, y consultarlos y cambiarlos por voz a través de `desired`. | [`parking_handlers.py`](../lambda/handlers/parking_handlers.py), [`set_mode`, `set_debounce`](../lambda/services/shadow_service.py#L93) |
 | RF15 | Diseñar mockups de reportes obtenibles con consultas a `SmartParkHistory`. | [2.12](#212-diseño-de-reportes-mockups), [`docs/mockups/`](mockups/) |
 
@@ -135,7 +135,7 @@ Justificación de los valores: 3 s es el tiempo que un usuario espera tras la re
 | RF10 | `HistoryPublisher`, regla `SmartParkHistoryIngest` | 2.2, 2.5.2, 2.9 | PF-04, PA-02 (contrato), PA-03 (`test_templates_keep_rule_identity_and_table_keys_aligned`) |
 | RF11 | `history_lambda_function.validate_event()` | 2.5.2, 2.8 | PF-04, PF-05, PNF-05, PA-03 (`test_snapshot_item_and_reduced_capacity`, `test_invalid_never_initializes_sdk`, `test_put_conditional_duplicate_and_retry`) |
 | RF12 | `HistoryPublisher::observeBarrier()`, `validate_barrier()`, `ShadowService.set_barrier()` | 2.5.1, 2.5.2 | PF-04, PA-03 (`test_barrier_origins_and_actual_transitions`, `test_barrier_order`) |
-| RF13 | `Parking::State::openingBlocked()`, `applyPending()`, `main.cpp` | 2.5.3, 2.6 | PF-06 (E1–E3), PNF-04, PNF-06 (E4), PA-02 |
+| RF13 | `Parking::State::openingBlocked()`, `applyPending()`, `main.cpp`, `ParkingDisplay::update()` | 2.5.3, 2.6 | PF-06 (E1–E3), PNF-04, PNF-06 (E4), PA-02 |
 | RF14 | `parking_handlers`, `ShadowService.set_mode/set_debounce`, `applyDesired()` | 2.5.1, 2.7, 2.11 | PF-06, PF-07, PNF-06, PA-03 (`test_v2_*`) |
 | RF15 | `SmartParkHistory` y patrones de acceso | 2.8, 2.12 | PF-08 |
 | RNF1–RNF12 | ver 1.4 | 2.6, 2.10 | PNF-01 a PNF-06, PF-05, 5.6, PA-01 a PA-03 |
@@ -146,17 +146,18 @@ Justificación de los valores: 3 s es el tiempo que un usuario espera tras la re
 
 ### 2.1 Diagrama de bloques del objeto inteligente
 
-El ESP32 separa el trabajo en dos contextos: `loop()` lee sensores, decide y acciona (Edge); la tarea FreeRTOS `smartpark-aws` es la única dueña de MQTT y NVS. Se comunican por tres colas de un elemento (instantánea, comando y estado), de modo que una red lenta nunca detiene la lógica local. El servo tiene su propia fuente de 5 V con masa común. Copia: [`diagrams/01-bloques.mmd`](diagrams/01-bloques.mmd).
+El ESP32 separa el trabajo en dos contextos: `loop()` lee sensores, decide y acciona (Edge); la tarea FreeRTOS `smartpark-aws` es la única dueña de MQTT y NVS. Se comunican por tres colas de un elemento (instantánea, comando y estado), de modo que una red lenta nunca detiene la lógica local. Todo se alimenta por el USB del ESP32: el pin 5V/VIN alimenta la LCD y el HC-SR04, y el pin 3V3, los IR y el servo, con GND común (2.3). La LCD 16×2 muestra en la fila 0 las plazas libres y ocupadas (`Libres:3/4 Oc:1`) y en la fila 1, por prioridad, `APERTURA BLOQ.`, `PARQUEO LLENO` o, cada 2 s, el modo y el estado estimado de la barrera (3.1). Copia: [`diagrams/01-bloques.mmd`](diagrams/01-bloques.mmd).
 
 ```mermaid
 flowchart LR
     subgraph PWR["Alimentación"]
-        USB["USB 5 V<br/>(ESP32, LCD, IR, HC-SR04)"]
-        EXT["Fuente regulada 5 V<br/>(solo SG90)"]
+        USB["USB 5 V<br/>(única alimentación)"]
+        V5["Pin 5V/VIN del ESP32<br/>(LCD, HC-SR04)"]
+        V33["Pin 3V3 del ESP32<br/>(4 IR, SG90)"]
         GND(("GND común"))
     end
     subgraph SENS["Sensores"]
-        US["HC-SR04<br/>TRIG GPIO 32 · ECHO GPIO 35<br/>(divisor 5 V → 3,3 V)"]
+        US["HC-SR04<br/>TRIG GPIO 32 · ECHO GPIO 35<br/>(ECHO directo)"]
         IR["4 sensores IR, uno por plaza<br/>GPIO 34 · 36 · 39 · 33"]
     end
     subgraph MCU["ESP32 DOIT DevKit V1 · Thing smartpark-grupo9-01"]
@@ -169,7 +170,7 @@ flowchart LR
     subgraph ACT["Actuadores e indicadores"]
         SERVO["Servo SG90 (barrera)<br/>PWM 50 Hz · GPIO 18"]
         LEDS["8 LEDs: rojo/verde por plaza<br/>17/13 · 14/19 · 23/25 · 26/27"]
-        LCD["LCD 20x4 + PCF8574 (0x27)<br/>SDA GPIO 21 · SCL GPIO 22"]
+        LCD["LCD 16×2 + PCF8574 (0x27)<br/>SDA GPIO 21 · SCL GPIO 22"]
     end
     CLOUD["AWS IoT Core<br/>MQTT sobre TLS 8883"]
     PC["Monitor serie 115200 baudios<br/>OPEN · CLOSE · STATUS · DISTANCE · SLOT1 · HELP"]
@@ -182,7 +183,8 @@ flowchart LR
     TASK <-- "Wi-Fi" --> CLOUD
     PC <--> LOOP
     USB --> MCU
-    EXT --> SERVO
+    USB --> V5
+    V5 -- "regulador de la placa" --> V33
     GND --- MCU
     GND --- SERVO
 ```
@@ -195,24 +197,32 @@ Fuente: [`diagrams/02-arquitectura.html`](diagrams/02-arquitectura.html). Hay do
 
 ### 2.3 Diagrama de circuito
 
-![Circuito de SmartPark V2](diagrams/03-circuito.png)
+![Circuito de SmartPark V2 (montaje real)](diagrams/03-circuito.png)
 
-Fuente editable: [`diagrams/03-circuito.excalidraw`](diagrams/03-circuito.excalidraw).
+Fuente editable: [`diagrams/03-circuito.excalidraw`](diagrams/03-circuito.excalidraw) · SVG: [`diagrams/03-circuito.svg`](diagrams/03-circuito.svg).
 
-| Pin ESP32 | Componente | Alimentación | Observaciones |
+El montaje está en una protoboard y se alimenta solo por el USB del ESP32. El pin 5V/VIN alimenta la LCD y el HC-SR04; el pin 3V3, del regulador de la placa, alimenta los cuatro IR y el servo. Todos los módulos se conectan directamente a los GPIO, y todas las masas están unidas al GND del ESP32. Las mejoras eléctricas para una versión real están en 7.5.
+
+![Montaje real en protoboard](evidencias/montaje/foto-circuito-protoboard.jpeg)
+
+*Montaje real en protoboard: ESP32, HC-SR04, 4 IR, 8 LEDs, servo SG90 y LCD 16×2, alimentados por USB. La LCD muestra el texto del firmware anterior a la adaptación a 16×2 (3.1), con la fila 0 cortada.*
+
+| Pin ESP32 | Componente | Alimentación | Conexión en el montaje |
 |---|---|---|---|
-| GPIO 32 | HC-SR04 TRIG | 5 V | Salida de 3,3 V; el HC-SR04 la acepta como nivel alto. |
-| GPIO 35 | HC-SR04 ECHO | 5 V | Solo entrada. ECHO sale a 5 V: adaptar a 3,3 V (divisor) antes del pin. |
-| GPIO 34 / 36 / 39 / 33 | IR plazas 1 / 2 / 3 / 4 | 3,3 V | 34, 36 y 39 son solo entrada y sin pull-up interno: una salida de colector abierto requiere pull-up externo a 3,3 V. Activos en bajo (`IR_OCCUPIED_LEVEL = LOW`). |
-| GPIO 18 | SG90 señal | 5 V de fuente externa | PWM 50 Hz, 500–2400 µs (0° = 500 µs, 90° = 1450 µs). Nunca alimentar desde 3V3 ni desde un GPIO. |
-| GPIO 17 / 13 | LED rojo / verde plaza 1 | GPIO | Una resistencia por LED: R ≥ (3,3 V − Vf) / 2 mA. GPIO 17 debe estar libre de PSRAM en el módulo. |
+| GPIO 32 | HC-SR04 TRIG | 5 V (pin 5V/VIN) | Directa. La salida de 3,3 V del GPIO es nivel alto para el HC-SR04. |
+| GPIO 35 | HC-SR04 ECHO | 5 V (pin 5V/VIN) | Directa al pin. GPIO 35 solo admite entrada; el ECHO del módulo entrega pulsos de 5 V (7.5). |
+| GPIO 34 / 36 / 39 / 33 | IR plazas 1 / 2 / 3 / 4 (OUT) | 3,3 V (pin 3V3) | Directa. Salida digital activa en bajo (`IR_OCCUPIED_LEVEL = LOW`). 34, 36 y 39 son solo entrada y sin pull-up interno. |
+| GPIO 18 | SG90 señal | 3,3 V (pin 3V3) | PWM 50 Hz, 500–2400 µs (0° = 500 µs, 90° = 1450 µs). El servo toma su corriente del regulador de 3,3 V de la placa (7.5). |
+| GPIO 17 / 13 | LED rojo / verde plaza 1 | GPIO | Una resistencia en serie por LED, con el cátodo a GND. |
 | GPIO 14 / 19 | LED rojo / verde plaza 2 | GPIO | Ídem. |
 | GPIO 23 / 25 | LED rojo / verde plaza 3 | GPIO | Ídem. |
 | GPIO 26 / 27 | LED rojo / verde plaza 4 | GPIO | Ídem. |
-| GPIO 21 / 22 | LCD SDA / SCL (PCF8574, 0x27) | 5 V (backpack) | I²C a 100 kHz. Con backpack a 5 V, usar traductor de nivel bidireccional. |
-| VIN / GND | USB 5 V / masa común | — | Masa común con la fuente del servo; positivos separados. |
+| GPIO 21 / 22 | LCD 16×2 SDA / SCL (PCF8574, 0x27) | 5 V (pin 5V/VIN) | I²C a 100 kHz, SDA y SCL directos a los GPIO (7.5). |
+| 5V/VIN · 3V3 · GND | Alimentación | USB 5 V | 5V/VIN: LCD y HC-SR04. 3V3: 4 IR y SG90. GND común a todos los componentes. |
 
-Fuente de los pines: [`config.example.h`](../include/config.example.h). Notas de cableado y presupuesto de corriente: [`firmware-v2.md`](firmware-v2.md#cableado-previsto).
+Resistencias de los LEDs: 4 de 220 Ω y 4 de 330 Ω, una en serie con cada LED; no está registrado qué valor lleva cada color.
+
+Fuente de los pines: [`config.example.h`](../include/config.example.h). Notas de cableado y presupuesto de corriente: [`firmware-v2.md`](firmware-v2.md#cableado-del-montaje).
 
 ### 2.4 Diagramas de clases
 
@@ -552,7 +562,7 @@ sequenceDiagram
     PK->>PK: candidato estable durante debounceMs (120 ms por defecto)
     PK->>LED: rojo ON, verde OFF
     PK->>PK: occupied++, available--
-    LCD->>LCD: "Ocup:x Libres:y/4" y, si available == 0, "PARQUEO LLENO" o "APERTURA BLOQUEADA"
+    LCD->>LCD: fila 0 "Libres:y/4 Oc:x" · fila 1 "APERTURA BLOQ." si hay bloqueo, si no "PARQUEO LLENO" si está lleno
     PK-->>HP: observeParking(): occupancy_changed (slot, estado_anterior)
     PK-->>NET: snapshot → reported.slots / ocupados / disponibles / lleno / bloqueo_apertura (clase Sensor)
 ```
@@ -639,8 +649,8 @@ stateDiagram-v2
 
 | Regla | Condición → acción | Ubicación | Justificación |
 |---|---|---|---|
-| E1 Indicación de plaza | IR estable ≥ `debounceMs` → LED rojo/verde, conteos, LCD | Edge ([`Parking::update()`](../src/Parking.cpp#L27)) | Depende solo de datos locales; latencia de decenas de ms; debe funcionar sin red. Llevarla a la Nube costaría un mensaje por transición y dejaría el LED apagado sin conexión. |
-| E2 Bloqueo de apertura | `modo == automatico` y `disponibles == 0` → apertura rechazada (`bloqueada`) | Edge ([`openingBlocked()`](../include/Parking.h#L15), [`applyPending()`](../src/AwsIoTManager.cpp#L42), [`main.cpp`](../src/main.cpp#L62)) | La decisión usa el estado de las plazas que solo el ESP32 conoce al instante; en la Nube habría una carrera entre el último `reported` y la orden. Sigue operando sin red. |
+| E1 Indicación de plaza | IR estable ≥ `debounceMs` → LED rojo/verde, conteos y fila 0 de la LCD (`Libres:x/4 Oc:y`) | Edge ([`Parking::update()`](../src/Parking.cpp#L27), [`ParkingDisplay::update()`](../src/ParkingDisplay.cpp#L35)) | Depende solo de datos locales; latencia de decenas de ms; debe funcionar sin red. Llevarla a la Nube costaría un mensaje por transición y dejaría el LED apagado sin conexión. |
+| E2 Bloqueo de apertura | `modo == automatico` y `disponibles == 0` → apertura rechazada (`bloqueada`) y fila 1 de la LCD `APERTURA BLOQ.` | Edge ([`openingBlocked()`](../include/Parking.h#L15), [`applyPending()`](../src/AwsIoTManager.cpp#L42), [`main.cpp`](../src/main.cpp#L62)) | La decisión usa el estado de las plazas que solo el ESP32 conoce al instante; en la Nube habría una carrera entre el último `reported` y la orden. Sigue operando sin red. |
 | E3 Cierre permitido | En `automatico`, `cerrar` siempre se acepta | Edge | Cerrar nunca empeora la ocupación; bloquearlo dejaría la barrera abierta. |
 | E4 Vencimiento de orden remota | `now ≥ vence` (≤ `AWS_ORDER_TTL_S` = 30 s) → `vencida`, sin movimiento | Edge ([`applyPending()`](../src/AwsIoTManager.cpp#L40)) | Evita que una orden dada durante un corte abra la barrera minutos después, cuando nadie la espera. |
 
@@ -652,7 +662,7 @@ stateDiagram-v2
 |---|---|
 | `manual` + *"abre la barrera"* | Se acepta y mueve el servo (`aceptada`). |
 | `automatico` con ≥ 1 plaza libre + *"abre la barrera"* | Se acepta. |
-| `automatico` con 0 libres (o plazas `desconocido`) + *"abre la barrera"* | Se rechaza en el Edge: `ultima_orden.resultado = "bloqueada"`, LCD `APERTURA BLOQUEADA`. Alexa responde *"Solicité abrir la barrera…"* porque la Lambda no espera al dispositivo; *"consulta el estado de la barrera"* confirma que sigue cerrada. |
+| `automatico` con 0 libres (o plazas `desconocido`) + *"abre la barrera"* | Se rechaza en el Edge: `ultima_orden.resultado = "bloqueada"`, fila 1 de la LCD `APERTURA BLOQ.`. Alexa responde *"Solicité abrir la barrera…"* porque la Lambda no espera al dispositivo; *"consulta el estado de la barrera"* confirma que sigue cerrada. |
 | Cualquier modo + *"cierra la barrera"* | Se acepta. |
 | Orden Serial y orden remota en la misma vuelta de `loop()` | Prevalece la Serial (operador en sitio) y la remota se descarta ([`applyPending()`](../src/AwsIoTManager.cpp#L37)). |
 | *"activa el modo manual"* | Desactiva el bloqueo: la voz no obliga a abrir, solo cambia el modo; la apertura requiere otra orden. |
@@ -910,7 +920,7 @@ Ningún mockup requiere un índice nuevo para un Thing; un panel que compare var
 | [`include/Parking.h`](../include/Parking.h), [`src/Parking.cpp`](../src/Parking.cpp) | IR, antirrebote, conteos, LEDs, modo (reglas E1 y E2) |
 | [`src/BarrierServo.cpp`](../src/BarrierServo.cpp) | SG90, PWM perezoso y posición estimada por tiempo |
 | [`src/UltrasonicSensor.cpp`](../src/UltrasonicSensor.cpp) | HC-SR04 con espera acotada e histéresis de presencia |
-| [`src/ParkingDisplay.cpp`](../src/ParkingDisplay.cpp) | LCD 20×4 por PCF8574, sin bloqueos: una fila por llamada |
+| [`src/ParkingDisplay.cpp`](../src/ParkingDisplay.cpp) | LCD 16×2 por PCF8574 (HD44780 en 4 bits, filas en DDRAM 0x00 y 0x40), sin bloqueos: escribe una fila por llamada y solo si su texto cambió; ante un error I²C reinicia la inicialización y reescribe ambas filas. Fila 0: `Libres:x/4 Oc:y`. Fila 1, por prioridad: `APERTURA BLOQ.`, `PARQUEO LLENO` o, cada 2 s, `Modo: manual`/`Modo: automatico` y `Barrera: abierta`/`cerrada`/`mueve`/`---`. |
 | [`include/SerialCommands.h`](../include/SerialCommands.h) | Analizador acotado de `OPEN`, `CLOSE`, `STATUS`, `DISTANCE`, `SLOT1`, `HELP` |
 | [`src/AwsIoTManager.cpp`](../src/AwsIoTManager.cpp) | Tarea de red: Wi-Fi, NTP, MQTT/TLS, Shadow, cuota, órdenes |
 | [`include/ShadowBudget.h`](../include/ShadowBudget.h) | Cuota diaria persistente por clase de solicitud |
@@ -1010,7 +1020,7 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 
 **Roles.** Tres integrantes: *maqueta* (plazas, objeto frente al HC-SR04, punto de acceso), *consola* (monitor serie, simulador de Alexa, cliente MQTT) y *registro* (cámara, cronómetro, hojas de registro y consolas de DynamoDB y CloudWatch).
 
-**Evidencia en texto.** Se prioriza la evidencia que se lee sin abrir videos. Todo se guarda en `docs/evidencias/pruebas/`, con una carpeta por prueba (`<ID>/`) que se crea durante la sesión.
+**Evidencia en texto.** Se prioriza la evidencia que se lee sin abrir videos. Todo se guarda en `docs/evidencias/pruebas/`, con una carpeta por prueba (`<ID>/`) ya creada; su `README.md` indica qué archivos guardar y cómo obtenerlos.
 
 | Tipo | Cómo se obtiene | Archivo |
 |---|---|---|
@@ -1069,14 +1079,14 @@ Las rutas de "Evidencia esperada" son relativas a `docs/evidencias/pruebas/`. "R
 
 | ID | RF | Procedimiento | Resultado esperado | Evidencia esperada | Resultado obtenido | Estado |
 |---|---|---|---|---|---|---|
-| PF-01 | RF1, RF2 | Enviar `DISTANCE` y `SLOT1`; cubrir el IR de la plaza 1 y liberarlo; observar el cliente MQTT. | Serial: `Distancia: X cm` y `Slot 1: … estado=…`; `update/accepted` con `slots`, `ocupados`, `disponibles` y `distancia_cm` iguales a lo observado. | `serial-sesion.txt`; `PF-01/update-accepted.png` | Pendiente de ejecución | Pendiente de ejecución |
-| PF-02 | RF3, RF4, RF5, RF6 | En `manual` (si no lo está, *"activa el modo manual"*): *"abre la barrera"* y *"cierra la barrera"* tres veces cada una (video de PNF-03); *"consulta la distancia"*, *"hay un auto esperando"* y *"consulta el estado de la barrera"*. | Un movimiento del servo por orden; `reported.barrera` igual al pedido; `ultima_orden.resultado = aceptada`; sin `delta` pendiente; las consultas repiten `distancia_cm`, `vehiculo_detectado` y `barrera` de `reported`. | `PF-02/simulador-*.png` (respuesta y JSON Input); `PF-02/update-accepted.png`; `serial-sesion.txt` | Pendiente de ejecución | Pendiente de ejecución |
-| PF-03 | RF7, RF8, RF9 | **A** (bloque 1): abrir la skill sin vinculación; generar el PIN con `SmartParkPairingAdmin`; *"vincula mi parqueo con el codigo …"*; cerrar y reabrir la skill. **B** (bloque 3, ≥ 300 s después del primer PIN): generar otro PIN; *"cambia mi vinculacion con el código …"*. **C** (bloque 5): *"desvincula mi parqueo"*; *"consulta la distancia"*. | A: sin vinculación, la skill pide vincular; con el PIN, ítem `userId → smartpark-grupo9-01` en `SmartParkBindings` y bienvenida al reabrir. B: *"Ese parqueo ya está vinculado a tu usuario. El código fue consumido."* y `revision` nueva. C: *"Desvinculé tu parqueo."*, ítem eliminado y la consulta pide vincular. | `PF-03/simulador-*.png`; `PF-03/bindings-*.png` (ítem en cada parte) | Pendiente de ejecución | Pendiente de ejecución |
-| PF-04 | RF10, RF11, RF12 | Usa los eventos de los bloques 1–3 (aperturas y cierres por voz de PF-02, `OPEN`/`CLOSE`, transiciones de PNF-02). En el bloque 5: contar en CloudWatch los `START` de `SmartParkHistoryProcessor` dentro de la ventana de PNF-05; consultar `SmartParkHistory` por `thingName` y el rango de la sesión; exportar el CSV y los logs. | Una invocación por mensaje publicado (`START` = N de PNF-05); ítems con `thingName`, `eventKey`, `schemaVersion = v1`, `occurredAt`, `receivedAt` y `data` coherente; `barrier_changed` con `anterior`/`actual` correctos, `origin = voz` para la voz (formato V2) y `edge` para `OPEN`/`CLOSE`. | `PF-04/historial-sesion.csv`; `PF-04/cloudwatch.csv` | Pendiente de ejecución | Pendiente de ejecución |
-| PF-05 | RF11 | Copiar del cliente MQTT un mensaje `sample` real de la sesión y publicarlo en `smartpark/smartpark-grupo9-01/history/v1` cuatro veces, cada una con un campo inválido: `distancia_cm: 999`, `capacidad: 5`, `eventType: "door_opened"` y `origin: "voz"`. Publicar dos veces el mensaje real sin cambios (duplicado). | 4 líneas `history_invalid field=…` y ningún ítem nuevo por los inválidos; el duplicado no crea un segundo ítem (escritura condicional). | `PF-05/mensajes.txt` (cuerpos publicados); `PF-04/cloudwatch.csv`; `PF-04/historial-sesion.csv` | Pendiente de ejecución | Pendiente de ejecución |
-| PF-06 | RF13 (E1–E3), RF14, convivencia con la voz | Con la barrera cerrada y las 4 plazas libres: *"activa el modo automático"*; ocupar las plazas 1 a 4; *"abre la barrera"* y `OPEN`; *"cierra la barrera"*; liberar la plaza 4 y *"abre la barrera"*; `CLOSE`; volver a ocupar la plaza 4; *"activa el modo manual"* y *"abre la barrera"*. Video para PNF-04. | E1: LED, LCD y `reported.slots` siguen a cada plaza. E2: con 4 ocupadas en `automatico`, barrera inmóvil, `ultima_orden.resultado = bloqueada`, `bloqueo_apertura: true`, LCD `APERTURA BLOQUEADA` y Serial *"Apertura bloqueada: sin plazas confirmadas"*. E3: cierre `aceptada`. Con una plaza libre, apertura `aceptada`. En `manual`, apertura `aceptada` con el parqueo lleno. | `serial-sesion.txt`; `PF-06/update-accepted-*.png`; `PF-06/simulador-*.png` | Pendiente de ejecución | Pendiente de ejecución |
-| PF-07 | RF14, RF3 | Con el estado final de PF-06 (`manual`, 4 plazas ocupadas): *"cuántos espacios hay disponibles"*, *"cuántas plazas están ocupadas"*, *"está libre la plaza 2"*, *"está libre la plaza 5"*, *"en qué modo está el parqueo"*, *"consulta el antirrebote"*, *"ajusta el antirrebote a 200 milisegundos"*, *"ajusta el antirrebote a 1001 milisegundos"*, *"ajusta el antirrebote a 120 milisegundos"*, *"ayuda"* y *"cancela"*; reabrir la skill y *"detente"*. Revisar el intent y el slot en **JSON Input**. | Consultas iguales a `reported` (0 disponibles, 4 ocupadas, plaza 2 ocupada, modo manual, 120 ms). 200 y 120 pasan por `desired` y luego por `reported.parametros_auto.antirrebote_ir_ms`. Plaza 5: *"Dime un número de estacionamiento del uno al cuatro."*; 1001: *"Dime un valor entero entre 50 y 1000 milisegundos."*; ninguno de los dos escribe el Shadow. Ayuda mantiene la sesión; cancelar y detener responden *"Hasta luego."*. | `PF-07/simulador-*.png`; `PF-07/update-accepted.png` | Pendiente de ejecución | Pendiente de ejecución |
-| PF-08 | RF15 | Ejecutar en la consola de DynamoDB las consultas de M1–M4 (2.12) sobre el rango de la sesión. | Cada consulta devuelve los ítems y atributos que necesita su mockup. | `PF-08/M1.csv` a `PF-08/M4.csv` | Pendiente de ejecución | Pendiente de ejecución |
+| PF-01 | RF1, RF2 | Enviar `DISTANCE` y `SLOT1`; cubrir el IR de la plaza 1 y liberarlo; observar el cliente MQTT. | Serial: `Distancia: X cm` y `Slot 1: … estado=…`; `update/accepted` con `slots`, `ocupados`, `disponibles` y `distancia_cm` iguales a lo observado. | [`serial-sesion.txt`](evidencias/pruebas/); [`PF-01/update-accepted.png`](evidencias/pruebas/PF-01/) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-02 | RF3, RF4, RF5, RF6 | En `manual` (si no lo está, *"activa el modo manual"*): *"abre la barrera"* y *"cierra la barrera"* tres veces cada una (video de PNF-03); *"consulta la distancia"*, *"hay un auto esperando"* y *"consulta el estado de la barrera"*. | Un movimiento del servo por orden; `reported.barrera` igual al pedido; `ultima_orden.resultado = aceptada`; sin `delta` pendiente; las consultas repiten `distancia_cm`, `vehiculo_detectado` y `barrera` de `reported`. | [`PF-02/simulador-*.png`](evidencias/pruebas/PF-02/) (respuesta y JSON Input); [`PF-02/update-accepted.png`](evidencias/pruebas/PF-02/); [`serial-sesion.txt`](evidencias/pruebas/) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-03 | RF7, RF8, RF9 | **A** (bloque 1): abrir la skill sin vinculación; generar el PIN con `SmartParkPairingAdmin`; *"vincula mi parqueo con el codigo …"*; cerrar y reabrir la skill. **B** (bloque 3, ≥ 300 s después del primer PIN): generar otro PIN; *"cambia mi vinculacion con el código …"*. **C** (bloque 5): *"desvincula mi parqueo"*; *"consulta la distancia"*. | A: sin vinculación, la skill pide vincular; con el PIN, ítem `userId → smartpark-grupo9-01` en `SmartParkBindings` y bienvenida al reabrir. B: *"Ese parqueo ya está vinculado a tu usuario. El código fue consumido."* y `revision` nueva. C: *"Desvinculé tu parqueo."*, ítem eliminado y la consulta pide vincular. | [`PF-03/simulador-*.png`](evidencias/pruebas/PF-03/); [`PF-03/bindings-*.png`](evidencias/pruebas/PF-03/) (ítem en cada parte) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-04 | RF10, RF11, RF12 | Usa los eventos de los bloques 1–3 (aperturas y cierres por voz de PF-02, `OPEN`/`CLOSE`, transiciones de PNF-02). En el bloque 5: contar en CloudWatch los `START` de `SmartParkHistoryProcessor` dentro de la ventana de PNF-05; consultar `SmartParkHistory` por `thingName` y el rango de la sesión; exportar el CSV y los logs. | Una invocación por mensaje publicado (`START` = N de PNF-05); ítems con `thingName`, `eventKey`, `schemaVersion = v1`, `occurredAt`, `receivedAt` y `data` coherente; `barrier_changed` con `anterior`/`actual` correctos, `origin = voz` para la voz (formato V2) y `edge` para `OPEN`/`CLOSE`. | [`PF-04/historial-sesion.csv`](evidencias/pruebas/PF-04/); [`PF-04/cloudwatch.csv`](evidencias/pruebas/PF-04/) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-05 | RF11 | Copiar del cliente MQTT un mensaje `sample` real de la sesión y publicarlo en `smartpark/smartpark-grupo9-01/history/v1` cuatro veces, cada una con un campo inválido: `distancia_cm: 999`, `capacidad: 5`, `eventType: "door_opened"` y `origin: "voz"`. Publicar dos veces el mensaje real sin cambios (duplicado). | 4 líneas `history_invalid field=…` y ningún ítem nuevo por los inválidos; el duplicado no crea un segundo ítem (escritura condicional). | [`PF-05/mensajes.txt`](evidencias/pruebas/PF-05/) (cuerpos publicados); [`PF-04/cloudwatch.csv`](evidencias/pruebas/PF-04/); [`PF-04/historial-sesion.csv`](evidencias/pruebas/PF-04/) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-06 | RF13 (E1–E3), RF14, convivencia con la voz | Con la barrera cerrada y las 4 plazas libres: *"activa el modo automático"*; ocupar las plazas 1 a 4; *"abre la barrera"* y `OPEN`; *"cierra la barrera"*; liberar la plaza 4 y *"abre la barrera"*; `CLOSE`; volver a ocupar la plaza 4; *"activa el modo manual"* y *"abre la barrera"*. Video para PNF-04. | E1: LED, `reported.slots` y fila 0 de la LCD siguen a cada plaza (`Libres:4/4 Oc:0` … `Libres:0/4 Oc:4`). E2: con 4 ocupadas en `automatico`, barrera inmóvil, `ultima_orden.resultado = bloqueada`, `bloqueo_apertura: true`, LCD `Libres:0/4 Oc:4` / `APERTURA BLOQ.` y Serial *"Apertura bloqueada: sin plazas confirmadas"*. E3: cierre `aceptada`; la LCD sigue en `APERTURA BLOQ.`. Con una plaza libre, apertura `aceptada`; LCD `Libres:1/4 Oc:3` y la fila 1 alterna cada 2 s entre `Modo: automatico` y `Barrera: abierta`. En `manual`, apertura `aceptada` con el parqueo lleno; LCD `Libres:0/4 Oc:4` / `PARQUEO LLENO`. | [`serial-sesion.txt`](evidencias/pruebas/); [`PF-06/update-accepted-*.png`](evidencias/pruebas/PF-06/); [`PF-06/simulador-*.png`](evidencias/pruebas/PF-06/) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-07 | RF14, RF3 | Con el estado final de PF-06 (`manual`, 4 plazas ocupadas): *"cuántos espacios hay disponibles"*, *"cuántas plazas están ocupadas"*, *"está libre la plaza 2"*, *"está libre la plaza 5"*, *"en qué modo está el parqueo"*, *"consulta el antirrebote"*, *"ajusta el antirrebote a 200 milisegundos"*, *"ajusta el antirrebote a 1001 milisegundos"*, *"ajusta el antirrebote a 120 milisegundos"*, *"ayuda"* y *"cancela"*; reabrir la skill y *"detente"*. Revisar el intent y el slot en **JSON Input**. | Consultas iguales a `reported` (0 disponibles, 4 ocupadas, plaza 2 ocupada, modo manual, 120 ms). 200 y 120 pasan por `desired` y luego por `reported.parametros_auto.antirrebote_ir_ms`. Plaza 5: *"Dime un número de estacionamiento del uno al cuatro."*; 1001: *"Dime un valor entero entre 50 y 1000 milisegundos."*; ninguno de los dos escribe el Shadow. Ayuda mantiene la sesión; cancelar y detener responden *"Hasta luego."*. | [`PF-07/simulador-*.png`](evidencias/pruebas/PF-07/); [`PF-07/update-accepted.png`](evidencias/pruebas/PF-07/) | Pendiente de ejecución | Pendiente de ejecución |
+| PF-08 | RF15 | Ejecutar en la consola de DynamoDB las consultas de M1–M4 (2.12) sobre el rango de la sesión. | Cada consulta devuelve los ítems y atributos que necesita su mockup. | [`PF-08/M1.csv`](evidencias/pruebas/PF-08/) a [`PF-08/M4.csv`](evidencias/pruebas/PF-08/) | Pendiente de ejecución | Pendiente de ejecución |
 
 **Intents cubiertos.** PF-02: `AbrirBarreraIntent`, `CerrarBarreraIntent`, `ConsultarDistanciaIntent`, `ConsultarVehiculoIntent`, `EstadoBarreraIntent`. PF-03: `VincularParqueoIntent`, `CambiarVinculacionIntent`, `DesvincularParqueoIntent`. PF-06: `ActivarModoAutomaticoIntent`, `ActivarModoManualIntent`. PF-07: `ConsultarDisponiblesIntent`, `ConsultarOcupadosIntent`, `ConsultarEstacionamientoIntent`, `ConsultarModoIntent`, `ConsultarAntirreboteIntent`, `CambiarAntirreboteIntent`, `AMAZON.HelpIntent`, `AMAZON.CancelIntent` y `AMAZON.StopIntent`. `AMAZON.NavigateHomeIntent` está declarado en el modelo sin frases propias y no se prueba por voz.
 
@@ -1088,12 +1098,12 @@ Las rutas de "Evidencia esperada" son relativas a `docs/evidencias/pruebas/`.
 
 | ID | RNF | Procedimiento | Rep. | Indicador | Criterio (1.4) | Evidencia esperada | Resultado obtenido | Estado |
 |---|---|---|---|---|---|---|---|---|
-| PNF-01 | RNF1 | Log serie de toda la sesión (≈ 75 min, ≥ 15 min conectado); `STATUS` en el bloque 0 y al final del bloque 5. | 1 | Reinicios (banner `=== SmartPark V2`), reconexiones no provocadas (`reconexiones=` y `AWS: conexion perdida` fuera de PNF-06), bloqueos (`STATUS` sin respuesta) | 0 / 0 / 0 | `serial-sesion.txt` | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-02 | RNF2, RNF3 | HC-SR04: objeto plano a 10, 20 y 30 cm medidos con regla; 5 lecturas `DISTANCE` por distancia. IR: 5 entradas y 5 salidas por plaza con el vehículo de maqueta, una transición cada 15 s dentro de la ventana de PNF-05; anotar si el LED y el estado coinciden con la realidad. | 15 + 40 | e = max\|dᵢ − d_real\|; aciertos IR / 40 | e ≤ 1 cm; ≥ 38/40 (95 %) | `serial-sesion.txt` (líneas `Distancia:`); `PF-04/historial-sesion.csv` (ítems `occupancy_changed`) | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-03 | RNF4 | Video durante PF-02 con el simulador y el servo en el mismo cuadro; 3 *"abre"* y 3 *"cierra"*; desde el cuadro en que la frase aparece enviada en el simulador hasta el cuadro en que la barrera se detiene. | 6 | t = Δcuadros / fps; máximo y promedio | máx ≤ 3,0 s | `PNF-03/voz-servo.mp4`; `PNF-03/cuadros.md` (cuadros anotados) | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-04 | RNF9 (Edge) | Video durante PF-06: desde el cuadro en que el vehículo cubre el IR hasta el cambio del LED (4 ocupaciones y la nueva ocupación de la plaza 4). | 5 | t = Δcuadros / fps | máx ≤ 0,3 s | `PNF-04/ir-led.mp4`; `PNF-04/cuadros.md` | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-05 | RNF5, RNF7, RNF8 | Ventana de 10 min (bloque 2) entre dos `STATUS`, con las 40 transiciones IR de PNF-02 (≥ 20 eventos). El reposo del bloque 5 aporta los respaldos del Shadow. Cálculo después de la sesión con `analizar_pruebas.py` (4.1). | 1 ventana | M / N; Δ1 y Δ0 (mín, promedio, máx, P95); mediana del intervalo entre `sample` y entre `AWS UPDATE clase=0` | ≥ 99 %; Δ1 máx ≤ 5 s; Δ0 máx ≤ 15 s; 300 ± 10 s; 30 ± 1 s | `PNF-05/analisis.md` (salida del script) | Pendiente de ejecución | Pendiente de ejecución |
-| PNF-06 | RNF6, RNF10, RF13 (E4) | Antes del primer corte: barrera cerrada, modo `automatico`, plazas libres. En cada corte: `STATUS` y apagar el punto de acceso del ESP32; en los primeros 10 s, *"activa el modo manual"* (segundo corte: *"activa el modo automático"*) y *"abre la barrera"*. Primer corte: ocupar las 4 plazas, `OPEN` y `CLOSE`, liberar las 4. Segundo corte: ocupar y liberar las plazas 1 y 2. A los 45 s, `STATUS` y encender. | 2 | t_rec = `AWS MQTT/TLS conectado` − `STATUS` de restauración; t_sinc = primer `AWS UPDATE` posterior con el nuevo `modo` (confirmado en `update/accepted`) − restauración; movimiento de la barrera; ítems / transiciones | t_rec ≤ 60 s; t_sinc ≤ 70 s; barrera inmóvil (orden de más de 30 s, E4); E1 y E2 operan sin red; ítems = transiciones (8 y 4) | `serial-sesion.txt`; `PNF-06/update-accepted-*.png`; `PF-04/historial-sesion.csv` | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-01 | RNF1 | Log serie de toda la sesión (≈ 75 min, ≥ 15 min conectado); `STATUS` en el bloque 0 y al final del bloque 5. | 1 | Reinicios (banner `=== SmartPark V2`), reconexiones no provocadas (`reconexiones=` y `AWS: conexion perdida` fuera de PNF-06), bloqueos (`STATUS` sin respuesta) | 0 / 0 / 0 | [`serial-sesion.txt`](evidencias/pruebas/) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-02 | RNF2, RNF3 | HC-SR04: objeto plano a 10, 20 y 30 cm medidos con regla; 5 lecturas `DISTANCE` por distancia. IR: 5 entradas y 5 salidas por plaza con el vehículo de maqueta, una transición cada 15 s dentro de la ventana de PNF-05; anotar si el LED y el estado coinciden con la realidad. | 15 + 40 | e = max\|dᵢ − d_real\|; aciertos IR / 40 | e ≤ 1 cm; ≥ 38/40 (95 %) | [`serial-sesion.txt`](evidencias/pruebas/) (líneas `Distancia:`); [`PF-04/historial-sesion.csv`](evidencias/pruebas/PF-04/) (ítems `occupancy_changed`) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-03 | RNF4 | Video durante PF-02 con el simulador y el servo en el mismo cuadro; 3 *"abre"* y 3 *"cierra"*; desde el cuadro en que la frase aparece enviada en el simulador hasta el cuadro en que la barrera se detiene. | 6 | t = Δcuadros / fps; máximo y promedio | máx ≤ 3,0 s | [`PNF-03/voz-servo.mp4`](evidencias/pruebas/PNF-03/); [`PNF-03/cuadros.md`](evidencias/pruebas/PNF-03/) (cuadros anotados) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-04 | RNF9 (Edge) | Video durante PF-06: desde el cuadro en que el vehículo cubre el IR hasta el cambio del LED (4 ocupaciones y la nueva ocupación de la plaza 4). El mismo video registra la LCD: con la 4.ª ocupación en `automatico`, fila 0 `Libres:0/4 Oc:4` y fila 1 `APERTURA BLOQ.`. | 5 | t = Δcuadros / fps | máx ≤ 0,3 s | [`PNF-04/ir-led.mp4`](evidencias/pruebas/PNF-04/); [`PNF-04/cuadros.md`](evidencias/pruebas/PNF-04/) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-05 | RNF5, RNF7, RNF8 | Ventana de 10 min (bloque 2) entre dos `STATUS`, con las 40 transiciones IR de PNF-02 (≥ 20 eventos). El reposo del bloque 5 aporta los respaldos del Shadow. Cálculo después de la sesión con `analizar_pruebas.py` (4.1). | 1 ventana | M / N; Δ1 y Δ0 (mín, promedio, máx, P95); mediana del intervalo entre `sample` y entre `AWS UPDATE clase=0` | ≥ 99 %; Δ1 máx ≤ 5 s; Δ0 máx ≤ 15 s; 300 ± 10 s; 30 ± 1 s | [`PNF-05/analisis.md`](evidencias/pruebas/PNF-05/) (salida del script) | Pendiente de ejecución | Pendiente de ejecución |
+| PNF-06 | RNF6, RNF10, RF13 (E4) | Antes del primer corte: barrera cerrada, modo `automatico`, plazas libres. En cada corte: `STATUS` y apagar el punto de acceso del ESP32; en los primeros 10 s, *"activa el modo manual"* (segundo corte: *"activa el modo automático"*) y *"abre la barrera"*. Primer corte: ocupar las 4 plazas, `OPEN` y `CLOSE`, liberar las 4. Segundo corte: ocupar y liberar las plazas 1 y 2. A los 45 s, `STATUS` y encender. | 2 | t_rec = `AWS MQTT/TLS conectado` − `STATUS` de restauración; t_sinc = primer `AWS UPDATE` posterior con el nuevo `modo` (confirmado en `update/accepted`) − restauración; movimiento de la barrera; ítems / transiciones | t_rec ≤ 60 s; t_sinc ≤ 70 s; barrera inmóvil (orden de más de 30 s, E4); E1 y E2 operan sin red; ítems = transiciones (8 y 4) | [`serial-sesion.txt`](evidencias/pruebas/); [`PNF-06/update-accepted-*.png`](evidencias/pruebas/PNF-06/); [`PF-04/historial-sesion.csv`](evidencias/pruebas/PF-04/) | Pendiente de ejecución | Pendiente de ejecución |
 | — | RNF9 (Nube) | No aplica: no hay reglas de control en la Nube (2.6). | — | — | — | — | No aplica | No aplica |
 | — | RNF11 | Cálculo (5.6). | — | — | — | — | — | — |
 | — | RNF12 | PA-03 (4.5) y revisión de `.gitignore` y de las plantillas. | — | — | — | — | — | — |
@@ -1104,7 +1114,7 @@ Las rutas de "Evidencia esperada" son relativas a `docs/evidencias/pruebas/`.
 
 ### 4.4 Análisis de fallas y correcciones
 
-Formato para cada prueba que no cumpla. El diagnóstico usa `STATUS` (contadores de Shadow, histórico, NVS, hora y reintentos), los logs de CloudWatch y la tensión del riel del servo.
+Formato para cada prueba que no cumpla. El diagnóstico usa `STATUS` (contadores de Shadow, histórico, NVS, hora y reintentos), los logs de CloudWatch y la tensión del pin 3V3, que alimenta el servo.
 
 | ID prueba | Síntoma | Datos de diagnóstico | Causa probable | Acción correctiva | Nueva medición | Estado |
 |---|---|---|---|---|---|---|
@@ -1114,7 +1124,8 @@ Guía de diagnóstico preparada a partir del código:
 
 | Síntoma | Qué revisar | Causa probable |
 |---|---|---|
-| Reinicio (reaparece el banner) | Tensión de 5 V al mover el servo; causa de reinicio (el firmware no la imprime hoy, 5.5) | Caída de tensión por el SG90 en la misma fuente; *brownout* |
+| Reinicio (reaparece el banner) | Tensión del pin 3V3 al mover el servo; causa de reinicio (el firmware no la imprime hoy, 5.5) | Caída de tensión del regulador de 3,3 V por la corriente del SG90; *brownout* |
+| La barrera no completa el recorrido o termina después de `SERVO_TRAVEL_MS` | Duración del movimiento en el video de PNF-03 frente a 700 ms; tensión del pin 3V3 durante el movimiento | SG90 alimentado a 3,3 V, por debajo de su rango nominal: menos torque y más tiempo de recorrido (7.5) |
 | `reported` no se actualiza | `Presupuesto ordinario=agotado`, `UPDATE rechazado` en serie | Cuota de 800 ordinarias agotada; política IoT incorrecta |
 | `MQTT local` sube pero no hay ítems | Regla deshabilitada; `history_invalid` en CloudWatch; `Errors` de la Lambda | Regla en `ruleDisabled: true`; esquema distinto; permiso de invocación |
 | `sin_hora` crece | `horaUTC=INVALIDA` | NTP sin respuesta |
@@ -1122,12 +1133,12 @@ Guía de diagnóstico preparada a partir del código:
 
 ### 4.5 Pruebas automáticas
 
-PA-03 se ejecutó el 2026-11-22 en la rama `fix/alexa-barrier-order-v2` (base `304a5`, con el formato V2 de la orden de barrera). PA-01 y PA-02 se ejecutaron el 2026-11-21 en Windows 11 con PlatformIO y MSYS2 (g++ 16.2.0), con `include/config.h` e `include/secrets.h` copiados de las plantillas. Salidas completas, con fecha y comando, en [`docs/evidencias/pruebas-automaticas/`](evidencias/pruebas-automaticas/).
+PA-03 se ejecutó el 2026-11-22 en la rama `fix/alexa-barrier-order-v2` (base `304a5`, con el formato V2 de la orden de barrera). PA-01 y PA-02 se ejecutaron el 2026-11-22 en la rama `docs/circuit-and-evidence-folders`, tras adaptar `ParkingDisplay` a la LCD 16×2, en Windows 11 con PlatformIO (`pio run -t clean` y luego `pio run`) y MSYS2 (g++ 16.2.0), con `include/config.h` e `include/secrets.h` locales, no versionados. Salidas completas, con fecha y comando, en [`docs/evidencias/pruebas-automaticas/`](evidencias/pruebas-automaticas/).
 
 | ID | Suite | Comando | Pruebas | Resultado | Evidencia |
 |---|---|---|---|---|---|
-| PA-01 | Compilación del firmware | `pio run` | — | **SUCCESS** en 30,4 s (`espressif32@7.1.0`, `toolchain-xtensa-esp32` 8.4.0): compila las 7 unidades de `src/`, enlaza `firmware.elf` y genera `firmware.bin`. **RAM 49 960 / 327 680 B (15,2 %)**; **Flash 964 425 / 1 310 720 B (73,6 %)**. | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) |
-| PA-02 | Firmware con dobles (host) + contrato del histórico | `SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh` | 6 suites (5 + contrato) | **6/6 PASS**: IR, rebotes, conteos, LEDs y LCD con fallo I²C; sensor, histéresis, servo, parser y `loop`; AWS con dobles (GET, comandos, `reported`, versiones, cuota/NVS, *backoff*, demo); modos, lleno y deduplicación V1/V2 tras reconexión o reinicio; publicación del histórico (reloj, prioridad, reintentos, desborde). Tamaños medidos: Shadow reporte/GET/delta/accepted 476/2458/672/1887 B, GET MQTT 2518 B; histórico máx. 347 B (MQTT 394 B). Contrato firmware → Lambda ([`check_history_contract.py`](../test/check_history_contract.py)): **12 cargas MQTT generadas por el firmware aceptadas por `SmartParkHistoryProcessor`**, y el reintento conserva la misma clave (`eventKey`). | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) |
+| PA-01 | Compilación del firmware | `pio run` | — | **SUCCESS** en 30,8 s (`espressif32@7.1.0`, `toolchain-xtensa-esp32` 8.4.0), sin avisos: compila las 7 unidades de `src/`, enlaza `firmware.elf` y genera `firmware.bin`. **RAM 49 912 / 327 680 B (15,2 %)**; **Flash 964 365 / 1 310 720 B (73,6 %)**. | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) |
+| PA-02 | Firmware con dobles (host) + contrato del histórico | `SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh` | 6 suites (5 + contrato) | **6/6 PASS**: IR, rebotes, conteos, LEDs y LCD 16×2 (texto exacto de cada fila, prioridad bloqueo > lleno > alternancia, alternancia cada 2 s, máximo 16 columnas, solo direcciones 0x00/0x40 y recuperación tras un fallo I²C); sensor, histéresis, servo, parser y `loop`; AWS con dobles (GET, comandos, `reported`, versiones, cuota/NVS, *backoff*, demo); modos, lleno y deduplicación V1/V2 tras reconexión o reinicio; publicación del histórico (reloj, prioridad, reintentos, desborde). Tamaños medidos: Shadow reporte/GET/delta/accepted 476/2458/672/1887 B, GET MQTT 2518 B; histórico máx. 347 B (MQTT 394 B). Contrato firmware → Lambda ([`check_history_contract.py`](../test/check_history_contract.py)): **12 cargas MQTT generadas por el firmware aceptadas por `SmartParkHistoryProcessor`**, y el reintento conserva la misma clave (`eventKey`). | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) |
 | PA-03 | Lambdas | `AWS_EC2_METADATA_DISABLED=true python -m unittest discover -s tests` (en `lambda/`) | 109 | **109 OK**, incluidas las 4 del formato V2 de la orden de barrera ([`test_barrier_order.py`](../lambda/tests/test_barrier_order.py)) y las 3 del modelo final de Alexa ([`test_alexa_model.py`](../lambda/tests/test_alexa_model.py)) (con `PYTHONUTF8=1`; sin esa variable, Windows cp1252 provoca 1 error de lectura del modelo de Alexa) | [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) |
 
 Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_isolation`), backend de la skill incluido RF14 (`test_backend`, `test_v2_*`), formato V2 de la orden de barrera con `origen = voz` (`test_barrier_order`: id válido, vigencia ≤ 30 s, `solicitada_ms` creciente, objetivo inválido sin escritura), modelo final de Alexa (`test_alexa_model`: invocación, handler de cada intent propio, frases únicas con slots declarados), sesión (`test_session`) e histórico (`test_history`: lectura y capacidad reducida, orígenes y transiciones de barrera, inválidos sin inicializar el SDK, duplicado y reintento, coherencia de plantillas). PA-02 cubre `Parking`, la LCD, la cuota, la reconexión con `desired` pendiente, la prioridad de control, la publicación del histórico y el contrato firmware → Lambda ([`test/README`](../test/README)). Los tamaños de PA-02 confirman que el GET del Shadow cabe en `MQTT_BUFFER_SIZE = 3072` y que cada mensaje se factura como uno solo en IoT Core (< 5 KB) y cada ítem del histórico como 1 WRU en DynamoDB (< 1 KB) (5.6).
@@ -1142,8 +1153,8 @@ Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_i
 
 | ID | Suite | Resultado | Detalle | Evidencia | Estado |
 |---|---|---|---|---|---|
-| PA-01 | Compilación del firmware (`pio run`) | SUCCESS | RAM 49 960 / 327 680 B (15,2 %); Flash 964 425 / 1 310 720 B (73,6 %) | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) | ✅ |
-| PA-02 | Firmware con dobles y contrato del histórico (`sh test/run_host_tests.sh`) | 6/6 suites PASS | 5 suites del firmware + contrato firmware → Lambda (12 cargas aceptadas) | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) | ✅ |
+| PA-01 | Compilación del firmware (`pio run`) | SUCCESS | RAM 49 912 / 327 680 B (15,2 %); Flash 964 365 / 1 310 720 B (73,6 %) | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt) | ✅ |
+| PA-02 | Firmware con dobles y contrato del histórico (`sh test/run_host_tests.sh`) | 6/6 suites PASS | 5 suites del firmware (incluida la LCD 16×2) + contrato firmware → Lambda (12 cargas aceptadas) | [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt) | ✅ |
 | PA-03 | Lambdas (`python -m unittest discover -s tests`) | 109/109 OK | Vinculación y PIN, skill (incluido RF14), orden de barrera V2, modelo final de Alexa, sesión e histórico | [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) | ✅ |
 
 **Requerimientos funcionales.**
@@ -1328,6 +1339,14 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 - Panel web con los reportes M1–M4 sobre las consultas de 2.12 y exportación mensual a S3 para análisis.
 - Varios Things por cuenta (un ESP32 por zona del parqueo) con agregación en la Nube.
 
+### 7.5 Montaje eléctrico para una versión real
+
+El montaje de la maqueta (2.3) conecta los módulos directamente al ESP32 y se alimenta solo por USB. Para una instalación real:
+
+- **Divisor de voltaje en el ECHO del HC-SR04:** el GPIO 35 trabaja a 3,3 V y el HC-SR04 alimentado a 5 V entrega pulsos de 5 V. Un divisor resistivo (por ejemplo, 1 kΩ en serie y 2 kΩ a GND) baja el pulso a ≈ 3,3 V.
+- **SG90 a 5 V con una fuente aparte y GND común:** su rango nominal es 4,8–6 V. A 3,3 V tiene menos torque y puede tardar más que `SERVO_TRAVEL_MS` (700 ms), de modo que la posición estimada (`reported.barrera`) se adelantaría al movimiento real. Una fuente propia también evita que sus picos de corriente pasen por el regulador de 3,3 V del ESP32.
+- **Traductor de nivel I²C para la LCD alimentada a 5 V:** un traductor bidireccional entre SDA/SCL (3,3 V, lado del ESP32) y el backpack PCF8574 (5 V), con resistencias de pull-up a la tensión de cada lado.
+
 ---
 
 ## 8. Anexos
@@ -1368,7 +1387,7 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 | Hojas de registro | [`evidencias/hojas-registro/`](evidencias/hojas-registro/) | Preparadas |
 | Salidas de las pruebas automáticas | [`pio-run.txt`](evidencias/pruebas-automaticas/pio-run.txt), [`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt), [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) | PA-01 SUCCESS; PA-02 5/5 PASS y contrato PASS (12 cargas); PA-03 109 OK |
 | Log serie de la sesión | `docs/evidencias/pruebas/serial-sesion.txt` | Pendiente de ejecución |
-| Evidencia por prueba (CSV, logs, capturas y los videos de PNF-03 y PNF-04) | `docs/evidencias/pruebas/<ID>/` (PF-01 a PF-08, PNF-01 a PNF-06) | Pendiente de ejecución |
+| Evidencia por prueba (CSV, logs, capturas y los videos de PNF-03 y PNF-04) | [`evidencias/pruebas/`](evidencias/pruebas/): una carpeta por prueba (PF-01 a PF-08, PNF-01 a PNF-06) con su `README.md` | Pendiente de ejecución |
 | Muestra exportada de `SmartParkHistory` | `docs/evidencias/pruebas/PF-04/historial-sesion.csv` | Pendiente de ejecución |
 | Indicadores de PNF-05 | `docs/evidencias/pruebas/PNF-05/analisis.md` ([`analizar_pruebas.py`](../tools/analizar_pruebas.py)) | Pendiente de ejecución |
 

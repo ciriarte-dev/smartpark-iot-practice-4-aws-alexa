@@ -1,0 +1,59 @@
+PF-08 · Consultas de los reportes M1–M4 en la consola de DynamoDB (RF15)
+
+Tabla: SmartParkHistory (PK thingName, SK eventKey = occurredAt de 13 dígitos + "#" + eventId)
+Patrón base A2 (informe 2.8):
+  thingName = smartpark-grupo9-01
+  eventKey BETWEEN "<DESDE13>#" AND "<HASTA13>#~"
+
+<DESDE13> y <HASTA13> son el inicio y el fin de la sesión en epoch milisegundos (13 dígitos).
+Se obtienen en Git Bash con la hora de los STATUS del bloque 0 y del bloque 5, por ejemplo:
+  date -d '2026-11-24T10:00:00-04:00' +%s%3N
+
+Los filtros usan atributos anidados (data.actual, data.slot), por eso se ejecutan en
+DynamoDB → PartiQL editor. Cada resultado se exporta como CSV con el nombre indicado.
+Si la descarga no está disponible en el editor PartiQL: DynamoDB → Explore items →
+SmartParkHistory → Query con la partición y el rango del patrón A2, sin filtro, y
+filtrar el CSV por los mismos campos.
+
+----------------------------------------------------------------------
+M1 — Ocupación por plaza y franja horaria  →  M1.csv
+Atributos usados: occurredAt, data.slot, data.estado_anterior, data.slots
+----------------------------------------------------------------------
+SELECT * FROM "SmartParkHistory"
+WHERE "thingName" = 'smartpark-grupo9-01'
+  AND "eventKey" BETWEEN '<DESDE13>#' AND '<HASTA13>#~'
+  AND "eventType" IN ['occupancy_changed', 'sample']
+
+----------------------------------------------------------------------
+M2 — Aperturas de barrera por origen  →  M2.csv
+Atributos usados: occurredAt, origin, data.actual
+----------------------------------------------------------------------
+SELECT * FROM "SmartParkHistory"
+WHERE "thingName" = 'smartpark-grupo9-01'
+  AND "eventKey" BETWEEN '<DESDE13>#' AND '<HASTA13>#~'
+  AND "eventType" = 'barrier_changed'
+  AND "data"."actual" = 'abierta'
+
+----------------------------------------------------------------------
+M3 — Saturación: parqueo lleno y apertura bloqueada  →  M3.csv
+Atributos usados: occurredAt, data.disponibles, data.capacidad, data.ocupados, data.modo
+----------------------------------------------------------------------
+SELECT * FROM "SmartParkHistory"
+WHERE "thingName" = 'smartpark-grupo9-01'
+  AND "eventKey" BETWEEN '<DESDE13>#' AND '<HASTA13>#~'
+  AND "eventType" IN ['occupancy_changed', 'sample']
+
+Lleno: data.disponibles = 0 y data.ocupados = data.capacidad.
+Bloqueado: lleno y data.modo = 'automatico'.
+
+----------------------------------------------------------------------
+M4 — Tiempo de permanencia por plaza  →  M4.csv
+Atributos usados: occurredAt, data.slot, data.estado_anterior
+----------------------------------------------------------------------
+SELECT * FROM "SmartParkHistory"
+WHERE "thingName" = 'smartpark-grupo9-01'
+  AND "eventKey" BETWEEN '<DESDE13>#' AND '<HASTA13>#~'
+  AND "eventType" = 'occupancy_changed'
+
+Para una sola plaza (filtro del informe 2.12), agregar: AND "data"."slot" = <n>  (n = 1 a 4).
+Permanencia = occurredAt (ocupado → libre) − occurredAt (libre → ocupado) de la misma plaza.

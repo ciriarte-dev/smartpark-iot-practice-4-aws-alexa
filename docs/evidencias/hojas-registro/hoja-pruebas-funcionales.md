@@ -31,12 +31,12 @@ Imprimir antes de la sesión y completar a mano. Procedimiento, resultado espera
 | PF-05 | 2 | `eventType: "door_opened"` |  |  |  |  |
 | PF-05 | 2 | `origin: "voz"` en `sample` |  |  |  |  |
 | PF-05 | 2 | Duplicado publicado dos veces |  |  |  |  |
-| PF-06 | 3 | *"activa el modo automático"*; ocupar plazas 1–4 |  |  |  |  |
-| PF-06 | 3 | *"abre la barrera"* con 4 ocupadas (E2) |  |  |  |  |
-| PF-06 | 3 | `OPEN` con 4 ocupadas (E2) |  |  |  |  |
-| PF-06 | 3 | *"cierra la barrera"* (E3) |  |  |  |  |
-| PF-06 | 3 | Liberar la plaza 4 y *"abre la barrera"* |  |  |  |  |
-| PF-06 | 3 | `CLOSE`; ocupar la plaza 4; *"activa el modo manual"* y *"abre la barrera"* |  |  |  |  |
+| PF-06 | 3 | *"activa el modo automático"*; ocupar plazas 1–4. LCD esperada: `Libres:0/4 Oc:4` / `APERTURA BLOQ.` |  |  |  |  |
+| PF-06 | 3 | *"abre la barrera"* con 4 ocupadas (E2). LCD: `APERTURA BLOQ.` |  |  |  |  |
+| PF-06 | 3 | `OPEN` con 4 ocupadas (E2). LCD: `APERTURA BLOQ.` |  |  |  |  |
+| PF-06 | 3 | *"cierra la barrera"* (E3). LCD: `APERTURA BLOQ.` |  |  |  |  |
+| PF-06 | 3 | Liberar la plaza 4 y *"abre la barrera"*. LCD: `Libres:1/4 Oc:3`; fila 1 alterna cada 2 s `Modo: automatico` / `Barrera: abierta` |  |  |  |  |
+| PF-06 | 3 | `CLOSE`; ocupar la plaza 4; *"activa el modo manual"* y *"abre la barrera"*. LCD: `Libres:0/4 Oc:4` / `PARQUEO LLENO` |  |  |  |  |
 | PF-08 | 5 | Consulta M1 |  |  |  |  |
 | PF-08 | 5 | Consulta M2 |  |  |  |  |
 | PF-08 | 5 | Consulta M3 |  |  |  |  |

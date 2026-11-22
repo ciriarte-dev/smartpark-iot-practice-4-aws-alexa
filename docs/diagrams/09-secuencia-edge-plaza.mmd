@@ -12,6 +12,6 @@ sequenceDiagram
     PK->>PK: candidato estable durante debounceMs (120 ms por defecto)
     PK->>LED: rojo ON, verde OFF
     PK->>PK: occupied++, available--
-    LCD->>LCD: "Ocup:x Libres:y/4" y, si available == 0, "PARQUEO LLENO" o "APERTURA BLOQUEADA"
+    LCD->>LCD: fila 0 "Libres:y/4 Oc:x" · fila 1 "APERTURA BLOQ." si hay bloqueo, si no "PARQUEO LLENO" si está lleno
     PK-->>HP: observeParking(): occupancy_changed (slot, estado_anterior)
     PK-->>NET: snapshot → reported.slots / ocupados / disponibles / lleno / bloqueo_apertura (clase Sensor)
