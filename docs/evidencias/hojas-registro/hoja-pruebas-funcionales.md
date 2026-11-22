@@ -25,7 +25,7 @@ Imprimir antes de la sesión y completar a mano. Procedimiento, resultado espera
 | PF-03 | 5 | C: *"desvincula mi parqueo"* y *"consulta la distancia"* |  |  |  |  |
 | PF-04 | 1 | `OPEN` y `CLOSE` por Serial |  |  |  |  |
 | PF-04 | 5 | `START` en CloudWatch dentro de la ventana de PNF-05 = N |  |  |  |  |
-| PF-04 | 5 | Ítems y atributos; `origin` de cada `barrier_changed`; CSV exportado |  |  |  |  |
+| PF-04 | 5 | Ítems y atributos; `origin` de cada `barrier_changed` (voz → `legado`, `OPEN`/`CLOSE` → `edge`); CSV exportado |  |  |  |  |
 | PF-05 | 2 | `distancia_cm: 999` |  |  |  |  |
 | PF-05 | 2 | `capacidad: 5` |  |  |  |  |
 | PF-05 | 2 | `eventType: "door_opened"` |  |  |  |  |
