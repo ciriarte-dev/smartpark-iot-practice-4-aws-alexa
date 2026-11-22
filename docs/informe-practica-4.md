@@ -869,9 +869,9 @@ Cuatro reportes para el administrador del parqueo. Los valores dibujados son ilu
 | Elemento | Atributos | Consulta |
 |---|---|---|
 | Barras apiladas por día y origen | `occurredAt`, `origin`, `data.actual` | `Query` A2; filtro `eventType = barrier_changed AND data.actual = abierta`; agrupar por día y `origin` |
-| KPIs (total, % por origen) | `origin` | misma consulta |
+| KPIs (total, % voz/`legado` y % `edge`, día con más aperturas) | `origin`, `occurredAt` | misma consulta |
 
-En la implementación actual las órdenes de la skill usan el formato V1 (`desired.barrera`) y se registran con `origin = legado`; el origen `voz` lo produce el formato V2 `orden_barrera`, que la skill aún no emite (5.5). La serie `nube` queda en cero mientras no existan reglas de Nube.
+En la implementación actual las órdenes de la skill usan el formato V1 (`desired.barrera`) y se registran con `origin = legado`; el origen `voz` lo produce el formato V2 `orden_barrera`, que la skill aún no emite (5.5). El mockup solo muestra los orígenes voz/`legado` y `edge`: el diseño no tiene lógica de control en la Nube (2.6), por lo que no hay aperturas con `origin = nube`. Si se agregara una regla de Nube (7.2), sus aperturas formarían una tercera serie.
 
 **M3 — Saturación: parqueo lleno y aperturas bloqueadas.** Decisión: si la capacidad es insuficiente.
 
