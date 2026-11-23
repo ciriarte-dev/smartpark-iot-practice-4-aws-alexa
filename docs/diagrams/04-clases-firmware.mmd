@@ -46,14 +46,23 @@ classDiagram
     }
     class ParkingDisplay {
         -Init init_
-        -char displayed_[4][21]
+        -char displayed_[2][17]
         +begin()
+        +reinitialize(now)
         +probe() uint8_t
+        +initialized() bool
         +update(now, State, BarrierServo)
+        -prepareExpander() bool
     }
     class SerialCommands {
         -char buffer_[COMMAND_CAPACITY]
         +feed(char) Command
+    }
+    class Command {
+        <<enum SerialCommands::Command>>
+        None, Open, Close, Status
+        Distance, Slot1, LcdReset
+        Help, Invalid
     }
     class AwsIoTManager {
         -WiFiClientSecure tls_
@@ -105,3 +114,5 @@ classDiagram
     AwsIoTManager ..> BarrierServo : open() / close()
     HistoryPublisher ..> ParkingState : lee
     ParkingDisplay ..> ParkingState : lee
+    SerialCommands ..> Command : devuelve
+    main ..> ParkingDisplay : LcdReset → reinitialize()

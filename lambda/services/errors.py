@@ -5,6 +5,11 @@ class UserError(Exception):
     """Error que puede explicarse de forma segura al usuario."""
 
 
+class MissingReportedField(UserError):
+    def __init__(self):
+        super().__init__("No tengo un dato reportado para esa consulta. Revisa el dispositivo y vuelve a intentar.")
+
+
 class ServiceError(UserError):
     def __init__(self):
         super().__init__(

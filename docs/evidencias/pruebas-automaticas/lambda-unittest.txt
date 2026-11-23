@@ -1,11 +1,11 @@
-Fecha: 2026-11-22 17:04:47 -0400
-Commit: 304a5 (rama fix/alexa-barrier-order-v2, con cambios sin confirmar en lambda/services/shadow_service.py, lambda/tests/test_backend.py y las pruebas nuevas test_barrier_order.py y test_alexa_model.py)
+Fecha: 2026-11-23 09:54:00 -0400
+Commit: b6f1c5e (rama docs/sync-after-henry-telemetry, sin cambios en codigo ni configuraciones)
 Directorio: lambda/
 Comando: AWS_EC2_METADATA_DISABLED=true PYTHONUTF8=1 .venv/Scripts/python.exe -m unittest discover -s tests -v
 Python: Python 3.13.0 en lambda/.venv
 Entorno: Windows 11, Git Bash
 Nota: PYTHONUTF8=1 fija la codificacion UTF-8 por defecto, como en el runtime Linux de Lambda. Sin esa variable, en Windows (cp1252) una prueba que abre un JSON del modelo de Alexa sin indicar codificacion termina con UnicodeDecodeError.
-----
+
 test_admin_rejects_alexa_envelopes_before_creating_clients (test_admin.AdminTests.test_admin_rejects_alexa_envelopes_before_creating_clients) ... ok
 test_admin_rejects_invalid_user_and_thing (test_admin.AdminTests.test_admin_rejects_invalid_user_and_thing) ... ok
 test_clients_reused_and_retries_disabled (test_admin.AdminTests.test_clients_reused_and_retries_disabled) ... ok
@@ -21,6 +21,7 @@ test_network_failure_not_retried (test_admin.AdminTests.test_network_failure_not
 test_parallel_generation_returns_only_one_pin (test_admin.AdminTests.test_parallel_generation_returns_only_one_pin) ... ok
 test_secure_random_bounds_and_hash_only (test_admin.AdminTests.test_secure_random_bounds_and_hash_only) ... ok
 test_unknown_transaction_cancellation_fails_closed (test_admin.AdminTests.test_unknown_transaction_cancellation_fails_closed) ... ok
+test_binding_and_explicit_voice_samples (test_alexa_model.AlexaFinalModelTests.test_binding_and_explicit_voice_samples) ... ok
 test_every_custom_intent_has_a_handler (test_alexa_model.AlexaFinalModelTests.test_every_custom_intent_has_a_handler) ... ok
 test_invocation_name (test_alexa_model.AlexaFinalModelTests.test_invocation_name) ... ok
 test_samples_are_unique_and_use_declared_slots (test_alexa_model.AlexaFinalModelTests.test_samples_are_unique_and_use_declared_slots) ... ok
@@ -77,6 +78,7 @@ test_thing_not_found (test_backend.BackendTests.test_thing_not_found) ... ok
 test_transaction_conflict_does_not_consume_code (test_backend.BackendTests.test_transaction_conflict_does_not_consume_code) ... ok
 test_transaction_service_error (test_backend.BackendTests.test_transaction_service_error) ... request_failed type=ServiceError
 ok
+test_twelve_digit_pin_is_rejected_by_both_binding_intents_without_aws (test_backend.BackendTests.test_twelve_digit_pin_is_rejected_by_both_binding_intents_without_aws) ... ok
 test_unbind_missing (test_backend.BackendTests.test_unbind_missing) ... ok
 test_unbind_one_delete_no_get (test_backend.BackendTests.test_unbind_one_delete_no_get) ... ok
 test_unexpected_error_is_safe (test_backend.BackendTests.test_unexpected_error_is_safe) ... request_failed type=RuntimeError
@@ -85,7 +87,11 @@ test_unknown_barrier_state (test_backend.BackendTests.test_unknown_barrier_state
 test_unknown_code (test_backend.BackendTests.test_unknown_code) ... ok
 test_unknown_presence_not_absence (test_backend.BackendTests.test_unknown_presence_not_absence) ... ok
 test_unlinked_binding_is_not_recreated_by_stale_change (test_backend.BackendTests.test_unlinked_binding_is_not_recreated_by_stale_change) ... ok
-test_v2_missing_stale_unavailable_and_failed_write (test_backend.BackendTests.test_v2_missing_stale_unavailable_and_failed_write) ... request_failed type=ServiceError
+test_v2_distinguishes_unconfigured_space_from_missing_measurement (test_backend.BackendTests.test_v2_distinguishes_unconfigured_space_from_missing_measurement) ... request_failed type=MissingReportedField
+request_failed type=MissingReportedField
+ok
+test_v2_missing_stale_unavailable_and_failed_write (test_backend.BackendTests.test_v2_missing_stale_unavailable_and_failed_write) ... request_failed type=MissingReportedField
+request_failed type=ServiceError
 ok
 test_v2_model_keeps_documented_intents_and_has_no_duplicate_samples (test_backend.BackendTests.test_v2_model_keeps_documented_intents_and_has_no_duplicate_samples) ... ok
 test_v2_reads_each_slot_and_rejects_invalid_numbers (test_backend.BackendTests.test_v2_reads_each_slot_and_rejects_invalid_numbers) ... ok
@@ -96,10 +102,6 @@ test_valid_binding_and_one_use_code (test_backend.BackendTests.test_valid_bindin
 test_valid_distance_reported_not_desired (test_backend.BackendTests.test_valid_distance_reported_not_desired) ... ok
 test_wrong_record_type_prevents_control (test_backend.BackendTests.test_wrong_record_type_prevents_control) ... ok
 test_wrong_skill_or_missing_config (test_backend.BackendTests.test_wrong_skill_or_missing_config) ... ok
-test_consecutive_orders_have_distinct_ids_and_increasing_issued_time (test_barrier_order.BarrierOrderTests.test_consecutive_orders_have_distinct_ids_and_increasing_issued_time) ... ok
-test_invalid_target_raises_without_updating_shadow (test_barrier_order.BarrierOrderTests.test_invalid_target_raises_without_updating_shadow) ... ok
-test_issued_matches_clock_and_validity_within_ttl (test_barrier_order.BarrierOrderTests.test_issued_matches_clock_and_validity_within_ttl) ... ok
-test_v2_format_with_voice_origin_and_valid_id (test_barrier_order.BarrierOrderTests.test_v2_format_with_voice_origin_and_valid_id) ... ok
 test_barrier_origins_and_actual_transitions (test_history.HistoryTest.test_barrier_origins_and_actual_transitions) ... ok
 test_invalid_never_initializes_sdk (test_history.HistoryTest.test_invalid_never_initializes_sdk) ... ok
 test_put_conditional_duplicate_and_retry (test_history.HistoryTest.test_put_conditional_duplicate_and_retry) ... ok
@@ -125,7 +127,7 @@ ok
 test_unbound_user_error_closes_without_physical_action (test_session.SessionTests.test_unbound_user_error_closes_without_physical_action) ... ok
 
 ----------------------------------------------------------------------
-Ran 109 tests in 0.439s
+Ran 108 tests in 0.533s
 
 OK
 Código de salida: 0

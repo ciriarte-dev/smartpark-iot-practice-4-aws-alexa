@@ -128,6 +128,8 @@ bool AwsIoTManager::loadBudget() {
     return storageOK_;
 }
 void AwsIoTManager::run() {
+    Serial.printf("AWS Shadow diagnostico v1 compilado=%s %s thing=%s MQTT_buffer=%u\n",
+                  __DATE__, __TIME__, THING_NAME, static_cast<unsigned>(MQTT_BUFFER_SIZE));
     WiFi.mode(WIFI_STA);
     WiFi.setAutoReconnect(false);
     tls_.setCACert(AWS_ROOT_CA);
@@ -215,7 +217,11 @@ void AwsIoTManager::connectStep(uint32_t now) {
     const char* topics[] = {TOPIC_SHADOW_DELTA, TOPIC_SHADOW_GET_ACCEPTED,
         TOPIC_SHADOW_GET_REJECTED, TOPIC_SHADOW_UPDATE_ACCEPTED, TOPIC_SHADOW_UPDATE_REJECTED};
     for (const char* topic : topics) {
-        if (!mqtt_.subscribe(topic, 1)) { failedAttempt(millis()); return; }
+        if (!mqtt_.subscribe(topic, 1)) {
+            Serial.printf("AWS SUBSCRIBE escritura fallida topic=%s\n", topic);
+            failedAttempt(millis());
+            return;
+        }
     }
     if (connections_++) ++status_.reconnects;
     // Solo una sincronizacion GET valida restablece los fallos consecutivos.
@@ -349,10 +355,22 @@ void AwsIoTManager::receive(char* topic, uint8_t* payload, unsigned int length) 
         return fields;
     }();
     StaticJsonDocument<2048> doc;
-    if (deserializeJson(doc, payload, length, DeserializationOption::Filter(filter))) { Serial.println("AWS: JSON invalido/excede buffer; se esperara timeout si corresponde"); return; }
+    const auto parseError = deserializeJson(doc, payload, length, DeserializationOption::Filter(filter));
+    if (parseError) {
+        Serial.printf("AWS Shadow RX topic=%s bytes=%u error_json=%s\n", topic, length, parseError.c_str());
+        return;
+    }
     const char* receivedToken = doc["clientToken"] | "";
     const bool ours = !strcmp(receivedToken, token_);
-    if (!strcmp(topic, TOPIC_SHADOW_UPDATE_ACCEPTED)) {
+    const bool updateAccepted = !strcmp(topic, TOPIC_SHADOW_UPDATE_ACCEPTED);
+    const bool updateRejected = !strcmp(topic, TOPIC_SHADOW_UPDATE_REJECTED);
+    if (updateAccepted || updateRejected) {
+        Serial.printf("AWS Shadow RX update/%s bytes=%u token_activo=%s coincide=%u pendiente=%u version=%lu\n",
+                      updateAccepted ? "accepted" : "rejected", length, token_,
+                      static_cast<unsigned>(ours), static_cast<unsigned>(inflight_),
+                      static_cast<unsigned long>(doc["version"] | 0U));
+    }
+    if (updateAccepted) {
         if (!inflight_ || !ours) return;
         inflight_ = false; ++status_.accepted;
         confirmed_ = sent_; haveConfirmed_ = true;
@@ -360,7 +378,7 @@ void AwsIoTManager::receive(char* topic, uint8_t* payload, unsigned int length) 
         if (current_.open == confirmed_.open && sent_.applied >= desiredSequence_ && current_.serial == sent_.serial) controlPending_ = false;
         return;
     }
-    if (!strcmp(topic, TOPIC_SHADOW_UPDATE_REJECTED)) {
+    if (updateRejected) {
         if (!inflight_ || !ours) return;
         inflight_ = false; ++status_.rejected;
         rejectedBlocked_ = true; // No martillar AWS con un documento/politica erroneos.
@@ -445,21 +463,33 @@ void AwsIoTManager::report(ShadowBudget::Kind kind) {
     }
     // null borra datos viejos: un timeout nunca se presenta como distancia/presencia valida.
     if (current_.valid) r["distancia_cm"] = roundf(current_.distance*10)/10; else r["distancia_cm"] = nullptr;
-    const int reportedPresence = current_.valid ? stablePresence_ : -1;
+    // Distancia y presencia describen la misma muestra. El filtro de estabilidad
+    // solo decide si un cambio de presencia debe adelantar un informe.
+    const int reportedPresence = current_.valid ? current_.presence : -1;
     if (reportedPresence >= 0) r["vehiculo_detectado"] = reportedPresence == 1; else r["vehiculo_detectado"] = nullptr;
     char body[768];
     if (doc.overflowed() || measureJson(doc) >= sizeof(body)) {
         Serial.println("AWS: reporte excede capacidad");
         return;
     }
-    serializeJson(doc, body, sizeof(body));
+    const size_t bodyLength = serializeJson(doc, body, sizeof(body));
     sent_ = current_; sent_.presence = reportedPresence;
     inflightKind_ = kind;
     inflight_ = true; requestAt_ = millis(); lastPublish_ = requestAt_;
     lastReport_ = requestAt_;
     ++requestAttempts_;
     Serial.printf("AWS UPDATE clase=%u intento=%lu\n", static_cast<unsigned>(kind), (unsigned long)requestAttempts_);
-    if (!mqtt_.publish(TOPIC_SHADOW_UPDATE, body)) failedAttempt(millis());
+    if (current_.valid && reportedPresence >= 0) {
+        Serial.printf("AWS Shadow HC-SR04: distancia_cm=%.1f vehiculo_detectado=%s\n",
+                      current_.distance, reportedPresence == 1 ? "true" : "false");
+    } else if (!current_.valid) {
+        Serial.println("AWS Shadow HC-SR04: sin lectura valida; se retiran ambos campos");
+    }
+    const bool written = mqtt_.publish(TOPIC_SHADOW_UPDATE, body);
+    Serial.printf("AWS Shadow TX topic=%s bytes=%u escritura_local=%s muestra_ms=%lu JSON=%s\n",
+                  TOPIC_SHADOW_UPDATE, static_cast<unsigned>(bodyLength), written ? "OK" : "ERROR",
+                  static_cast<unsigned long>(current_.sample), body);
+    if (!written) failedAttempt(millis());
 }
 void AwsIoTManager::step() {
     uint32_t now = millis();
@@ -506,9 +536,13 @@ void AwsIoTManager::step() {
                 inflight_ = false; controlPending_ = true; requestAttempts_ = 0;
             }
             // Una presencia confirmada desplaza un reporte anterior sin esperar su timeout.
-            if (inflight_ && inflightKind_ != ShadowBudget::Control && !controlPending_ && stableCount_ >= AWS_PRESENCE_STABLE_SAMPLES &&
+            const bool presenceStable = current_.valid && current_.presence >= 0 &&
+                current_.presence == stablePresence_ && stableCount_ >= AWS_PRESENCE_STABLE_SAMPLES;
+            if (inflight_ && inflightKind_ != ShadowBudget::Control && !controlPending_ && presenceStable &&
                 stablePresence_ != sent_.presence) inflight_ = false;
             if (inflight_ && now-requestAt_ >= AWS_SHADOW_RESPONSE_TIMEOUT_MS) {
+                Serial.printf("AWS Shadow UPDATE timeout token=%s intento=%lu\n",
+                              token_, static_cast<unsigned long>(requestAttempts_));
                 inflight_ = false;
                 if (requestAttempts_ >= AWS_MAX_REQUEST_ATTEMPTS) {
                     rejectedBlocked_ = true;
@@ -520,8 +554,7 @@ void AwsIoTManager::step() {
                 bool control = controlPending_ || !haveConfirmed_ || current_.ready != confirmed_.ready ||
                     current_.open != confirmed_.open || current_.serial != confirmed_.serial ||
                     current_.applied != confirmed_.applied;
-                bool presence = stableCount_ >= AWS_PRESENCE_STABLE_SAMPLES &&
-                    stablePresence_ != confirmed_.presence;
+                bool presence = presenceStable && stablePresence_ != confirmed_.presence;
                 bool slotsChanged = current_.parkingValid && !confirmed_.parkingValid;
                 for (uint8_t i = 0; current_.parkingValid && i < Parking::capacity; ++i)
                     slotsChanged |= current_.parking.slots[i] != confirmed_.parking.slots[i];

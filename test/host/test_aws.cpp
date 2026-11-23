@@ -112,7 +112,8 @@ struct AwsIoTManagerTest {
         a.current_.ready = true;
         a.current_.valid = true;
         a.current_.distance = 400;
-        a.stablePresence_ = 1;
+        a.current_.presence = 0;
+        a.stablePresence_ = -1;
         a.current_.order = a.mainOrder_;
         strcpy(a.current_.order.id, longId);
         a.current_.parking = parking.state();
@@ -128,6 +129,9 @@ struct AwsIoTManagerTest {
         assert(r["slots"]["1"] == "libre" && r["slots"]["4"] == "ocupado");
         assert(r["ocupados"] == 3 && r["disponibles"] == 1 && r["capacidad"] == 4);
         assert(r["modo"] == "automatico" && r["parametros_auto"]["antirrebote_ir_ms"] == IR_DEBOUNCE_MAX_MS);
+
+        assert(r["distancia_cm"].as<float>() == 400.0f);
+        assert(r["vehiculo_detectado"].is<bool>() && !r["vehiculo_detectado"].as<bool>());
 
         DynamicJsonDocument response(12288);
         response["clientToken"] = "00000000-0000-4000-8000-000000000000";
@@ -176,6 +180,28 @@ struct AwsIoTManagerTest {
         strcpy(rebooted.token_, "00000000-0000-4000-8000-000000000000");
         receive(rebooted, TOPIC_SHADOW_GET_ACCEPTED, getJson);
         assert(rebooted.synced_ && !rebooted.getPending_ && rebooted.version_ == 4294967295u);
+
+        UltrasonicSensor ultrasonic;
+        ultrasonic.begin();
+        Fake::echo = 580;
+        assert(ultrasonic.measure().status == UltrasonicSensor::ReadingStatus::Valid);
+        a.tick(barrier, ultrasonic, parking);
+        assert(xQueueReceive(a.snapshots_, &a.current_, 0) == pdTRUE);
+        a.report(ShadowBudget::Control);
+        assert(!deserializeJson(outgoing, a.mqtt_.bodies.back()));
+        assert(outgoing["state"]["reported"]["distancia_cm"].as<float>() == 9.9f);
+        assert(outgoing["state"]["reported"]["vehiculo_detectado"] == true);
+
+        Fake::echo = 0;
+        assert(ultrasonic.measure().status == UltrasonicSensor::ReadingStatus::Timeout);
+        a.tick(barrier, ultrasonic, parking);
+        assert(xQueueReceive(a.snapshots_, &a.current_, 0) == pdTRUE);
+        a.report(ShadowBudget::Control);
+        assert(!deserializeJson(outgoing, a.mqtt_.bodies.back()));
+        const auto invalid = outgoing["state"]["reported"].as<JsonObjectConst>();
+        assert(invalid.containsKey("distancia_cm") && invalid["distancia_cm"].isNull());
+        assert(invalid.containsKey("vehiculo_detectado") && invalid["vehiculo_detectado"].isNull());
+        assert(invalid["capacidad"] == 4);
     }
 
     static void testLegacyParking() {
@@ -438,13 +464,15 @@ struct AwsIoTManagerTest {
         AwsIoTManager a; init(a);
         a.connectStep(Fake::now);
         assert(a.mqtt_.connects==1 && a.mqtt_.subscriptions.size()==5);
+        assert(a.mqtt_.subscriptions[3] == TOPIC_SHADOW_UPDATE_ACCEPTED);
+        assert(a.mqtt_.subscriptions[4] == TOPIC_SHADOW_UPDATE_REJECTED);
         assert(a.mqtt_.topics.size()==1 && a.mqtt_.topics[0]==TOPIC_SHADOW_GET);
         a.step(); a.step(); assert(a.mqtt_.topics.size()==1); // GET unico
         auto getToken=std::string(a.token_);
         receive(a,TOPIC_SHADOW_GET_ACCEPTED,"{\"clientToken\":\""+getToken+"\",\"version\":1,\"state\":{\"reported\":{\"barrera\":\"cerrada\",\"distancia_cm\":20,\"vehiculo_detectado\":false}}}");
         assert(a.synced_ && a.haveConfirmed_ && a.attempts_==0);
         a.current_.ready=true; a.current_.open=false; a.current_.valid=true; a.current_.distance=20;
-        a.stablePresence_=0;
+        a.current_.presence=0; a.stablePresence_=0;
         a.step(); assert(a.mqtt_.topics.size()==1);
         legacy(a, 2, "abierta", 2);
         AwsIoTManager::Command cmd;
@@ -470,9 +498,21 @@ struct AwsIoTManagerTest {
         a.current_.distance=30; a.step(); assert(a.inflight_); ack(a);
         assert(a.budget_.record.counts[ShadowBudget::Sensor]==1);
         Fake::now+=AWS_MIN_PUBLISH_INTERVAL_MS;
-        a.stablePresence_=1; a.stableCount_=3; a.step(); assert(a.inflight_); ack(a);
+        a.current_.distance=6.2f;
+        a.current_.presence=1; a.stablePresence_=1; a.stableCount_=3; a.step(); assert(a.inflight_); ack(a);
+        const auto sensorCount = a.budget_.record.counts[ShadowBudget::Sensor];
+        const auto acceptedCount = a.status_.accepted;
         Fake::now+=AWS_REPORT_INTERVAL_MS-1; a.step(); assert(!a.inflight_);
-        ++Fake::now; a.step(); assert(a.inflight_); ack(a);
+        ++Fake::now; a.step(); assert(a.inflight_);
+        DynamicJsonDocument periodic(1024);
+        assert(!deserializeJson(periodic, a.mqtt_.bodies.back()));
+        const auto reported = periodic["state"]["reported"];
+        assert(reported["distancia_cm"].as<float>() == 6.2f);
+        assert(reported["vehiculo_detectado"].is<bool>() && reported["vehiculo_detectado"].as<bool>());
+        assert(a.status_.accepted == acceptedCount);
+        ack(a);
+        assert(a.status_.accepted == acceptedCount + 1);
+        assert(a.budget_.record.counts[ShadowBudget::Sensor] == sensorCount);
         assert(a.budget_.record.counts[ShadowBudget::Periodic]==1);
         auto persisted=Preferences::disk;
         ShadowBudgetRecord restored; std::memcpy(&restored,persisted.data(),sizeof(restored));
@@ -535,14 +575,14 @@ struct AwsIoTManagerTest {
         // Presencia nueva desplaza distancia en vuelo, sin esperar acuse ni intervalo.
         Fake::now+=AWS_MIN_PUBLISH_INTERVAL_MS; stable.current_.distance=50; stable.step();
         oldToken=stable.token_; count=stable.mqtt_.topics.size();
-        stable.stablePresence_=0; stable.step();
+        stable.current_.presence=0; stable.stablePresence_=0; stable.step();
         assert(stable.mqtt_.topics.size()==count+1 && stable.sent_.presence==0);
         assert(std::string(stable.token_)!=oldToken); ack(stable);
         // Presencia no puede gastar la reserva; control si puede.
         auto priorBudget=stable.budget_.record;
         stable.budget_.record=ShadowBudgetRecord{}; stable.budget_.record.day=priorBudget.day;
         stable.budget_.record.counts[ShadowBudget::Periodic]=800;
-        stable.stablePresence_=1; count=stable.mqtt_.topics.size(); stable.step();
+        stable.current_.presence=1; stable.stablePresence_=1; count=stable.mqtt_.topics.size(); stable.step();
         assert(stable.mqtt_.topics.size()==count && stable.budget_.total()==800);
         stable.controlPending_=true; stable.step();
         assert(stable.budget_.total()==801 && stable.inflightKind_==ShadowBudget::Control); ack(stable);

@@ -1,0 +1,83 @@
+[
+  {
+    "name": "VincularParqueoIntent",
+    "slots": [
+      {
+        "name": "codigo",
+        "type": "AMAZON.FOUR_DIGIT_NUMBER"
+      }
+    ],
+    "samples": [
+      "vincula mi parqueo con el código {codigo}"
+    ]
+  },
+  {
+    "name": "CambiarVinculacionIntent",
+    "slots": [
+      {
+        "name": "codigo",
+        "type": "AMAZON.FOUR_DIGIT_NUMBER"
+      }
+    ],
+    "samples": [
+      "cambia mi vinculación con el código {codigo}"
+    ]
+  },
+  {
+    "name": "DesvincularParqueoIntent",
+    "samples": [
+      "desvincula mi parqueo"
+    ]
+  },
+  {
+    "name": "AbrirBarreraIntent",
+    "samples": [
+      "abrir",
+      "abre la barrera"
+    ]
+  },
+  {
+    "name": "CerrarBarreraIntent",
+    "samples": [
+      "cerrar",
+      "cierra la barrera"
+    ]
+  },
+  {
+    "name": "EstadoBarreraIntent",
+    "samples": [
+      "consultar estado",
+      "consulta el estado de la barrera"
+    ]
+  },
+  {
+    "name": "ConsultarDistanciaIntent",
+    "samples": [
+      "consultar distancia",
+      "a qué distancia está el vehículo"
+    ]
+  },
+  {
+    "name": "ConsultarVehiculoIntent",
+    "samples": [
+      "consultar vehículo",
+      "hay un vehículo esperando"
+    ]
+  },
+  {
+    "name": "AMAZON.HelpIntent",
+    "samples": []
+  },
+  {
+    "name": "AMAZON.CancelIntent",
+    "samples": []
+  },
+  {
+    "name": "AMAZON.StopIntent",
+    "samples": []
+  },
+  {
+    "name": "AMAZON.FallbackIntent",
+    "samples": []
+  }
+]

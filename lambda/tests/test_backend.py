@@ -212,9 +212,10 @@ class BackendTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[2]
         model = json.loads((root / "alexa/es-US.interaction-model.json").read_text())
         intents = model["interactionModel"]["languageModel"]["intents"]
-        baseline = (root / "docs/informe.md").read_text().split("**Esqueleto del modelo de interacción.**", 1)[1]
-        legacy = json.loads(baseline.split("```json\n", 1)[1].split("```", 1)[0])
-        self.assertEqual(intents[:12], legacy["interactionModel"]["languageModel"]["intents"])
+        # Independent baseline from the documented Practice 3 interaction model.
+        baseline = Path(__file__).with_name("fixtures") / "practica3_alexa_intents.json"
+        legacy = json.loads(baseline.read_text(encoding="utf-8"))
+        self.assertEqual(intents[:12], legacy)
         seen = set()
         for intent in intents:
             declared = {slot["name"] for slot in intent.get("slots", [])}
@@ -224,6 +225,25 @@ class BackendTests(unittest.TestCase):
                 seen.add(normalized)
                 self.assertLessEqual(set(re.findall(r"{([^}]+)}", sample)), declared)
         self.assertEqual(len({intent["name"] for intent in intents}), 20)
+
+    def test_v2_distinguishes_unconfigured_space_from_missing_measurement(self):
+        self.bind()
+        self.report_parking()
+        doc = self.document["state"]["reported"]
+        del doc["slots"]["2"]
+        slots = {"espacio": {"name": "espacio", "value": "2"}}
+        self.assertIn("No tengo un dato reportado", self.invoke("ConsultarEstacionamientoIntent", slots=slots))
+        doc["capacidad"] = 1
+        self.assertIn("no está configurado", self.invoke("ConsultarEstacionamientoIntent", slots=slots))
+        del doc["distancia_cm"]
+        self.assertIn("No tengo un dato reportado para esa consulta", self.invoke("ConsultarDistanciaIntent"))
+
+    def test_twelve_digit_pin_is_rejected_by_both_binding_intents_without_aws(self):
+        slots = {"codigo": {"name": "codigo", "value": "123456789012"}}
+        for intent in ("VincularParqueoIntent", "CambiarVinculacionIntent"):
+            self.assertIn("cuatro dígitos", self.invoke(intent, slots=slots))
+        self.db.get_item.assert_not_called()
+        self.factory.assert_not_called()
 
     def linking(self, intent="VincularParqueoIntent", code=CODE):
         return self.invoke(intent, slots={"codigo": {"name": "codigo", "value": code}})
@@ -418,11 +438,7 @@ class BackendTests(unittest.TestCase):
             self.assertIn("Solicité " + action, self.invoke(intent))
             args = self.data.update_thing_shadow.call_args.kwargs
             self.assertEqual(args["thingName"], THING)
-            desired = json.loads(args["payload"])["state"]["desired"]
-            self.assertIn("barrera", desired)
-            self.assertIsNone(desired["barrera"])
-            self.assertEqual(desired["orden_barrera"]["objetivo"], state)
-            self.assertEqual(desired["orden_barrera"]["origen"], "voz")
+            self.assertEqual(json.loads(args["payload"]), {"state": {"desired": {"barrera": state}}})
         self.data.get_thing_shadow.assert_not_called()
         self.assertEqual(self.data.update_thing_shadow.call_count, 2)
 

@@ -3,7 +3,7 @@
 Imprimir antes de la sesión y completar a mano. Procedimiento, resultado esperado y orden de los bloques: [informe, secciones 4.1 y 4.2](../../informe-practica-4.md#42-pruebas-funcionales).
 
 - Fecha: ____________  Responsables (maqueta / consola / registro): ______________________________
-- Firmware (commit): ________  Thing: `smartpark-grupo9-01`  Región: `us-east-1`
+- Firmware (commit y marca de compilación Serial): __________________  Thing: `smartpark-grupo9-01`  Región: `us-east-1`
 - Log serie: `pio device monitor -f time | tee docs/evidencias/pruebas/serial-sesion.txt` (Git Bash). Hora de inicio del log: ________
 - Hora: la del PC (hh:mm:ss), la misma que aparece en el log serie.
 - Evidencia: `docs/evidencias/pruebas/<ID>/`, con el nombre `<ID>-<paso>-<descripción>`.
@@ -12,8 +12,11 @@ Imprimir antes de la sesión y completar a mano. Procedimiento, resultado espera
 
 | ID | Bloque | Paso | Hora (hh:mm:ss) | Valor observado (Serial / Shadow / DynamoDB / respuesta) | ¿Cumple? (S/N) | Archivo de evidencia |
 |---|---|---|---|---|---|---|
-| PF-01 | 2 | `DISTANCE` y `SLOT1` |  |  |  |  |
-| PF-01 | 2 | Cubrir y liberar el IR de la plaza 1; `update/accepted` |  |  |  |  |
+| PF-01 | 2 | Arranque, Thing, marca de compilación y `STATUS` inicial |  |  |  |  |
+| PF-01 | 2 | `DISTANCE` a 6–10 cm; UPDATE periódico con distancia y `true`; acuse por token |  |  |  |  |
+| PF-01 | 2 | `DISTANCE` a 25–30 cm; UPDATE con distancia y `false`; acuse por token |  |  |  |  |
+| PF-01 | 2 | Eco inválido (`null` y claves ausentes); restaurar eco y comprobar que ambos campos reaparecen |  |  |  |  |
+| PF-01 | 2 | `SLOT1`, cubrir y liberar el IR; comprobar los campos de plazas y registrar `STATUS` final |  |  |  |  |
 | PF-02 | 1 | Abrir / cerrar ×3 (video PNF-03) |  |  |  |  |
 | PF-02 | 1 | *"consulta la distancia"* |  |  |  |  |
 | PF-02 | 1 | *"hay un auto esperando"* |  |  |  |  |
@@ -22,10 +25,10 @@ Imprimir antes de la sesión y completar a mano. Procedimiento, resultado espera
 | PF-03 | 1 | A: PIN 1 generado (hora) y *"vincula mi parqueo con el codigo …"* |  |  |  |  |
 | PF-03 | 1 | A: cerrar y reabrir la skill |  |  |  |  |
 | PF-03 | 3 | B: PIN 2 (≥ 300 s después del PIN 1) y *"cambia mi vinculacion con el código …"* |  |  |  |  |
-| PF-03 | 5 | C: *"desvincula mi parqueo"* y *"consulta la distancia"* |  |  |  |  |
+| PF-03 | 5 | C: *"elimina la vinculación de mi parqueo inteligente"* y *"consulta la distancia"* |  |  |  |  |
 | PF-04 | 1 | `OPEN` y `CLOSE` por Serial |  |  |  |  |
 | PF-04 | 5 | `START` en CloudWatch dentro de la ventana de PNF-05 = N |  |  |  |  |
-| PF-04 | 5 | Ítems y atributos; `origin` de cada `barrier_changed`; CSV exportado |  |  |  |  |
+| PF-04 | 5 | Ítems y atributos; `origin` de cada `barrier_changed` (voz → `legado`, `OPEN`/`CLOSE` → `edge`); CSV exportado |  |  |  |  |
 | PF-05 | 2 | `distancia_cm: 999` |  |  |  |  |
 | PF-05 | 2 | `capacidad: 5` |  |  |  |  |
 | PF-05 | 2 | `eventType: "door_opened"` |  |  |  |  |

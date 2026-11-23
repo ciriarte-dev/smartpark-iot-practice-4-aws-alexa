@@ -77,7 +77,8 @@
             "la barrera esta cerrada",
             "dime el estado de la barrera",
             "cual es el estado de la barrera",
-            "la barrera esta abierta"
+            "la barrera esta abierta",
+            "consultar estado"
           ]
         },
         {
@@ -117,10 +118,9 @@
           "slots": [],
           "samples": [
             "desvincular parqueo",
-            "quita mi dispositivo",
-            "desconecta mi parqueo",
-            "elimina mi vinculacion",
-            "desvincula mi parqueo"
+            "desvincula mi parqueo",
+            "elimina la vinculación de mi parqueo inteligente",
+            "quita la vinculación de mi parqueo inteligente"
           ]
         },
         {

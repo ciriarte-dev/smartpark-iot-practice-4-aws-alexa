@@ -1,6 +1,6 @@
 import re
 
-from services.errors import UserError
+from services.errors import MissingReportedField, UserError
 from services.shadow_service import IR_DEBOUNCE_MAX_MS, IR_DEBOUNCE_MIN_MS, PARKING_MODES
 
 from .common import IntentHandler, bound_device, say
@@ -47,7 +47,13 @@ class ParkingSlotHandler(IntentHandler):
     def handle(self, handler_input):
         shadow, thing = bound_device(handler_input)
         spot = number_slot(handler_input, "espacio", 1, 4, "Dime un número de estacionamiento del uno al cuatro.")
-        value = shadow.get_reported(thing, "slots", str(spot))
+        try:
+            value = shadow.get_reported(thing, "slots", str(spot))
+        except MissingReportedField:
+            capacity = shadow.get_reported(thing, "capacidad")
+            if type(capacity) is int and 1 <= capacity < spot:
+                raise UserError(f"El último reporte indica que el estacionamiento {spot} no está configurado.") from None
+            raise
         if value == "desconocido":
             return say(handler_input, f"El estacionamiento {spot} aún no tiene una lectura confirmada.", keep_open=True)
         if value not in ("libre", "ocupado"):

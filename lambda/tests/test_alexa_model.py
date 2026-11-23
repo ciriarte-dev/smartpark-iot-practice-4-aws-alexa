@@ -1,4 +1,4 @@
-"""Valida el modelo de interacción desplegado en la consola de Alexa.
+"""Valida el modelo de interacción local preparado para Alexa.
 
 Modelo: alexa/es-US.smartpark-v2.final.json. Los handlers se localizan leyendo
 los atributos intent_name de lambda/handlers/ con ast, sin importar el SDK.
@@ -7,6 +7,7 @@ import ast
 import json
 import re
 import unittest
+import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -20,14 +21,23 @@ def load_language_model():
 
 
 def handled_intents():
+    entry = ast.parse((ROOT / "lambda" / "lambda_function.py").read_text())
+    registered = {
+        elt.func.id
+        for loop in entry.body if isinstance(loop, ast.For) and isinstance(loop.iter, ast.Tuple)
+        for elt in loop.iter.elts if isinstance(elt, ast.Call) and isinstance(elt.func, ast.Name)
+    }
     names = set()
     for path in sorted(HANDLERS_DIR.glob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
-                targets = {target.id for target in node.targets if isinstance(target, ast.Name)}
-                if "intent_name" in targets and isinstance(node.value.value, str):
-                    names.add(node.value.value)
+        for cls in tree.body:
+            if not isinstance(cls, ast.ClassDef) or cls.name not in registered:
+                continue
+            for node in cls.body:
+                if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
+                    targets = {target.id for target in node.targets if isinstance(target, ast.Name)}
+                    if "intent_name" in targets and isinstance(node.value.value, str):
+                        names.add(node.value.value)
     return names
 
 
@@ -51,11 +61,21 @@ class AlexaFinalModelTests(unittest.TestCase):
         for intent in self.intents:
             declared = {slot["name"] for slot in intent.get("slots", [])}
             for sample in intent.get("samples", []):
-                normalized = " ".join(sample.casefold().split())
+                normalized = " ".join("".join(c for c in unicodedata.normalize("NFD", sample.casefold())
+                                              if not unicodedata.combining(c)).split())
                 self.assertNotIn(normalized, seen, f"Frase duplicada en {intent['name']} y {seen.get(normalized)}")
                 seen[normalized] = intent["name"]
                 used = set(re.findall(r"{([^}]+)}", sample))
                 self.assertLessEqual(used, declared, f"{intent['name']}: slot no declarado en '{sample}'")
+
+    def test_binding_and_explicit_voice_samples(self):
+        intents = {entry["name"]: entry for entry in self.intents}
+        for name in ("VincularParqueoIntent", "CambiarVinculacionIntent"):
+            self.assertEqual(intents[name]["slots"], [{"name": "codigo", "type": "AMAZON.FOUR_DIGIT_NUMBER"}])
+        self.assertIn("consultar estado", intents["EstadoBarreraIntent"]["samples"])
+        unlink = intents["DesvincularParqueoIntent"]["samples"]
+        self.assertNotIn("desconecta mi dispositivo", unlink)
+        self.assertIn("elimina la vinculación de mi parqueo inteligente", unlink)
 
 
 if __name__ == "__main__":

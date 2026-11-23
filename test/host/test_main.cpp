@@ -16,7 +16,7 @@ struct LcdScreen {
 };
 
 static LcdScreen lcdScreen() {
-    constexpr size_t initFrames = 4 + 2 * 5; // 3, 3, 3, 2 y luego 0x28 0x08 0x06 0x0c 0x01.
+    constexpr size_t initFrames = 1 + 4 + 2 * 4; // Reposo, 3 3 3 2, luego 0x28 0x0c 0x01 0x06.
     LcdScreen screen;
     for (auto& row : screen.rows) row.assign(LCD_COLUMNS, ' ');
     const auto& frames = Wire.transmissions;
@@ -219,6 +219,7 @@ int main() {
     assert(parse(" op")==C::None && parse("en \r\n")==C::Open);
     assert(parse("CLOSE\n")==C::Close && parse("STATUS\n")==C::Status);
     assert(parse("DISTANCE\n")==C::Distance && parse("help\n")==C::Help);
+    assert(parse(" lcdreset \r\n")==C::LcdReset);
     assert(parse("INVALID\n")==C::Invalid && parse(" \n")==C::None);
     assert(parse(std::string(100,'x')+"OPEN\n")==C::Invalid);
     assert(parse("OPEN\n")==C::Open);
@@ -272,5 +273,25 @@ int main() {
     assert(Fake::levels[slot1.red] == HIGH && Fake::levels[slot1.green] == LOW);
     assert(Serial.output.find("error I2C") != std::string::npos);
     Wire.connected = true;
+    Wire.transmissions.clear();
+    writes = Fake::writes;
+    Serial.output.clear();
+    Serial.inject("LCDRESET\nSLOT1\n");
+    loop();
+    assert(Serial.output.find("reinicializacion solicitada") != std::string::npos);
+    assert(Serial.output.find("responde; inicializando") != std::string::npos);
+    assert(Wire.transmissions.size() == 1 && Wire.transmissions.front().empty()); // Solo la sonda de SLOT1.
+    Wire.transmissions.clear();
+    for (unsigned elapsed = 0; elapsed < 250; elapsed += 5) {
+        Fake::now += 5;
+        loop();
+    }
+    const auto restoredScreen = lcdScreen();
+    assert(Wire.transmissions.front() == std::vector<uint8_t>{0x08});
+    assert(restoredScreen.valid && restoredScreen.rows[0].find("Libres:") == 0);
+    assert(restoredScreen.rows[1].find_first_not_of(' ') != std::string::npos);
+    assert(Fake::writes == writes);
+    diagnose();
+    assert(Serial.output.find("inicializada; responde") != std::string::npos);
     std::cout << "PASS: sensor, histeresis, servo, parser e integracion del loop (simulados)\n";
 }

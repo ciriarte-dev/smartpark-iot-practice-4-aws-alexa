@@ -97,7 +97,7 @@ class SessionTests(unittest.TestCase):
             result = self.response(intent)
             self.assert_open(result)
             text = result["response"]["outputSpeech"]["ssml"]
-            for command in ("abrir", "cerrar", "consultar estado", "consultar distancia", "salir"):
+            for command in ("abrir", "cerrar", "consulta el estado de la barrera", "consultar distancia", "salir"):
                 self.assertIn(command, text)
         self.db.get_item.assert_not_called()
         self.factory.assert_not_called()
