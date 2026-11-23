@@ -55,6 +55,13 @@ Los escenarios cubiertos son:
 | Detención | `Detener.mp4` | Evidencia registrada |
 | Apertura con el parqueo lleno | `AbrirCuandoTodosEspaciosOcupados.mp4` | Evidencia registrada |
 
+## Evidencias complementarias recomendadas
+
+- Capturas del simulador para documentar el intent y el slot de cada frase.
+- Capturas del Shadow para confirmar los cambios válidos del antirrebote.
+- Captura de la respuesta ante la plaza 5 o el valor 1001 ms.
+- Capturas separadas de ayuda, cancelación y detención si se requiere mayor trazabilidad.
+
 ## Criterios de aprobación
 
 PF-07 se considera aprobada cuando se verifica:

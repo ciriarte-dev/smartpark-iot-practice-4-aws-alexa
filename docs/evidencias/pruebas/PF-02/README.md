@@ -15,12 +15,13 @@ Comprobar que Alexa pueda:
 
 ## Evidencias registradas
 
-| Evidencia | Función probada | Resultado |
-|---|---|---|
-| [Abrir-Cerrar.mp4](<Abrir-Cerrar.mp4>) | Órdenes de voz para abrir y cerrar la barrera | Evidencia de control de la barrera por Alexa |
-| [ConsultarDistancia.mp4](<ConsultarDistancia.mp4>) | *"Consulta la distancia"* | Evidencia de la respuesta de Alexa a la consulta de distancia |
-| [AutoEsperando.mp4](<AutoEsperando.mp4>) | *"Hay un auto esperando"* | Evidencia de la consulta sobre la detección de un vehículo |
-| [ConsultarEstado.mp4](<ConsultarEstado.mp4>) | *"Consulta el estado de la barrera"* | Evidencia de la respuesta sobre el estado de la barrera |
+| Evidencia | Función probada |
+|---|---|
+| [Abrir-Cerrar.mp4](<Abrir-Cerrar.mp4>) | Órdenes de voz para abrir y cerrar la barrera |
+| [ConsultarDistancia.mp4](<ConsultarDistancia.mp4>) | Consulta de la distancia |
+| [AutoEsperando.mp4](<AutoEsperando.mp4>) | Consulta de vehículo esperando |
+| [ConsultarEstado.mp4](<ConsultarEstado.mp4>) | Consulta del estado de la barrera |
+| [pf02.xlsx](<pf02.xlsx>) | Pruebas de detección vehicular por distancia |
 
 ## Resultado observado
 
@@ -30,6 +31,7 @@ Comprobar que Alexa pueda:
 | Consulta de distancia | `ConsultarDistancia.mp4` | Alexa entrega la respuesta de la consulta de distancia |
 | Consulta de vehículo esperando | `AutoEsperando.mp4` | Alexa entrega el resultado de la detección de un vehículo |
 | Consulta del estado de la barrera | `ConsultarEstado.mp4` | Alexa entrega el estado actual de la barrera |
+| Lectura por umbral | `pf02.xlsx` | Se registraron cuatro distancias en varias pruebas |
 
 ## Resultado
 

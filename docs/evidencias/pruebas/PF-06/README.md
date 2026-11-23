@@ -30,6 +30,16 @@ Las reglas verificadas son:
 
 Los videos presentan escenarios de apertura registrados durante la ejecución de PF-06. Deben relacionarse con el estado de ocupación y el modo mostrado en la maqueta.
 
+## Evidencia por escenario
+
+| Video | Uso recomendado |
+|---|---|
+| [Abrir.mp4](<Abrir.mp4>) | Mostrar una apertura en un escenario concreto de PF-06 |
+| [Abrir1.mp4](<Abrir1.mp4>) | Mostrar una segunda ejecución o verificación de apertura |
+| [Abrir2.mp4](<Abrir2.mp4>) | Mostrar una tercera ejecución o verificación de apertura |
+
+Al revisar los videos debe cotejarse el movimiento de la barrera con la LCD y con el estado de ocupación correspondiente.
+
 ## Escenarios de PF-06
 
 | Escenario | Resultado esperado |

@@ -26,8 +26,19 @@ También se verifica que cada cambio de estado de la barrera conserve su origen:
 | Evidencia | Procedimiento demostrado | Estado |
 |---|---|---|
 | [Abrir-CerrraPorTerminal.mp4](<Abrir-CerrraPorTerminal.mp4>) | Apertura y cierre de la barrera mediante las órdenes `OPEN` y `CLOSE` enviadas por el terminal Serial | Evidencia registrada |
+| [historial-barrera.csv](<historial-barrera.csv>) | Exportación de eventos `barrier_changed` | Evidencia registrada |
+| [historial-muestra.csv](<historial-muestra.csv>) | Exportación de eventos `sample` y `occupancy_changed` | Evidencia registrada |
 
 El video documenta que los comandos `OPEN` y `CLOSE` se enviaron por el terminal y que la barrera realizó los cambios correspondientes.
+
+## Datos del histórico
+
+Los CSV contienen registros exportados de `SmartParkHistory`:
+
+- `historial-barrera.csv`: cambios de estado de la barrera, estados anterior/actual y origen del evento.
+- `historial-muestra.csv`: muestras del parqueo y cambios de ocupación.
+
+Los registros incluyen `thingName`, `eventKey`, `eventType`, `schemaVersion`, `occurredAt`, `receivedAt` y `data`. Los eventos de barrera registrados incluyen orígenes `edge` y `legado`; las muestras y ocupaciones tienen origen `edge`.
 
 ## Criterios de aprobación
 
