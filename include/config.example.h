@@ -13,7 +13,7 @@
 
 // ---------- AWS IoT Core ----------
 // Endpoint sin protocolo, rutas ni el sufijo de ejemplo.
-#define AWS_IOT_ENDPOINT   "a1acybki981kqw-ats.iot.us-east-1.amazonaws.com"
+#define AWS_IOT_ENDPOINT   "TU_ENDPOINT-ats.iot.us-east-1.amazonaws.com"
 #define MQTT_PORT          8883
 #define THING_NAME         "smartpark-grupo9-01" // Debe coincidir con el Thing creado en AWS.
 // GET V2 con metadatos y encabezado MQTT medido en pruebas host.
