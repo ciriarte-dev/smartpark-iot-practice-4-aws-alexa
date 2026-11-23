@@ -75,7 +75,7 @@ LCD esperada en el video: la fila 0 sigue cada ocupación (`Libres:3/4 Oc:1` …
 | N = final − inicio |  |
 | Inicio y fin del reposo del bloque 5 (S) |  |
 
-Cálculo después de la sesión: `python tools/analizar_pruebas.py` con el CSV de PF-04, el log serie y la exportación de CloudWatch ([informe, 4.1](../../informe-practica-4.md#41-plan-de-pruebas-y-hojas-de-registro)). Salida en `docs/evidencias/pruebas/PNF-05/analisis.md`.
+Cálculo después de la sesión: `python tools/analizar_pruebas.py` con el CSV de PF-04, el log serie y la exportación de CloudWatch ([informe, 4.1](../../informe-practica-4.md#41-plan-de-pruebas)). Salida en `docs/evidencias/pruebas/PNF-05/analisis.md`.
 
 ## PNF-06 Reconexión y operación sin conexión (RNF6, RNF10 y E4)
 

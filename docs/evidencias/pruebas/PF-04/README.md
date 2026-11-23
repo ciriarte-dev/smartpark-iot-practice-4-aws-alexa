@@ -1,51 +1,17 @@
 # PF-04 — Almacenamiento del histórico
 
-Esta carpeta contiene las evidencias de la prueba funcional **PF-04**, correspondiente al registro y almacenamiento de eventos en `SmartParkHistory`.
+**Requisitos:** RF10, RF11, RF12. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Datos: [5.3 del informe](../../../informe-practica-4.md#53-datos-almacenados-en-dynamodb).
 
-Respalda los requerimientos **RF10, RF11 y RF12**. El procedimiento completo se describe en [PF-04 de la sección 4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales).
+**Procedimiento.** Órdenes `OPEN` y `CLOSE` por el monitor serie y órdenes por voz; exportación de `SmartParkHistory` desde la consola de DynamoDB.
 
-## Objetivo
+| Archivo | Qué demuestra |
+|---|---|
+| [`Abrir-CerrarPorTerminal.mp4`](Abrir-CerrarPorTerminal.mp4) | `OPEN` y `CLOSE` por Serial y movimiento de la barrera (origen `edge`) |
+| [`historial-barrera.csv`](historial-barrera.csv) | 38 `barrier_changed`: 31 `legado` (órdenes V1, incluida la voz) y 7 `edge` |
+| [`historial-muestra.csv`](historial-muestra.csv) | Página de 50 filas: 8 `sample`, 40 `occupancy_changed` y 2 `barrier_changed` repetidos del otro CSV |
 
-Comprobar que los eventos del sistema sean recibidos, validados y almacenados en DynamoDB con los atributos requeridos:
+Análisis reproducible: [`../../analisis/historial-resultados.md`](../../analisis/historial-resultados.md).
 
-- `thingName`
-- `eventKey`
-- `schemaVersion = v1`
-- `occurredAt`
-- `receivedAt`
-- `data`
+**Resultado.** 88 filas, 86 ítems únicos por `eventKey`; se excluyen 2 ítems `prueba-*` publicados a mano desde el cliente MQTT; quedan 84 eventos del firmware con los 9 atributos del modelo. La skill envía las órdenes en formato V1 (`desired.barrera`), por lo que la voz figura con `origin = legado`; el origen `voz` solo lo produce el formato V2, que la Lambda desplegada no usa. Las lecturas son del 19 y 20/11 con `capacidad = 1` (desarrollo); la sesión del 22/11 solo se exportó para la barrera (27 `legado`, 4 `edge`).
 
-También se verifica que cada cambio de estado de la barrera conserve su origen:
-
-- `voz`, para órdenes enviadas desde Alexa.
-- `edge`, para órdenes `OPEN` y `CLOSE` enviadas desde el terminal Serial.
-- `nube` o `legado`, según corresponda a otras fuentes admitidas.
-
-## Evidencia registrada
-
-| Evidencia | Procedimiento demostrado | Estado |
-|---|---|---|
-| [Abrir-CerrraPorTerminal.mp4](<Abrir-CerrraPorTerminal.mp4>) | Apertura y cierre de la barrera mediante las órdenes `OPEN` y `CLOSE` enviadas por el terminal Serial | Evidencia registrada |
-| [historial-barrera.csv](<historial-barrera.csv>) | Exportación de eventos `barrier_changed` | Evidencia registrada |
-| [historial-muestra.csv](<historial-muestra.csv>) | Exportación de eventos `sample` y `occupancy_changed` | Evidencia registrada |
-
-El video documenta que los comandos `OPEN` y `CLOSE` se enviaron por el terminal y que la barrera realizó los cambios correspondientes.
-
-## Datos del histórico
-
-Los CSV contienen registros exportados de `SmartParkHistory`:
-
-- `historial-barrera.csv`: cambios de estado de la barrera, estados anterior/actual y origen del evento.
-- `historial-muestra.csv`: muestras del parqueo y cambios de ocupación.
-
-Los registros incluyen `thingName`, `eventKey`, `eventType`, `schemaVersion`, `occurredAt`, `receivedAt` y `data`. Los eventos de barrera registrados incluyen orígenes `edge` y `legado`; las muestras y ocupaciones tienen origen `edge`.
-
-## Criterios de aprobación
-
-PF-04 se considera aprobada cuando se verifica:
-
-1. Que exista una invocación del procesador por cada evento publicado.
-2. Que los ítems contengan los atributos obligatorios.
-3. Que los datos almacenados sean coherentes con los eventos observados.
-4. Que los cambios de barrera registren el origen correcto.
-5. Que los resultados de DynamoDB y CloudWatch permitan reconstruir la sesión.
+**Estado:** ✅ Cumple (RF10, RF12); ⚠️ Cumple parcial (RF11, [ficha F13](../../../informe-practica-4.md#f13-lecturas-almacenadas-pf-04-rf11)).

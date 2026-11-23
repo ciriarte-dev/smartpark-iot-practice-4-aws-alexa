@@ -1,10 +1,11 @@
 # PF-08 — Consultas de los reportes M1–M4
 
-Respalda RF15. Procedimiento, resultado esperado y criterio: [PF-08 en 4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Los valores se anotan primero en la [hoja de registro](../../hojas-registro/hoja-pruebas-funcionales.md).
+**Requisito:** RF15. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Análisis: [ficha F12](../../../informe-practica-4.md#f12-consultas-de-los-reportes-pf-08) y [5.3](../../../informe-practica-4.md#53-datos-almacenados-en-dynamodb).
 
-| Archivo esperado | Cómo obtenerlo |
+| Archivo | Qué demuestra |
 |---|---|
-| [`consultas.txt`](consultas.txt) | Parámetros de cada consulta para la consola de DynamoDB (archivo de apoyo). |
-| `M1.csv` a `M4.csv` | Resultado de cada consulta de `consultas.txt` sobre el rango de la sesión, exportado con *Download results to CSV*. |
+| [`consultas.txt`](consultas.txt) | Consultas PartiQL de M1–M4 sobre `SmartParkHistory` y los atributos que usa cada una |
 
-Las rutas con `../` apuntan a archivos compartidos con otras pruebas. Esta carpeta se completa durante la sesión de banco; no contiene resultados todavía.
+**Resultado.** No se exportaron M1–M4.csv. Con los CSV de [PF-04](../PF-04/) se comprobó que los 11 atributos que usan los cuatro mockups están en los ítems almacenados, y M2 se calculó para el 22/11: 16 aperturas, 14 `legado` (87,5 %) y 2 `edge` (12,5 %).
+
+**Estado:** ⚠️ Cumple parcial.
