@@ -31,48 +31,13 @@
 7. [Recomendaciones](#7-recomendaciones)
 8. [Anexos](#8-anexos)
 
-Antes de la sección 1: [Guía para la evaluación](#guía-para-la-evaluación).
+Antes de la sección 1: [Resumen del informe](#resumen-del-informe).
 
 ---
 
-## Guía para la evaluación
+## Resumen del informe
 
 **Estado de la evidencia.** El diseño y la implementación (secciones 1 a 3) están en el repositorio y se enlazan al código con número de línea. Las pruebas automáticas se ejecutaron el 2026-11-23 sobre el commit `ad5d377` (4.5). La sesión de pruebas en vivo del 22/11/2026 dejó videos, hojas de cálculo, un PDF de mediciones y exportaciones de DynamoDB, todos transcritos o analizados en [`docs/evidencias/`](evidencias/); no dejó log serie ni exportación de CloudWatch, y las mediciones que dependían de ellos se declaran como no ejecutadas (4.1). Cada resultado que no cumple tiene una ficha de diagnóstico en 4.4.
-
-**Contenido exigido por §4.2 del enunciado.**
-
-| Exigencia | Sección |
-|---|---|
-| Caso de uso, ampliación respecto a la P3 y justificación de sensores y actuadores | 1.1, 1.2 |
-| Requerimientos funcionales y no funcionales | 1.3, 1.4, 1.5 |
-| Diagrama de bloques | 2.1 |
-| Diagrama de arquitectura con reglas, Lambdas y tablas | 2.2 |
-| Diagrama de circuito | 2.3 |
-| Diagramas de clases del objeto y de las Lambdas | 2.4.1, 2.4.2 |
-| Secuencias: consulta del sensor, comando, almacenamiento y cada regla automática | 2.5.1, 2.5.2, 2.5.3, 2.5.4 |
-| Estados de la lógica de control y ubicación Edge / Nube | 2.6 |
-| Documento Shadow (`desired`, `reported`, `delta`) | 2.7 |
-| Modelo de datos de DynamoDB y patrones de acceso | 2.8 |
-| Reglas de AWS IoT y funciones Lambda | 2.9 |
-| Frecuencia de reporte | 2.10 |
-| Skill de Alexa | 2.11 |
-| Mockups de reportes y consultas | 2.12 |
-| Estructura del código y fragmentos clave | 3.1 |
-| Configuración de AWS y permisos asignados | 3.2 |
-| Configuración de Alexa | 3.3 |
-| Pruebas y validaciones | 4 |
-| Resultados | 5 |
-| Conclusiones y recomendaciones | 6, 7 |
-| Anexos | 8 |
-
-**Criterios de la rúbrica (§5.2.2, nivel 4).**
-
-| Criterio | Dónde se sustenta |
-|---|---|
-| Requerimientos, análisis y diseño | 1 (caso de uso, sensores, RF y RNF medibles, trazabilidad en 1.5); 2 (todos los diagramas, Shadow, DynamoDB frente a patrones de acceso, reglas, skill, mockups, Edge / Nube en 2.6 y frecuencia de reporte en 2.10) |
-| Desarrollo e implementación | 3.1 (código con enlaces `#L`); 3.2 (configuración de AWS y permisos asignados, con motivo, riesgo y mínimo de producción); 3.3 (Alexa); 8.5 (configuraciones exportadas); 4.3 (revisión de secretos) |
-| Pruebas y validaciones | 4.1 (plan completo y alcance real de la sesión); 4.2 (cada RF, cada intent, almacenamiento y reglas E1–E4); 4.3 (cada RNF); 4.4 (análisis de cada falla); 4.5 (pruebas automáticas) |
-| Resultados, conclusiones y recomendaciones | 5.1 (matriz), 5.2 (valores medidos), 5.3 (datos de DynamoDB), 5.4 (análisis Edge / Nube), 5.5 (desviaciones e impacto), 5.6 (costo); 6; 7 (correcciones y extensiones); 8 (anexos) |
 
 **Convención de estados.** Se usa una sola en todo el informe y en los README de evidencia.
 
@@ -1452,13 +1417,13 @@ Las tres suites se ejecutaron el 2026-11-23 sobre el commit `ad5d377` (rama `doc
 
 ### 5.1 Matriz de cumplimiento
 
-Convención de estados en la [Guía para la evaluación](#guía-para-la-evaluación). Cada valor sale del archivo enlazado; las fichas de 4.4 analizan cada estado distinto de ✅.
+Convención de estados en el [Resumen del informe](#resumen-del-informe). Cada valor sale del archivo enlazado; las fichas de 4.4 analizan cada estado distinto de ✅.
 
 **Requerimientos funcionales.**
 
 | Req. | Prueba en vivo | Prueba automática | Valor medido u observado | Criterio | Estado | Evidencia |
 |---|---|---|---|---|---|---|
-| RF1 | PF-01, PNF-02 | PA-02 ✅ | 75 lecturas HC-SR04 (30 en `pf01.xlsx`, 35 en el PDF), error máx 1,0 cm; `SLOT1` y cambio de la plaza 1 | Lecturas válidas; plaza detectada | ✅ Cumple | [`pf01.md`](evidencias/pruebas/PF-01/pf01.md), [`registro-no-funcionales.md`](evidencias/pruebas/PNF-01/registro-no-funcionales.md) |
+| RF1 | PF-01, PNF-02 | PA-02 ✅ | 65 lecturas HC-SR04 (30 en `pf01.xlsx`, 35 en el PDF), error máx 1,0 cm; `SLOT1` y cambio de la plaza 1 | Lecturas válidas; plaza detectada | ✅ Cumple | [`pf01.md`](evidencias/pruebas/PF-01/pf01.md), [`registro-no-funcionales.md`](evidencias/pruebas/PNF-01/registro-no-funcionales.md) |
 | RF2 | PF-01, PF-07 | PA-02 ✅ | `reported` con distancia, vehículo y barrera (captura); plazas, modo y antirrebote leídos por Alexa desde `reported` | Atributos en `reported` | ✅ Cumple | [`shadow-publica.png`](evidencias/aws-iot/shadow-publica.png), [`PF-07/`](evidencias/pruebas/PF-07/) |
 | RF3 | PF-02, PF-07, PNF-06 | PA-02 ✅ | 6/6 órdenes → `desired`; ajuste del antirrebote por voz a 200 y 120 ms; `desired` pendiente aplicado 3/3 tras cortes | `delta` aplicado y confirmado | ✅ Cumple | [`pf02.md`](evidencias/pruebas/PF-02/pf02.md), [`PF-07/`](evidencias/pruebas/PF-07/) |
 | RF4 | PF-02 | PA-03 ✅ | Respuestas a distancia y vehículo esperando | Dato de `reported` ≤ 180 s | ✅ Cumple | [`ConsultarDistancia.mp4`](evidencias/pruebas/PF-02/ConsultarDistancia.mp4), [`AutoEsperando.mp4`](evidencias/pruebas/PF-02/AutoEsperando.mp4) |
@@ -1671,7 +1636,7 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 4. **El almacenamiento en AWS es fiable, pero el ESP32 pierde eventos en ráfagas.** Los 84 eventos que salieron del ESP32 tienen ítem, con los 9 atributos del modelo y el origen de cada orden de barrera (31 `legado`, 7 `edge`), y los inválidos y duplicados se descartan según PA-03. Reconstruyendo N con el número de secuencia, la integridad fue 78,7 % (48/61): en una ráfaga de transiciones la cola de 16 eventos se llenó y se descartaron 12 (F6). La latencia del `PutItem` (Δ1) no se midió por falta de CloudWatch.
 5. **El límite de 10 s del histórico es un compromiso deliberado con un costo medible.** Mantiene el histórico por debajo de 8640 mensajes/día, pero en ráfagas retrasa los eventos hasta 179,1 s; los eventos aislados llegan en una mediana de 1,2 s (F4). Para reportes no afecta el resultado; para una regla de Nube en tiempo real habría que permitir ráfagas.
 6. **La estabilidad eléctrica es la principal debilidad del prototipo.** Los reinicios (RNF1) también explican los intervalos cortos entre muestras (RNF5) y la pérdida de eventos en RAM. La causa más probable es alimentar el SG90 desde el 3,3 V del ESP32, una decisión del montaje (2.3) con corrección concreta (7.5, 7.6).
-7. **El modelo de DynamoDB resuelve los reportes con una sola `Query` por rango.** Los 11 atributos de M1–M4 están en los ítems almacenados y M2 se reconstruye de la exportación (16 aperturas el 22/11, 87,5 % por voz); solo un panel de varios Things o el conteo de aperturas rechazadas requieren cambios (7.1).
+7. **El modelo de DynamoDB resuelve los reportes con una sola `Query` por rango.** Los 11 atributos de M1–M4 están en los ítems almacenados y M2 se reconstruye de la exportación (16 aperturas el 22/11, 87,5 % `legado`, voz en formato V1); solo un panel de varios Things o el conteo de aperturas rechazadas requieren cambios (7.1).
 8. **Los permisos de la cuenta no aplican el mínimo privilegio, y el informe lo declara.** La política IoT usa `iot:*` sobre `*` y el rol del backend usa políticas FullAccess, aceptado por §3.3 para simplificar la configuración; las plantillas de producción, con recursos concretos, están versionadas y el plan de migración está en 7.6. No hay secretos en el repositorio.
 9. **El costo estimado es del orden de céntimos de dólar al mes** (≈ 0,01 USD con capa gratuita, ≈ 0,15–0,23 USD sin ella) y la frecuencia real observada está por debajo del escenario de cálculo.
 

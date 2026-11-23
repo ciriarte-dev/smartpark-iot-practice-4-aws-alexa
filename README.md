@@ -18,7 +18,7 @@
 
 Parqueo de cuatro plazas con barrera, controlado por un ESP32 conectado a AWS IoT Core (Shadow, regla de IoT, Lambda y DynamoDB) y a una skill de Alexa, con la lógica de control en el Edge.
 
-> **Informe técnico de la Práctica 4: [docs/informe-practica-4.md](docs/informe-practica-4.md)**. Empieza por su [Guía para la evaluación](docs/informe-practica-4.md#guía-para-la-evaluación).
+> **Informe técnico de la Práctica 4: [docs/informe-practica-4.md](docs/informe-practica-4.md)**. Empieza por su [Resumen del informe](docs/informe-practica-4.md#resumen-del-informe).
 
 ## Documentación
 
