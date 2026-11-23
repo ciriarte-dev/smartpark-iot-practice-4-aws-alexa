@@ -1,4 +1,5 @@
-Fecha: 2026-11-22 18:17:58 -0400
+Fecha: 2026-11-23 09:54:24 -0400
+Commit: b6f1c5e (rama docs/sync-after-henry-telemetry)
 Comando: pio run (después de pio run -t clean)
 Configuración: include/config.h e include/secrets.h locales (no versionados)
 
@@ -59,8 +60,8 @@ Compiling .pio\build\esp32doit-devkit-v1\libc84\WiFiClientSecure\WiFiClientSecur
 Compiling .pio\build\esp32doit-devkit-v1\libc84\WiFiClientSecure\esp_crt_bundle.c.o
 Compiling .pio\build\esp32doit-devkit-v1\libc84\WiFiClientSecure\ssl_client.cpp.o
 Compiling .pio\build\esp32doit-devkit-v1\FrameworkArduino\Esp.cpp.o
-Archiving .pio\build\esp32doit-devkit-v1\libbf4\libWiFi.a
 Compiling .pio\build\esp32doit-devkit-v1\FrameworkArduino\FirmwareMSC.cpp.o
+Archiving .pio\build\esp32doit-devkit-v1\libbf4\libWiFi.a
 Compiling .pio\build\esp32doit-devkit-v1\FrameworkArduino\FunctionalInterrupt.cpp.o
 Compiling .pio\build\esp32doit-devkit-v1\FrameworkArduino\HWCDC.cpp.o
 Compiling .pio\build\esp32doit-devkit-v1\FrameworkArduino\HardwareSerial.cpp.o
@@ -113,8 +114,8 @@ Linking .pio\build\esp32doit-devkit-v1\firmware.elf
 Retrieving maximum program size .pio\build\esp32doit-devkit-v1\firmware.elf
 Checking size .pio\build\esp32doit-devkit-v1\firmware.elf
 Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
-RAM:   [==        ]  15.2% (used 49912 bytes from 327680 bytes)
-Flash: [=======   ]  73.6% (used 964365 bytes from 1310720 bytes)
+RAM:   [==        ]  15.2% (used 49944 bytes from 327680 bytes)
+Flash: [=======   ]  73.7% (used 965557 bytes from 1310720 bytes)
 Building .pio\build\esp32doit-devkit-v1\firmware.bin with action:
   "$PYTHONEXE" "$OBJCOPY" --chip esp32 elf2image --flash_mode ${__get_board_flash_mode(__env__)} --flash_freq ${__get_board_f_image(__env__)} --flash_size 4MB --elf-sha256-offset 0xb0 -o $TARGET $SOURCES
 Building .pio\build\esp32doit-devkit-v1\firmware.bin
@@ -122,4 +123,10 @@ esptool.py v4.11.0
 Creating esp32 image...
 Merged 27 ELF sections
 Successfully created esp32 image.
-========================= [SUCCESS] Took 30.82 seconds =========================
+========================= [SUCCESS] Took 30.41 seconds =========================
+
+Environment          Status    Duration
+-------------------  --------  ------------
+esp32doit-devkit-v1  SUCCESS   00:00:30.406
+========================= 1 succeeded in 00:00:30.406 =========================
+Código de salida: 0
