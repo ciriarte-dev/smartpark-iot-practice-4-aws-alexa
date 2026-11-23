@@ -1,5 +1,5 @@
 #include "AwsIoTManager.h"
-#include "config.h"
+#include "config.h" //cambiar por config.example.h
 #include "secrets.h"
 #include <WiFi.h>
 #include <ArduinoJson.h>

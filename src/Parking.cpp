@@ -1,5 +1,5 @@
 #include "Parking.h"
-#include "config.h"
+#include "config.h" //cambiar por config.example.h
 
 static_assert(Parking::capacity >= 1 && Parking::capacity <= sizeof(SLOT_PINS) / sizeof(SLOT_PINS[0]), "Mapa de plazas incompleto");
 
