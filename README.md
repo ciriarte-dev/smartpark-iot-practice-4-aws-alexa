@@ -10,7 +10,7 @@
 
 **Integrantes:**
 
-- Carlos Eduardo Iriarte Rodriguez
+- Carlos Eduardo Iriarte Rodríguez
 - Isabella Catherine Montes Iñiguez
 - Henry Alejandro Rivera Mendez
 
