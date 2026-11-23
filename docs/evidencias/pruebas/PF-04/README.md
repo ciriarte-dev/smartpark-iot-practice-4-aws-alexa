@@ -1,10 +1,40 @@
 # PF-04 — Almacenamiento del histórico
 
-Respalda RF10, RF11, RF12. Procedimiento, resultado esperado y criterio: [PF-04 en 4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Los valores se anotan primero en la [hoja de registro](../../hojas-registro/hoja-pruebas-funcionales.md).
+Esta carpeta contiene las evidencias de la prueba funcional **PF-04**, correspondiente al registro y almacenamiento de eventos en `SmartParkHistory`.
 
-| Archivo esperado | Cómo obtenerlo |
-|---|---|
-| `historial-sesion.csv` | Consola de DynamoDB → `SmartParkHistory` → *Query* por `thingName` y rango de `eventKey` de la sesión → *Download results to CSV*. |
-| `cloudwatch.csv` | CloudWatch Logs Insights sobre `/aws/lambda/SmartParkHistoryProcessor` con `fields @timestamp, @message \| sort @timestamp asc` → *Export results* → CSV. |
+Respalda los requerimientos **RF10, RF11 y RF12**. El procedimiento completo se describe en [PF-04 de la sección 4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales).
 
-Las rutas con `../` apuntan a archivos compartidos con otras pruebas. Esta carpeta se completa durante la sesión de banco; no contiene resultados todavía.
+## Objetivo
+
+Comprobar que los eventos del sistema sean recibidos, validados y almacenados en DynamoDB con los atributos requeridos:
+
+- `thingName`
+- `eventKey`
+- `schemaVersion = v1`
+- `occurredAt`
+- `receivedAt`
+- `data`
+
+También se verifica que cada cambio de estado de la barrera conserve su origen:
+
+- `voz`, para órdenes enviadas desde Alexa.
+- `edge`, para órdenes `OPEN` y `CLOSE` enviadas desde el terminal Serial.
+- `nube` o `legado`, según corresponda a otras fuentes admitidas.
+
+## Evidencia registrada
+
+| Evidencia | Procedimiento demostrado | Estado |
+|---|---|---|
+| [Abrir-CerrraPorTerminal.mp4](<Abrir-CerrraPorTerminal.mp4>) | Apertura y cierre de la barrera mediante las órdenes `OPEN` y `CLOSE` enviadas por el terminal Serial | Evidencia registrada |
+
+El video documenta que los comandos `OPEN` y `CLOSE` se enviaron por el terminal y que la barrera realizó los cambios correspondientes.
+
+## Criterios de aprobación
+
+PF-04 se considera aprobada cuando se verifica:
+
+1. Que exista una invocación del procesador por cada evento publicado.
+2. Que los ítems contengan los atributos obligatorios.
+3. Que los datos almacenados sean coherentes con los eventos observados.
+4. Que los cambios de barrera registren el origen correcto.
+5. Que los resultados de DynamoDB y CloudWatch permitan reconstruir la sesión.
