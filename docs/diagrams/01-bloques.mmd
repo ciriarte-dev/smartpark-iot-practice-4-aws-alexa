@@ -22,7 +22,7 @@ flowchart LR
         LCD["LCD 16×2 + PCF8574 (0x27)<br/>SDA GPIO 21 · SCL GPIO 22"]
     end
     CLOUD["AWS IoT Core<br/>MQTT sobre TLS 8883"]
-    PC["Monitor serie 115200 baudios<br/>OPEN · CLOSE · STATUS · DISTANCE · SLOT1 · HELP"]
+    PC["Monitor serie 115200 baudios<br/>OPEN · CLOSE · STATUS · DISTANCE<br/>SLOT1 · LCDRESET · HELP"]
 
     US --> LOOP
     IR --> LOOP
