@@ -1,5 +1,5 @@
 #include "BarrierServo.h"
-#include "config.h" //cambiar por config.example.h
+#include "config.h" 
 namespace {
 int pulseForAngle(int angle) {
     return SERVO_MIN_US + (SERVO_MAX_US - SERVO_MIN_US) * angle / 180;

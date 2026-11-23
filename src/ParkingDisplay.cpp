@@ -1,5 +1,5 @@
 #include "ParkingDisplay.h"
-#include "config.h" //cambiar por config.example.h
+#include "config.h" 
 #include <Wire.h>
 #include <stdio.h>
 #include <string.h>
