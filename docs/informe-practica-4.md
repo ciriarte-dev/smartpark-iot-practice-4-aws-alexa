@@ -1266,6 +1266,16 @@ Cobertura de PA-03: vinculación y PIN (`test_admin`, `test_pin_public`, `test_i
 
 ### 5.3 Datos almacenados en DynamoDB
 
+**Exportaciones verificadas de `smartpark-grupo9-01`.** La [muestra de 50 registros](evidencias/pruebas/PF-04/historial-muestra.csv) contiene 8 muestras, 40 cambios de ocupación y 2 cambios de barrera. Dos cambios de ocupación tienen identificadores con prefijo `prueba`. La [consulta de cambios de barrera](evidencias/pruebas/PF-04/historial-barrera.csv) devolvió 38 registros con claves distintas. Las exportaciones pueden solaparse y sus recuentos se interpretan por separado.
+
+| Origen registrado | Aperturas | Cierres | Total |
+|---|---:|---:|---:|
+| `legado` | 16 | 15 | 31 |
+| `edge` | 3 | 4 | 7 |
+| **Total** | **19** | **19** | **38** |
+
+La captura de un ítem en la consola muestra `barrier_changed`, `origin: edge`, `anterior: desconocida`, `actual: abierta` y `posicion_estimada: true`. El origen `legado` identifica órdenes en formato V1. Para atribuir un evento concreto a Alexa hace falta correlacionarlo con la prueba de la skill. Estas exportaciones muestran qué quedó almacenado. La integridad y la latencia requieren los registros de la misma ventana de PNF-05.
+
 **Muestra de ítems:** exportación de la sesión en `docs/evidencias/pruebas/PF-04/historial-sesion.csv` (Pendiente de ejecución).
 
 **Consultas usadas** (consola de DynamoDB, *Query* sobre `SmartParkHistory`):
@@ -1432,12 +1442,14 @@ El montaje de la maqueta (2.3) conecta los módulos directamente al ESP32 y se a
 
 ### 8.4 Evidencias de arquitectura y configuración
 
+La captura del Classic Shadow del 23/11/2026 muestra dos plazas ocupadas y dos libres, modo manual, antirrebote de 120 ms, distancia de aproximadamente 25,6 cm y `vehiculo_detectado: false` en `reported`. Es evidencia de telemetría de PF-01. La apertura figuraba en `delta` y la posición de la barrera aún no estaba estimada en esa captura.
+
 | Evidencia | Estado |
 |---|---|
 | Capturas de la consola: Thing, certificado activo y políticas adjuntas | Pendiente de ejecución |
-| Regla `SmartParkHistoryIngest` habilitada y su acción | Pendiente de ejecución |
+| Regla `SmartParkHistoryIngest` habilitada y su acción | La captura del 23/11/2026 muestra la regla activa, el SQL sobre `smartpark/+/history/v1` y una acción Lambda. Falta una captura del detalle que muestre el destino exacto. |
 | Configuración de las tres Lambdas (runtime, memoria, *timeout*, variables sin valores secretos) | Pendiente de ejecución |
-| Tablas `SmartParkBindings` y `SmartParkHistory` en estado `ACTIVE` | Pendiente de ejecución |
+| Tablas `SmartParkBindings` y `SmartParkHistory` en estado `ACTIVE` | La captura del 23/11/2026 muestra ambas activas. `SmartParkBindings` tiene `userId` como clave de partición. `SmartParkHistory` tiene `thingName` como clave de partición y `eventKey` como clave de ordenación. Todas son de tipo cadena. |
 | Modelo de interacción construido y endpoint en la Alexa Developer Console | Pendiente de ejecución |
 | Fotografías del montaje | Pendiente de ejecución |
 | Facturación del mes de la sesión (Billing o Cost Explorer: mensajes, operaciones de Shadow, reglas y escrituras de DynamoDB), para contrastar 5.6 | Pendiente de ejecución |
