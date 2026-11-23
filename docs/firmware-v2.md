@@ -22,6 +22,8 @@ El firmware usa un backpack PCF8574 con dirección inicial `0x27`, datos en P4�
 
 ## LCD 16×2
 
+Si la pantalla muestra caracteres corruptos y el monitor serie sigue respondiendo, envía `LCDRESET` a 115200 baudios con terminación de línea. El comando solicita la reinicialización de la LCD y el redibujo de ambas filas desde el bucle normal. La confirmación de Serial indica que se recibió la orden. Usa `SLOT1` para consultar el estado I²C y comprueba visualmente que vuelve el texto. El comando no acciona el servo ni reinicia el ESP32.
+
 `ParkingDisplay` controla una LCD 16×2 (HD44780 en modo de 4 bits por el PCF8574; filas en las direcciones DDRAM 0x00 y 0x40). Escribe una fila por llamada y solo si su texto cambió, sin bloquear `loop()`. Ante un error I²C reinicia la inicialización y reescribe ambas filas. El tamaño está en `LCD_COLUMNS = 16` y `LCD_ROWS = 2`, con valor por defecto en [`ParkingDisplay.h`](../include/ParkingDisplay.h).
 
 | Fila | Contenido |

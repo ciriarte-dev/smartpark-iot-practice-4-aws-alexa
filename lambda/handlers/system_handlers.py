@@ -6,7 +6,7 @@ from ask_sdk_core.utils import is_intent_name, is_request_type
 from .common import get_backend, say, user_id
 from services.errors import UserError
 
-HELP = "Dentro de SmartPark puedes decir abrir, cerrar, consultar estado, consultar distancia o consultar vehículo. También puedes consultar plazas libres, el modo o el antirrebote. Para terminar, di salir o cancelar. También puedes vincular tu parqueo con un código autorizado, cambiar la vinculación o desvincularlo."
+HELP = "Dentro de SmartPark puedes decir abrir, cerrar, consulta el estado de la barrera, consultar distancia o consultar vehículo. También puedes consultar plazas libres, el modo o el antirrebote. Para terminar, di salir o cancelar. También puedes vincular tu parqueo con un código autorizado, cambiar la vinculación o decir elimina la vinculación de mi parqueo inteligente."
 
 
 class LaunchHandler(AbstractRequestHandler):
@@ -17,7 +17,7 @@ class LaunchHandler(AbstractRequestHandler):
         binding = get_backend().bindings.get_binding(user_id(handler_input))
         text = "Bienvenido a parqueo inteligente. "
         if binding:
-            text += "Puedes decir abrir, consultar estado, cerrar o salir."
+            text += "Puedes decir abrir, consulta el estado de la barrera, cerrar o salir."
         else:
             text += "Primero pide un código al administrador y di: vincula mi parqueo con el código, seguido de los cuatro dígitos."
         return say(handler_input, text, keep_open=True)
@@ -52,7 +52,7 @@ class FallbackHandler(AbstractRequestHandler):
         return True
 
     def handle(self, handler_input):
-        return say(handler_input, "No reconocí esa solicitud. Di abrir, cerrar, consultar estado, consultar distancia o consultar vehículo. Para terminar, di salir. También puedes pedir ayuda.", keep_open=True)
+        return say(handler_input, "No reconocí esa solicitud. Di abrir, cerrar, consulta el estado de la barrera, consultar distancia o consultar vehículo. Para terminar, di salir. También puedes pedir ayuda.", keep_open=True)
 
 
 class SafeExceptionHandler(AbstractExceptionHandler):

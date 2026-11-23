@@ -72,7 +72,11 @@ void execute(SerialCommands::Command cmd) {
     case C::Status: printDistance(); printBarrier(); aws.printStatus(); break;
     case C::Distance: printDistance(); break;
     case C::Slot1: printSlot1(); break;
-    case C::Help: Serial.println("Comandos: OPEN, CLOSE, STATUS, DISTANCE, SLOT1, HELP (terminar con CR o LF)"); break;
+    case C::LcdReset:
+        display.reinitialize(millis());
+        Serial.println("LCD: reinicializacion solicitada. Usa SLOT1 para consultar el estado.");
+        break;
+    case C::Help: Serial.println("Comandos: OPEN, CLOSE, STATUS, DISTANCE, SLOT1, LCDRESET, HELP (terminar con CR o LF)"); break;
     case C::Invalid: Serial.println("Comando invalido o demasiado largo. Use HELP."); break;
     case C::None: break;
     }

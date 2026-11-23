@@ -225,6 +225,25 @@ class BackendTests(unittest.TestCase):
                 self.assertLessEqual(set(re.findall(r"{([^}]+)}", sample)), declared)
         self.assertEqual(len({intent["name"] for intent in intents}), 20)
 
+    def test_v2_distinguishes_unconfigured_space_from_missing_measurement(self):
+        self.bind()
+        self.report_parking()
+        doc = self.document["state"]["reported"]
+        del doc["slots"]["2"]
+        slots = {"espacio": {"name": "espacio", "value": "2"}}
+        self.assertIn("No tengo un dato reportado", self.invoke("ConsultarEstacionamientoIntent", slots=slots))
+        doc["capacidad"] = 1
+        self.assertIn("no está configurado", self.invoke("ConsultarEstacionamientoIntent", slots=slots))
+        del doc["distancia_cm"]
+        self.assertIn("No tengo un dato reportado para esa consulta", self.invoke("ConsultarDistanciaIntent"))
+
+    def test_twelve_digit_pin_is_rejected_by_both_binding_intents_without_aws(self):
+        slots = {"codigo": {"name": "codigo", "value": "123456789012"}}
+        for intent in ("VincularParqueoIntent", "CambiarVinculacionIntent"):
+            self.assertIn("cuatro dígitos", self.invoke(intent, slots=slots))
+        self.db.get_item.assert_not_called()
+        self.factory.assert_not_called()
+
     def linking(self, intent="VincularParqueoIntent", code=CODE):
         return self.invoke(intent, slots={"codigo": {"name": "codigo", "value": code}})
 

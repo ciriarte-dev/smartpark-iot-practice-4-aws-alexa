@@ -5,7 +5,7 @@ import time
 
 from botocore.exceptions import BotoCoreError, ClientError
 
-from .errors import ServiceError, UserError
+from .errors import MissingReportedField, ServiceError, UserError
 from .validation import validate_thing
 
 # Mantener en sincronía con IR_DEBOUNCE_MIN_MS e IR_DEBOUNCE_MAX_MS del firmware.
@@ -55,7 +55,10 @@ class ShadowService:
                 value = document["state"]["reported"]
                 metadata = document["metadata"]["reported"]
                 for key in path:
-                    value = value[key]
+                    try:
+                        value = value[key]
+                    except KeyError as exc:
+                        raise MissingReportedField() from exc
                     metadata = metadata[key]
                 timestamp = metadata["timestamp"]
                 if type(timestamp) not in (int, float) or not math.isfinite(timestamp):
