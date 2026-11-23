@@ -27,6 +27,16 @@ Los escenarios cubiertos son:
 | [EspaciosOcupados.mp4](<EspaciosOcupados.mp4>) | *"¿Cuántas plazas están ocupadas?"* | Evidencia de la consulta de plazas ocupadas |
 | [Plaza2Ocupada-1.mp4](<Plaza2Ocupada-1.mp4>) | Consulta del estado de la plaza 2 | Evidencia de la respuesta sobre una plaza ocupada |
 | [Plaza2Ocupada-2.mp4](<Plaza2Ocupada-2.mp4>) | Consulta del estado de la plaza 2 | Evidencia adicional de la respuesta sobre una plaza ocupada |
+| [ConsultaModoParqueo.mp4](<ConsultaModoParqueo.mp4>) | Consulta del modo actual del parqueo | Evidencia de la respuesta con el modo reportado |
+| [ConsultaAntirrebote.mp4](<ConsultaAntirrebote.mp4>) | Consulta del valor actual del antirrebote | Evidencia de la respuesta con el parámetro configurado |
+| [Antirrebote200ms.mp4](<Antirrebote200ms.mp4>) | Ajuste válido del antirrebote a 200 ms | Evidencia de la solicitud por voz |
+| [Antirrebote120ms.mp4](<Antirrebote120ms.mp4>) | Ajuste válido del antirrebote a 120 ms | Evidencia de la solicitud por voz |
+| [Antirrebote120mss.mp4](<Antirrebote120mss.mp4>) | Ajuste válido del antirrebote a 120 ms | Evidencia adicional del ajuste por voz |
+| [Antirrebote1001ms.mp4](<Antirrebote1001ms.mp4>) | Ajuste fuera de rango a 1001 ms | Evidencia del rechazo de la validación |
+| [Ayuda.mp4](<Ayuda.mp4>) | Solicitud de ayuda | Evidencia del manejo de `AMAZON.HelpIntent` |
+| [Cancelar.mp4](<Cancelar.mp4>) | Cancelación de la sesión | Evidencia del manejo de `AMAZON.CancelIntent` |
+| [Detener.mp4](<Detener.mp4>) | Detención de la sesión | Evidencia del manejo de `AMAZON.StopIntent` |
+| [AbrirCuandoTodosEspaciosOcupados.mp4](<AbrirCuandoTodosEspaciosOcupados.mp4>) | Intento de abrir la barrera con todas las plazas ocupadas | Evidencia de la relación entre el estado completo y el control de la barrera |
 
 ## Resultados observados
 
@@ -35,20 +45,15 @@ Los escenarios cubiertos son:
 | Consulta de espacios disponibles | `EspaciosDisponibles.mp4` | Evidencia registrada |
 | Consulta de espacios ocupados | `EspaciosOcupados.mp4` | Evidencia registrada |
 | Consulta de la plaza 2 | `Plaza2Ocupada-1.mp4` y `Plaza2Ocupada-2.mp4` | Evidencia registrada |
-
-## Consultas y cambios pendientes de adjuntar
-
-Las siguientes evidencias pueden agregarse para completar la trazabilidad de PF-07:
-
-| Función | Evidencia recomendada |
-|---|---|
-| Estado libre u ocupado de otras plazas | Captura o video del simulador |
-| Modo actual del parqueo | Captura o video de la respuesta por voz |
-| Consulta del antirrebote | Captura o video de la respuesta por voz |
-| Cambio válido del antirrebote | Captura del Shadow y video de la respuesta |
-| Rechazo de un valor fuera del rango permitido | Captura del simulador |
-| Rechazo de una plaza fuera del rango válido | Captura del simulador |
-| Ayuda, cancelación y detención | Captura o video de las respuestas |
+| Consulta del modo del parqueo | `ConsultaModoParqueo.mp4` | Evidencia registrada |
+| Consulta del antirrebote | `ConsultaAntirrebote.mp4` | Evidencia registrada |
+| Ajuste del antirrebote a 200 ms | `Antirrebote200ms.mp4` | Evidencia registrada |
+| Ajuste del antirrebote a 120 ms | `Antirrebote120ms.mp4` y `Antirrebote120mss.mp4` | Evidencias registradas |
+| Rechazo de 1001 ms | `Antirrebote1001ms.mp4` | Evidencia registrada |
+| Solicitud de ayuda | `Ayuda.mp4` | Evidencia registrada |
+| Cancelación | `Cancelar.mp4` | Evidencia registrada |
+| Detención | `Detener.mp4` | Evidencia registrada |
+| Apertura con el parqueo lleno | `AbrirCuandoTodosEspaciosOcupados.mp4` | Evidencia registrada |
 
 ## Criterios de aprobación
 
