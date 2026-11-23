@@ -259,7 +259,7 @@ Revisar Billing, elegibilidad/créditos, duración/memoria de ambas Lambdas, Clo
 
 Se prueban generación segura y rango, normalización/formato, PIN incorrecto/expirado/usado, usuario no autorizado, Thing inexistente, vincular/cambiar/desvincular, revisión concurrente, tres intentos persistentes incluso con hilos, último intento correcto, consumo único, una sola ventana concurrente, bloqueo de regeneración, colisiones limitadas, errores de servicios, aislamiento de entradas/ZIP y logs sanitizados. Se conservan las pruebas de sensores, Shadow y respuestas del SDK.
 
-Son **pruebas con dobles**, no pruebas AWS reales. Los ZIP se importan y prueban offline bajo Python 3.13, con dependencias universales; no se ejecutó el runtime Linux de Lambda ni se validaron IAM, reconocimiento del slot, apertura física o Billing en la cuenta. No se desplegaron funciones, crearon recursos ni realizaron commits/pushes.
+Registro al empaquetar (antes del despliegue): son **pruebas con dobles**, no pruebas AWS reales. Los ZIP se importan y prueban offline bajo Python 3.13, con dependencias universales; no se ejecutó el runtime Linux de Lambda ni se validaron IAM, reconocimiento del slot, apertura física o Billing en la cuenta. No se desplegaron funciones, crearon recursos ni realizaron commits/pushes.
 
 ## Resultado anterior: PIN de cuatro dígitos
 
@@ -273,7 +273,7 @@ Son **pruebas con dobles**, no pruebas AWS reales. Los ZIP se importan y prueban
 - Ambos por debajo de los límites verificados de carga directa (50 MiB comprimidos, 250 MiB descomprimidos), sin carpeta contenedora ni secretos del proyecto. Los bundles CA públicos de dependencias son la excepción HTTPS documentada.
 - Los archivos fuente de ambos paquetes fueron cotejados contra el código final; la verificación no representa una ejecución real en AWS/Linux ni una evaluación real de políticas IAM.
 
-## Resultado actual: conversación continua
+## Estado al empaquetar (antes del despliegue): conversación continua
 
 - **91 pruebas locales, OK**, ejecutadas con mocks/dobles y sockets bloqueados antes de empaquetar.
 - **74 pruebas sobre el ZIP Alexa extraído, OK**, sin usar dependencias de `.venv`; handler raíz `lambda_function.lambda_handler` importable.
@@ -281,3 +281,7 @@ Son **pruebas con dobles**, no pruebas AWS reales. Los ZIP se importan y prueban
 - `dist/SmartParkAlexaBackend.zip`: **18.360.025 bytes** comprimidos; 27.374.557 bytes descomprimidos. SHA-256 `223bfd422e9aa45389629b5ab5931d7ee2d92b5d1748b9e7cbbf8d72daa5faf2`.
 - Validaciones de sintaxis, integridad, estructura y código final: PASS. El paquete administrativo y la lógica PIN/servicios se cotejaron por hash y permanecen intactos.
 - Pendiente: cargar manualmente el ZIP Alexa, agregar/construir frases cortas en Developer Console y comprobar voz, tiempos de escucha y sesión real en simulador/Echo. No se probó AWS real ni se desplegó nada.
+
+## Estado actual
+
+Las tres Lambdas (`SmartParkAlexaBackend`, `SmartParkPairingAdmin` y `SmartParkHistoryProcessor`) están desplegadas en `us-east-1`. Se probaron con el simulador de Alexa y en la sesión de banco del 22/11/2026. La configuración y los permisos están en la [sección 3.2 del informe](../docs/informe-practica-4.md#32-configuraciones-en-aws-y-permisos-asignados), las pruebas funcionales en la [4.2](../docs/informe-practica-4.md#42-pruebas-funcionales) y las automáticas en la [4.5](../docs/informe-practica-4.md#45-pruebas-automáticas), donde la suite actual da **PA-03: 108/108 OK**. Los números de la sección anterior (91 y 74) corresponden al empaquetado previo al despliegue.
