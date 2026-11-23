@@ -94,7 +94,7 @@ pio run -t upload       # cargar en el ESP32
 pio device monitor      # monitor serie a 115200 baudios
 ```
 
-En el monitor serie se aceptan los comandos `OPEN`, `CLOSE`, `STATUS`, `DISTANCE`, `SLOT1` y `HELP` ([`include/SerialCommands.h`](include/SerialCommands.h)).
+En el monitor serie se aceptan los comandos `OPEN`, `CLOSE`, `STATUS`, `DISTANCE`, `SLOT1`, `LCDRESET` (reinicializa la LCD sin mover el servo) y `HELP` ([`include/SerialCommands.h`](include/SerialCommands.h)). Para aislar una falla de la pantalla existe el entorno de diagnóstico `pio run -e lcd-diagnostico -t upload` ([`src/lcd_diagnostico.cpp`](src/lcd_diagnostico.cpp)); `pio run` solo compila el firmware principal.
 
 Pruebas automáticas:
 
@@ -115,7 +115,8 @@ Invocación: **"Alexa, abre parqueo inteligente"**. Frases tomadas de [`alexa/es
 
 | Intent | Frase de ejemplo |
 |---|---|
-| `VincularParqueoIntent` | "vincular parqueo con el codigo {codigo}" |
+| `VincularParqueoIntent` | "vincula mi parqueo con el codigo {codigo}" |
+| `CambiarVinculacionIntent` | "cambia mi vinculacion con el código {codigo}" |
 | `ConsultarDisponiblesIntent` | "cuántos espacios hay disponibles" |
 | `ConsultarOcupadosIntent` | "cuántas plazas están ocupadas" |
 | `ConsultarEstacionamientoIntent` | "está libre la plaza {espacio}" |
@@ -123,12 +124,12 @@ Invocación: **"Alexa, abre parqueo inteligente"**. Frases tomadas de [`alexa/es
 | `ConsultarDistanciaIntent` | "consulta la distancia" |
 | `AbrirBarreraIntent` | "abrir" |
 | `CerrarBarreraIntent` | "cerrar" |
-| `EstadoBarreraIntent` | "dime el estado de la barrera" |
+| `EstadoBarreraIntent` | "consulta el estado de la barrera" · "consultar estado" |
 | `ConsultarModoIntent` | "en qué modo está el parqueo" |
 | `ActivarModoAutomaticoIntent` | "activa el modo automático" |
 | `ActivarModoManualIntent` | "activa el modo manual" |
 | `ConsultarAntirreboteIntent` | "consulta el antirrebote" |
 | `CambiarAntirreboteIntent` | "ajusta el antirrebote a {milisegundos} milisegundos" |
-| `DesvincularParqueoIntent` | "desvincular parqueo" |
+| `DesvincularParqueoIntent` | "elimina la vinculación de mi parqueo inteligente" · "desvincula mi parqueo" |
 
 Intents, slots y respuestas: [sección 2.11 del informe](docs/informe-practica-4.md#211-diseño-de-la-skill-de-alexa).

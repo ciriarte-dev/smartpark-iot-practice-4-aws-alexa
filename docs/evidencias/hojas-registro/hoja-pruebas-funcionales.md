@@ -25,7 +25,7 @@ Imprimir antes de la sesión y completar a mano. Procedimiento, resultado espera
 | PF-03 | 1 | A: PIN 1 generado (hora) y *"vincula mi parqueo con el codigo …"* |  |  |  |  |
 | PF-03 | 1 | A: cerrar y reabrir la skill |  |  |  |  |
 | PF-03 | 3 | B: PIN 2 (≥ 300 s después del PIN 1) y *"cambia mi vinculacion con el código …"* |  |  |  |  |
-| PF-03 | 5 | C: *"desvincula mi parqueo"* y *"consulta la distancia"* |  |  |  |  |
+| PF-03 | 5 | C: *"elimina la vinculación de mi parqueo inteligente"* y *"consulta la distancia"* |  |  |  |  |
 | PF-04 | 1 | `OPEN` y `CLOSE` por Serial |  |  |  |  |
 | PF-04 | 5 | `START` en CloudWatch dentro de la ventana de PNF-05 = N |  |  |  |  |
 | PF-04 | 5 | Ítems y atributos; `origin` de cada `barrier_changed` (voz → `legado`, `OPEN`/`CLOSE` → `edge`); CSV exportado |  |  |  |  |
