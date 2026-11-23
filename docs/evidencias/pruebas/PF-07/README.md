@@ -1,10 +1,62 @@
 # PF-07 — Consultas y cambios de modo y antirrebote por voz
 
-Respalda RF14, RF3. Procedimiento, resultado esperado y criterio: [PF-07 en 4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Los valores se anotan primero en la [hoja de registro](../../hojas-registro/hoja-pruebas-funcionales.md).
+Esta carpeta contiene las evidencias en video de la prueba funcional **PF-07**, correspondiente a las consultas de plazas y al control por voz del parqueo.
 
-| Archivo esperado | Cómo obtenerlo |
+Respalda los requerimientos **RF14 y RF3**. El procedimiento completo se describe en [PF-07 de la sección 4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales).
+
+## Objetivo
+
+Comprobar que Alexa responda correctamente a consultas sobre el estado de las plazas y que los resultados coincidan con el estado reportado por el dispositivo.
+
+Los escenarios cubiertos son:
+
+- Cantidad de espacios disponibles.
+- Cantidad de espacios ocupados.
+- Estado ocupado o libre de una plaza específica.
+- Modo actual del parqueo.
+- Antirrebote configurado.
+- Cambio del antirrebote mediante voz.
+- Validación de plazas y valores fuera de rango.
+- Ayuda, cancelación y detención de la sesión de Alexa.
+
+## Evidencias disponibles
+
+| Evidencia | Consulta demostrada | Resultado |
+|---|---|---|
+| [EspaciosDisponibles.mp4](<EspaciosDisponibles.mp4>) | *"¿Cuántos espacios hay disponibles?"* | Evidencia de la consulta de plazas disponibles |
+| [EspaciosOcupados.mp4](<EspaciosOcupados.mp4>) | *"¿Cuántas plazas están ocupadas?"* | Evidencia de la consulta de plazas ocupadas |
+| [Plaza2Ocupada-1.mp4](<Plaza2Ocupada-1.mp4>) | Consulta del estado de la plaza 2 | Evidencia de la respuesta sobre una plaza ocupada |
+| [Plaza2Ocupada-2.mp4](<Plaza2Ocupada-2.mp4>) | Consulta del estado de la plaza 2 | Evidencia adicional de la respuesta sobre una plaza ocupada |
+
+## Resultados observados
+
+| Escenario | Evidencia | Estado |
+|---|---|---|
+| Consulta de espacios disponibles | `EspaciosDisponibles.mp4` | Evidencia registrada |
+| Consulta de espacios ocupados | `EspaciosOcupados.mp4` | Evidencia registrada |
+| Consulta de la plaza 2 | `Plaza2Ocupada-1.mp4` y `Plaza2Ocupada-2.mp4` | Evidencia registrada |
+
+## Consultas y cambios pendientes de adjuntar
+
+Las siguientes evidencias pueden agregarse para completar la trazabilidad de PF-07:
+
+| Función | Evidencia recomendada |
 |---|---|
-| `simulador-*.png` | Capturas del simulador de Alexa (**Test → Development**) con la respuesta y el panel **JSON Input** de cada frase. |
-| `update-accepted.png` | Captura del cliente de prueba MQTT de AWS IoT suscrito a `$aws/things/smartpark-grupo9-01/shadow/update/accepted` tras *"ajusta el antirrebote a 120 milisegundos"*. |
+| Estado libre u ocupado de otras plazas | Captura o video del simulador |
+| Modo actual del parqueo | Captura o video de la respuesta por voz |
+| Consulta del antirrebote | Captura o video de la respuesta por voz |
+| Cambio válido del antirrebote | Captura del Shadow y video de la respuesta |
+| Rechazo de un valor fuera del rango permitido | Captura del simulador |
+| Rechazo de una plaza fuera del rango válido | Captura del simulador |
+| Ayuda, cancelación y detención | Captura o video de las respuestas |
 
-Las rutas con `../` apuntan a archivos compartidos con otras pruebas. Esta carpeta se completa durante la sesión de banco; no contiene resultados todavía.
+## Criterios de aprobación
+
+PF-07 se considera aprobada cuando se verifica:
+
+1. Las consultas reportan el estado correspondiente al `reported` del dispositivo.
+2. El modo y el antirrebote pueden consultarse por voz.
+3. Los valores válidos modifican el parámetro mediante `desired` y son confirmados en `reported`.
+4. Los valores fuera de rango no escriben el Shadow.
+5. Las consultas inválidas reciben una respuesta apropiada.
+6. Ayuda mantiene la sesión y cancelar o detener finalizan la interacción.
