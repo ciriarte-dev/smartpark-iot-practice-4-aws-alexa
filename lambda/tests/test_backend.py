@@ -212,9 +212,10 @@ class BackendTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[2]
         model = json.loads((root / "alexa/es-US.interaction-model.json").read_text())
         intents = model["interactionModel"]["languageModel"]["intents"]
-        baseline = (root / "docs/informe.md").read_text().split("**Esqueleto del modelo de interacción.**", 1)[1]
-        legacy = json.loads(baseline.split("```json\n", 1)[1].split("```", 1)[0])
-        self.assertEqual(intents[:12], legacy["interactionModel"]["languageModel"]["intents"])
+        # Independent baseline from the documented Practice 3 interaction model.
+        baseline = Path(__file__).with_name("fixtures") / "practica3_alexa_intents.json"
+        legacy = json.loads(baseline.read_text(encoding="utf-8"))
+        self.assertEqual(intents[:12], legacy)
         seen = set()
         for intent in intents:
             declared = {slot["name"] for slot in intent.get("slots", [])}
