@@ -1,6 +1,7 @@
-Fecha: 2026-11-23 09:54:24 -0400
-Commit: b6f1c5e (rama docs/sync-after-henry-telemetry)
-Comando: pio run (después de pio run -t clean)
+Fecha: 2026-11-23 17:59:43 -0400
+Commit: ad5d377 (rama docs/final-report-review)
+Cambios desde b6f1c5e: solo documentación, la fixture de pruebas de la P3 (lambda/tests) y un espacio final en '#include "config.h"' de src/
+Comando: pio run -t clean && pio run
 Configuración: include/config.h e include/secrets.h locales (no versionados)
 
 Processing esp32doit-devkit-v1 (platform: espressif32@7.1.0; board: esp32doit-devkit-v1; framework: arduino)
@@ -123,10 +124,10 @@ esptool.py v4.11.0
 Creating esp32 image...
 Merged 27 ELF sections
 Successfully created esp32 image.
-========================= [SUCCESS] Took 30.41 seconds =========================
+========================= [SUCCESS] Took 30.07 seconds =========================
 
 Environment          Status    Duration
 -------------------  --------  ------------
-esp32doit-devkit-v1  SUCCESS   00:00:30.406
-========================= 1 succeeded in 00:00:30.406 =========================
-Código de salida: 0
+esp32doit-devkit-v1  SUCCESS   00:00:30.067
+========================= 1 succeeded in 00:00:30.067 =========================
+exit=0

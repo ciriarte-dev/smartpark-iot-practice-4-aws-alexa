@@ -1,5 +1,5 @@
 #include "UltrasonicSensor.h"
-#include "config.h" //cambiar por config.example.h
+#include "config.h" 
 void UltrasonicSensor::begin() {
     pinMode(TRIG_PIN, OUTPUT);
     digitalWrite(TRIG_PIN, LOW);

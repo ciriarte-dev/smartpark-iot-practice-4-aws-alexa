@@ -1,133 +1,22 @@
-Fecha: 2026-11-23 09:54:00 -0400
-Commit: b6f1c5e (rama docs/sync-after-henry-telemetry, sin cambios en codigo ni configuraciones)
-Directorio: lambda/
-Comando: AWS_EC2_METADATA_DISABLED=true PYTHONUTF8=1 .venv/Scripts/python.exe -m unittest discover -s tests -v
-Python: Python 3.13.0 en lambda/.venv
-Entorno: Windows 11, Git Bash
-Nota: PYTHONUTF8=1 fija la codificacion UTF-8 por defecto, como en el runtime Linux de Lambda. Sin esa variable, en Windows (cp1252) una prueba que abre un JSON del modelo de Alexa sin indicar codificacion termina con UnicodeDecodeError.
+Fecha: 2026-11-23 17:59:43 -0400
+Commit: ad5d377 (rama docs/final-report-review)
+Cambios desde b6f1c5e: solo documentación, la fixture de pruebas de la P3 (lambda/tests) y un espacio final en '#include "config.h"' de src/
+Comando: cd lambda && AWS_EC2_METADATA_DISABLED=true PYTHONUTF8=1 .venv/Scripts/python.exe -m unittest discover -s tests
+Configuración: include/config.h e include/secrets.h locales (no versionados)
 
-test_admin_rejects_alexa_envelopes_before_creating_clients (test_admin.AdminTests.test_admin_rejects_alexa_envelopes_before_creating_clients) ... ok
-test_admin_rejects_invalid_user_and_thing (test_admin.AdminTests.test_admin_rejects_invalid_user_and_thing) ... ok
-test_clients_reused_and_retries_disabled (test_admin.AdminTests.test_clients_reused_and_retries_disabled) ... ok
-test_collision_attempts_bounded (test_admin.AdminTests.test_collision_attempts_bounded) ... ok
-test_collision_retries_only_pin_and_rolls_back_window (test_admin.AdminTests.test_collision_retries_only_pin_and_rolls_back_window) ... ok
-test_consumed_window_still_blocks_regeneration (test_admin.AdminTests.test_consumed_window_still_blocks_regeneration) ... ok
-test_does_not_reset_active_window (test_admin.AdminTests.test_does_not_reset_active_window) ... ok
-test_existing_thing_required (test_admin.AdminTests.test_existing_thing_required) ... ok
-test_expired_window_can_be_replaced (test_admin.AdminTests.test_expired_window_can_be_replaced) ... ok
-test_handler_aws_error_sanitized (test_admin.AdminTests.test_handler_aws_error_sanitized) ... ok
-test_handler_success_does_not_log_pin_or_user (test_admin.AdminTests.test_handler_success_does_not_log_pin_or_user) ... ok
-test_network_failure_not_retried (test_admin.AdminTests.test_network_failure_not_retried) ... ok
-test_parallel_generation_returns_only_one_pin (test_admin.AdminTests.test_parallel_generation_returns_only_one_pin) ... ok
-test_secure_random_bounds_and_hash_only (test_admin.AdminTests.test_secure_random_bounds_and_hash_only) ... ok
-test_unknown_transaction_cancellation_fails_closed (test_admin.AdminTests.test_unknown_transaction_cancellation_fails_closed) ... ok
-test_binding_and_explicit_voice_samples (test_alexa_model.AlexaFinalModelTests.test_binding_and_explicit_voice_samples) ... ok
-test_every_custom_intent_has_a_handler (test_alexa_model.AlexaFinalModelTests.test_every_custom_intent_has_a_handler) ... ok
-test_invocation_name (test_alexa_model.AlexaFinalModelTests.test_invocation_name) ... ok
-test_samples_are_unique_and_use_declared_slots (test_alexa_model.AlexaFinalModelTests.test_samples_are_unique_and_use_declared_slots) ... ok
-test_barrier_state_reported (test_backend.BackendTests.test_barrier_state_reported) ... ok
-test_binding_race_does_not_replace_newer_binding (test_backend.BackendTests.test_binding_race_does_not_replace_newer_binding) ... ok
-test_change_binding (test_backend.BackendTests.test_change_binding) ... ok
-test_change_legacy_binding_without_revision (test_backend.BackendTests.test_change_legacy_binding_without_revision) ... ok
-test_change_without_existing_binding (test_backend.BackendTests.test_change_without_existing_binding) ... ok
-test_code_for_another_user (test_backend.BackendTests.test_code_for_another_user) ... ok
-test_configured_endpoint_skips_discovery (test_backend.BackendTests.test_configured_endpoint_skips_discovery) ... ok
-test_control_ignores_arbitrary_thing_slot (test_backend.BackendTests.test_control_ignores_arbitrary_thing_slot) ... ok
-test_distance_integer_format (test_backend.BackendTests.test_distance_integer_format) ... ok
-test_dynamodb_delete_error_sanitized (test_backend.BackendTests.test_dynamodb_delete_error_sanitized) ... request_failed type=ServiceError
-ok
-test_dynamodb_error_sanitized (test_backend.BackendTests.test_dynamodb_error_sanitized) ... request_failed type=ServiceError
-ok
-test_endpoint_validation (test_backend.BackendTests.test_endpoint_validation) ... ok
-test_expired_code (test_backend.BackendTests.test_expired_code) ... ok
-test_expiry_after_describe_prevents_commit (test_backend.BackendTests.test_expiry_after_describe_prevents_commit) ... ok
-test_future_timestamp (test_backend.BackendTests.test_future_timestamp) ... ok
-test_help_stop_cancel_fallback (test_backend.BackendTests.test_help_stop_cancel_fallback) ... ok
-test_invalid_code_format (test_backend.BackendTests.test_invalid_code_format) ... ok
-test_invalid_distances (test_backend.BackendTests.test_invalid_distances) ... ok
-test_invalid_json_and_oversize_close_stream (test_backend.BackendTests.test_invalid_json_and_oversize_close_stream) ... ok
-test_invalid_stored_thing_prevents_iot (test_backend.BackendTests.test_invalid_stored_thing_prevents_iot) ... ok
-test_iot_get_error_sanitized (test_backend.BackendTests.test_iot_get_error_sanitized) ... request_failed type=ServiceError
-ok
-test_iot_update_timeout_no_retry (test_backend.BackendTests.test_iot_update_timeout_no_retry) ... request_failed type=ServiceError
-ok
-test_launch_bound (test_backend.BackendTests.test_launch_bound) ... ok
-test_launch_unbound (test_backend.BackendTests.test_launch_unbound) ... ok
-test_lazy_client_reuse_and_retry_config (test_backend.BackendTests.test_lazy_client_reuse_and_retry_config) ... ok
-test_legacy_pairing_record_without_window_is_rejected (test_backend.BackendTests.test_legacy_pairing_record_without_window_is_rejected) ... ok
-test_logs_omit_user_code_and_aws_details (test_backend.BackendTests.test_logs_omit_user_code_and_aws_details) ... ok
-test_malformed_revision_prevents_control (test_backend.BackendTests.test_malformed_revision_prevents_control) ... ok
-test_missing_code_slot (test_backend.BackendTests.test_missing_code_slot) ... ok
-test_missing_reported_is_not_desired (test_backend.BackendTests.test_missing_reported_is_not_desired) ... ok
-test_missing_table_is_safe (test_backend.BackendTests.test_missing_table_is_safe) ... ok
-test_missing_timestamp_does_not_fallback_to_document_time (test_backend.BackendTests.test_missing_timestamp_does_not_fallback_to_document_time) ... ok
-test_no_binding_for_controls_or_queries (test_backend.BackendTests.test_no_binding_for_controls_or_queries) ... ok
-test_no_user_id (test_backend.BackendTests.test_no_user_id) ... ok
-test_old_request_rejected (test_backend.BackendTests.test_old_request_rejected) ... ok
-test_open_and_close_only_desired (test_backend.BackendTests.test_open_and_close_only_desired) ... ok
-test_overlong_code_lifetime (test_backend.BackendTests.test_overlong_code_lifetime) ... ok
-test_pairing_record_key_cannot_be_user (test_backend.BackendTests.test_pairing_record_key_cannot_be_user) ... ok
-test_presence_true_and_false (test_backend.BackendTests.test_presence_true_and_false) ... ok
-test_same_binding_consumes_pin (test_backend.BackendTests.test_same_binding_consumes_pin) ... ok
-test_session_ended (test_backend.BackendTests.test_session_ended) ... ok
-test_session_user_cannot_override_context_user (test_backend.BackendTests.test_session_user_cannot_override_context_user) ... ok
-test_shadow_not_found (test_backend.BackendTests.test_shadow_not_found) ... ok
-test_stale_per_field_even_when_document_is_new (test_backend.BackendTests.test_stale_per_field_even_when_document_is_new) ... ok
-test_thing_name_is_not_authorization (test_backend.BackendTests.test_thing_name_is_not_authorization) ... ok
-test_thing_not_found (test_backend.BackendTests.test_thing_not_found) ... ok
-test_transaction_conflict_does_not_consume_code (test_backend.BackendTests.test_transaction_conflict_does_not_consume_code) ... ok
-test_transaction_service_error (test_backend.BackendTests.test_transaction_service_error) ... request_failed type=ServiceError
-ok
-test_twelve_digit_pin_is_rejected_by_both_binding_intents_without_aws (test_backend.BackendTests.test_twelve_digit_pin_is_rejected_by_both_binding_intents_without_aws) ... ok
-test_unbind_missing (test_backend.BackendTests.test_unbind_missing) ... ok
-test_unbind_one_delete_no_get (test_backend.BackendTests.test_unbind_one_delete_no_get) ... ok
-test_unexpected_error_is_safe (test_backend.BackendTests.test_unexpected_error_is_safe) ... request_failed type=RuntimeError
-ok
-test_unknown_barrier_state (test_backend.BackendTests.test_unknown_barrier_state) ... ok
-test_unknown_code (test_backend.BackendTests.test_unknown_code) ... ok
-test_unknown_presence_not_absence (test_backend.BackendTests.test_unknown_presence_not_absence) ... ok
-test_unlinked_binding_is_not_recreated_by_stale_change (test_backend.BackendTests.test_unlinked_binding_is_not_recreated_by_stale_change) ... ok
-test_v2_distinguishes_unconfigured_space_from_missing_measurement (test_backend.BackendTests.test_v2_distinguishes_unconfigured_space_from_missing_measurement) ... request_failed type=MissingReportedField
+............................request_failed type=ServiceError
+.request_failed type=ServiceError
+..........request_failed type=ServiceError
+.request_failed type=ServiceError
+..........................request_failed type=ServiceError
+....request_failed type=RuntimeError
+.....request_failed type=MissingReportedField
 request_failed type=MissingReportedField
-ok
-test_v2_missing_stale_unavailable_and_failed_write (test_backend.BackendTests.test_v2_missing_stale_unavailable_and_failed_write) ... request_failed type=MissingReportedField
+.request_failed type=MissingReportedField
 request_failed type=ServiceError
-ok
-test_v2_model_keeps_documented_intents_and_has_no_duplicate_samples (test_backend.BackendTests.test_v2_model_keeps_documented_intents_and_has_no_duplicate_samples) ... ok
-test_v2_reads_each_slot_and_rejects_invalid_numbers (test_backend.BackendTests.test_v2_reads_each_slot_and_rejects_invalid_numbers) ... ok
-test_v2_reads_reported_counts_mode_and_debounce (test_backend.BackendTests.test_v2_reads_reported_counts_mode_and_debounce) ... ok
-test_v2_rejects_out_of_range_debounce_and_unbound_user (test_backend.BackendTests.test_v2_rejects_out_of_range_debounce_and_unbound_user) ... ok
-test_v2_writes_precise_patches_and_uses_each_users_binding (test_backend.BackendTests.test_v2_writes_precise_patches_and_uses_each_users_binding) ... ok
-test_valid_binding_and_one_use_code (test_backend.BackendTests.test_valid_binding_and_one_use_code) ... ok
-test_valid_distance_reported_not_desired (test_backend.BackendTests.test_valid_distance_reported_not_desired) ... ok
-test_wrong_record_type_prevents_control (test_backend.BackendTests.test_wrong_record_type_prevents_control) ... ok
-test_wrong_skill_or_missing_config (test_backend.BackendTests.test_wrong_skill_or_missing_config) ... ok
-test_barrier_origins_and_actual_transitions (test_history.HistoryTest.test_barrier_origins_and_actual_transitions) ... ok
-test_invalid_never_initializes_sdk (test_history.HistoryTest.test_invalid_never_initializes_sdk) ... ok
-test_put_conditional_duplicate_and_retry (test_history.HistoryTest.test_put_conditional_duplicate_and_retry) ... ok
-test_snapshot_item_and_reduced_capacity (test_history.HistoryTest.test_snapshot_item_and_reduced_capacity) ... ok
-test_templates_keep_rule_identity_and_table_keys_aligned (test_history.HistoryTest.test_templates_keep_rule_identity_and_table_keys_aligned) ... ok
-test_alexa_cannot_route_admin_json_fields (test_isolation.IsolationTests.test_alexa_cannot_route_admin_json_fields) ... ok
-test_generated_pin_can_bind_once_and_cannot_rearm_early (test_isolation.IsolationTests.test_generated_pin_can_bind_once_and_cannot_rearm_early) ... ok
-test_counter_survives_new_service_instance (test_pin_public.PinPublicTests.test_counter_survives_new_service_instance) ... ok
-test_format (test_pin_public.PinPublicTests.test_format) ... ok
-test_last_attempt_can_be_correct (test_pin_public.PinPublicTests.test_last_attempt_can_be_correct) ... ok
-test_new_generation_invalidates_reserved_authorization (test_pin_public.PinPublicTests.test_new_generation_invalidates_reserved_authorization) ... ok
-test_parallel_correct_consumption_succeeds_once (test_pin_public.PinPublicTests.test_parallel_correct_consumption_succeeds_once) ... ok
-test_parallel_guesses_never_exceed_three (test_pin_public.PinPublicTests.test_parallel_guesses_never_exceed_three) ... ok
-test_wrong_pin_consumes_an_attempt_without_reading_pair (test_pin_public.PinPublicTests.test_wrong_pin_consumes_an_attempt_without_reading_pair) ... ok
-test_five_successful_intents_keep_session_and_same_aws_call_counts (test_session.SessionTests.test_five_successful_intents_keep_session_and_same_aws_call_counts) ... ok
-test_help_and_fallback_are_clear_and_do_not_call_aws (test_session.SessionTests.test_help_and_fallback_are_clear_and_do_not_call_aws) ... ok
-test_launch_open_state_close_stop_with_same_session (test_session.SessionTests.test_launch_open_state_close_stop_with_same_session) ... ok
-test_session_ended_never_reopens_or_speaks (test_session.SessionTests.test_session_ended_never_reopens_or_speaks) ... ok
-test_stale_or_invalid_data_closes_without_reprompt (test_session.SessionTests.test_stale_or_invalid_data_closes_without_reprompt) ... ok
-test_stop_and_cancel_close_without_aws_calls (test_session.SessionTests.test_stop_and_cancel_close_without_aws_calls) ... ok
-test_timeout_after_physical_request_closes_without_inviting_repetition (test_session.SessionTests.test_timeout_after_physical_request_closes_without_inviting_repetition) ... request_failed type=ServiceError
-ok
-test_unbound_user_error_closes_without_physical_action (test_session.SessionTests.test_unbound_user_error_closes_without_physical_action) ... ok
-
+..............................request_failed type=ServiceError
+..
 ----------------------------------------------------------------------
-Ran 108 tests in 0.533s
+Ran 108 tests in 0.635s
 
 OK
-Código de salida: 0

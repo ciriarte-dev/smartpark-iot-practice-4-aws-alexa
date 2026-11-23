@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "config.h" //cambiar por config.example.h
+#include "config.h" 
 #include "UltrasonicSensor.h"
 #include "BarrierServo.h"
 #include "SerialCommands.h"

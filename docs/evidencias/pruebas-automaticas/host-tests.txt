@@ -1,8 +1,8 @@
-Fecha: 2026-11-23 09:54:02 -0400
-Commit: b6f1c5e (rama docs/sync-after-henry-telemetry)
-Comando: SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh
-Compilador: g++.exe (Rev4, Built by MSYS2 project) 16.2.0
-Entorno: Windows 11, MSYS2
+Fecha: 2026-11-23 17:59:43 -0400
+Commit: ad5d377 (rama docs/final-report-review)
+Cambios desde b6f1c5e: solo documentación, la fixture de pruebas de la P3 (lambda/tests) y un espacio final en '#include "config.h"' de src/
+Comando: PATH=/c/msys64/ucrt64/bin:$PATH SMARTPARK_HISTORY_PYTHON=lambda/.venv/Scripts/python.exe sh test/run_host_tests.sh
+Configuración: include/config.h e include/secrets.h locales (no versionados)
 
 PASS: cuatro sensores IR, rebotes, conteos, LEDs y LCD 16x2 (filas, prioridad bloqueo > lleno > alternancia de 2 s, maximo 16 columnas y recuperacion I2C)
 PASS: sensor, histeresis, servo, parser e integracion del loop (simulados)
@@ -11,4 +11,4 @@ Shadow JSON reporte/GET/delta/accepted: 477/2459/672/1888; MQTT GET: 2519 bytes
 PASS: modos, lleno, prioridad Serial y deduplicacion V1/V2 tras reconexion o reinicio
 PASS: publicacion MQTT, reloj, prioridad, reconexion, reintentos, cuota independiente y desborde. Historico JSON max observado: 347 B; MQTT: 394 B
 PASS: 12 cargas MQTT del firmware aceptadas por la Lambda; reintento conserva la clave.
-Código de salida: 0
+exit=0

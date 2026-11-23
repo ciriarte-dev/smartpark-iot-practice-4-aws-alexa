@@ -3,7 +3,7 @@ PNF-05 · Cálculo de RNF5, RNF7 y RNF8 con tools/analizar_pruebas.py
 Se ejecuta después de la sesión, desde la raíz del repositorio (Python 3.9+, solo
 biblioteca estándar), cuando ya existen las exportaciones de PF-04 y el log serie:
 
-python tools/analizar_pruebas.py docs/evidencias/pruebas/PF-04/historial-sesion.csv \
+python tools/analizar_pruebas.py docs/evidencias/pruebas/PNF-05/historial-sesion.csv \
   --serial docs/evidencias/pruebas/serial-sesion.txt \
   --cloudwatch docs/evidencias/pruebas/PF-04/cloudwatch.csv \
   --inicio AAAA-MM-DDThh:mm:ss-04:00 --fin AAAA-MM-DDThh:mm:ss-04:00 \
