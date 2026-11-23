@@ -878,7 +878,7 @@ FROM 'smartpark/+/history/v1'
 | Permiso | Política basada en recursos de la Lambda: `lambda:InvokeFunction` para `iot.amazonaws.com`, limitada por `SourceArn` (la regla) y `SourceAccount` ([`iot-invoke-permission.example.json`](../aws/history/iot-invoke-permission.example.json)). La acción Lambda no usa rol IAM de regla. |
 | Identidad | `thingName` sale del tópico y no del cuerpo. La plantilla de la política del dispositivo ([`device-publish-policy.example.json`](../aws/history/device-publish-policy.example.json)) solo le permite publicar en su propio tópico, así que con ella un Thing no puede escribir el histórico de otro. En la cuenta, la política asignada es `iot:*` y esta garantía no está activa (3.2, 5.5). |
 
-La plantilla se crea con `"ruleDisabled": true` para habilitarla solo después de verificar la tabla y la Lambda ([`historial-aws-practica-4.md`](historial-aws-practica-4.md#despliegue-manual-posterior)).
+La plantilla se crea con `"ruleDisabled": true` para habilitarla solo después de verificar la tabla y la Lambda ([`historial-aws-practica-4.md`](historial-aws-practica-4.md#despliegue-manual)).
 
 **Funciones Lambda.**
 
@@ -1037,7 +1037,7 @@ Las plantillas usan `<REGION>`/`<ACCOUNT_ID>` ([`aws/history/`](../aws/history/)
 | Certificados | X.509 del Thing y Amazon Root CA 1 en `include/secrets.h`, excluido por [`.gitignore`](../.gitignore); plantilla vacía en [`secrets.example.h`](../include/secrets.example.h). Se quedan fuera del repositorio porque quien tenga la clave privada puede suplantar al objeto. |
 | Política IoT del dispositivo | [`aws-iot-policy.example.json`](aws-iot-policy.example.json) (Shadow) + [`device-publish-policy.example.json`](../aws/history/device-publish-policy.example.json) (histórico) |
 | Regla | `SmartParkHistoryIngest` (2.9) |
-| Lambda `SmartParkHistoryProcessor` | Python 3.13, handler `history_lambda_function.lambda_handler`, 128 MB (punto de partida), `HISTORY_TABLE_NAME=SmartParkHistory` ([`historial-aws-practica-4.md`](historial-aws-practica-4.md#despliegue-manual-posterior)) |
+| Lambda `SmartParkHistoryProcessor` | Python 3.13, handler `history_lambda_function.lambda_handler`, 128 MB (punto de partida), `HISTORY_TABLE_NAME=SmartParkHistory` ([`historial-aws-practica-4.md`](historial-aws-practica-4.md#despliegue-manual)) |
 | Lambda `SmartParkAlexaBackend` | Python 3.13, handler `lambda_function.lambda_handler`, disparador Alexa Skills Kit con Skill ID; variables `ALEXA_SKILL_ID`, `TABLE_NAME=SmartParkBindings`, `IOT_DATA_ENDPOINT` (opcional), `MAX_REPORTED_AGE_SECONDS` (opcional, 180 por defecto) |
 | Lambda `SmartParkPairingAdmin` | Python 3.13, handler `admin_lambda_function.lambda_handler`, sin disparador; `TABLE_NAME=SmartParkBindings` |
 | Tablas | `SmartParkBindings` (PK `userId`), `SmartParkHistory` ([`table.example.json`](../aws/history/table.example.json)) |
@@ -1208,7 +1208,7 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 
 **Fórmulas.** Promedio x̄ = Σxᵢ/n; mediana; P95 = valor en la posición ⌈0,95·n⌉ de la muestra ordenada; integridad = M/N·100; error absoluto = |lectura − referencia|.
 
-**Revisión de secretos (RNF12, 2026-11-23).** `git ls-files` no incluye `include/secrets.h`, `include/config.h`, `.env` ni archivos `.pem`, `.key` o `.crt` (excluidos en [`.gitignore`](../.gitignore)); los únicos PEM versionados son las cabeceras vacías de [`secrets.example.h`](../include/secrets.example.h), el `secrets.h` de `test/host/aws_fakes/` solo contiene marcadores `test` y no hay claves de acceso de AWS. Las capturas de `docs/evidencias/` tienen ocultos los ARN, el número de cuenta, el Skill ID y el código de vinculación.
+**Revisión de secretos (RNF12, 2026-11-23).** `git ls-files` no incluye `include/secrets.h`, `include/config.h`, `.env` ni archivos `.pem`, `.key` o `.crt` (excluidos en [`.gitignore`](../.gitignore)); los únicos PEM versionados son las cabeceras vacías de [`secrets.example.h`](../include/secrets.example.h), el `secrets.h` de `test/host/aws_fakes/` solo contiene marcadores `test` y no hay claves de acceso de AWS. La plantilla versionada [`config.example.h`](../include/config.example.h) usa el marcador `TU_ENDPOINT-ats.iot.us-east-1.amazonaws.com`; el endpoint real de AWS IoT solo está en `include/config.h`, excluido por [`.gitignore`](../.gitignore). Los commits anteriores del historial conservan el endpoint de la cuenta en la plantilla; no es una credencial, porque la conexión exige el certificado del Thing y su clave privada, que nunca se versionaron. Las capturas de `docs/evidencias/` tienen ocultos los ARN, el número de cuenta, el Skill ID y el código de vinculación.
 
 ### 4.4 Análisis de fallas y correcciones
 
