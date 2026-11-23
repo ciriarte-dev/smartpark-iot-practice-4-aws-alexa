@@ -10,8 +10,8 @@ Preparación local de la Fase 3. Las plantillas de [`aws/history`](../aws/histor
 | RF11 | Lambda y pruebas locales de tipos, rangos, coherencia de conteos, origen del Thing y marcas de tiempo. Pendiente comprobar la escritura en AWS. |
 | RF12 | Contrato y pruebas de transiciones de barrera con origen y posición estimada. El firmware genera las transiciones al finalizar el tiempo de recorrido. Pendiente validar con el servo físico y AWS. |
 | RF13 | El bloqueo por disponibilidad del firmware corre en Edge para mantener latencia baja y operación sin conexión. La Lambda almacena datos y carece de permisos para accionar la barrera. La validación física sigue pendiente. |
-| RF14 | El firmware ya reporta modo y antirrebote. Consulta y cambio por voz corresponden a la Fase 4. |
-| RF15 | El historial admite consultas por Thing y tiempo, filtrables por tipo de evento. Los mockups de utilización y actividad se completarán en la Fase 5. |
+| RF14 | El firmware reporta modo y antirrebote; la consulta y el cambio por voz están en [`parking_handlers.py`](../lambda/handlers/parking_handlers.py) ([alexa-practica-4.md](alexa-practica-4.md)). |
+| RF15 | El historial admite consultas por Thing y tiempo, filtrables por tipo de evento. Mockups M1–M4 en [`docs/mockups/`](mockups/) y sus consultas en el [informe, 2.12](informe-practica-4.md#212-diseño-de-reportes-mockups). |
 
 ## Contrato del tópico
 
@@ -37,7 +37,7 @@ Ejemplo de lectura MQTT. Generar `occurredAt` con un reloj UTC sincronizado. `ev
 }
 ```
 
-- `sample` guarda una instantánea. `occupancy_changed` guarda la misma instantánea más `data.slot` (número de plaza) y `data.estado_anterior`, que debe diferir del nuevo estado en `slots`. Se admiten capacidades de una a cuatro plazas. `desconocido` queda fuera de los conteos de libre y ocupado. La distancia válida está entre 2 y 400 cm. En ausencia de lectura, enviar `null` para distancia y presencia. Con distancia válida se puede enviar presencia `null` mientras se estabiliza.
+- `sample` guarda una instantánea. `occupancy_changed` guarda la misma instantánea más `data.slot` (número de plaza) y `data.estado_anterior`, que debe diferir del nuevo estado en `slots`. Se admiten capacidades de una a cuatro plazas. `desconocido` queda fuera de los conteos de libre y ocupado. La distancia válida está entre 2 y 400 cm. En ausencia de lectura, enviar `null` para distancia y presencia. El validador admite presencia `null` con distancia válida; el firmware actual envía la presencia de la misma muestra que la distancia.
 - `barrier_changed` guarda `data.anterior`, `data.actual`, `data.posicion_estimada: true` y, cuando exista, `data.requestId`. El estado inicial puede ser `desconocida`. El evento identifica una transición de estado estimado. Las órdenes rechazadas y las que repiten el estado actual no cuentan como movimientos. El origen es `voz`, `edge`, `nube` o `legado`. Este último conserva la falta de procedencia explícita del comando Shadow V1.
 - La Lambda descarta eventos con tipos, rangos o combinaciones incorrectas y horas de ocurrencia más de cinco minutos por delante de la hora recibida. El tiempo de recepción no reemplaza al de ocurrencia. Los errores de infraestructura se propagan para el reintento asíncrono. Un duplicado se considera procesado.
 
@@ -70,17 +70,16 @@ El formato MQTT tiene exactamente `eventId`, `occurredAt`, `eventType`, `origin`
   "eventId": "b1982cbcd114f5cc81e4945fce01eac1-0000000000000011",
   "occurredAt": 1795000000000,
   "eventType": "barrier_changed",
-  "origin": "voz",
+  "origin": "legado",
   "data": {
     "anterior": "abierta",
     "actual": "cerrada",
-    "posicion_estimada": true,
-    "requestId": "voice-close"
+    "posicion_estimada": true
   }
 }
 ```
 
-Para una transición de plaza se usa el formato de muestra de la sección Contrato del tópico, con `eventType: "occupancy_changed"` y los campos `data.slot` y `data.estado_anterior`. `requestId` se omite para movimientos Serial o de Shadow legado sin ID de pedido. En las pruebas, el histórico llegó a **347 B** de JSON y **394 B** con la reserva de cabecera MQTT. El límite comprobado en compilación admite un JSON de hasta 511 B más tópico y cabecera. El paquete de respuesta `GET` del Shadow sigue midiendo **2.518 B** en la prueba representativa. El búfer compartido se mantiene en **3.072 B**.
+Para una transición de plaza se usa el formato de muestra de la sección Contrato del tópico, con `eventType: "occupancy_changed"` y los campos `data.slot` y `data.estado_anterior`. El ejemplo corresponde a una orden de voz de la skill, que llega en formato V1 y se registra como `legado`. `requestId` solo se incluye con una orden V2 (`orden_barrera.id`); se omite para movimientos Serial o de Shadow legado. En las pruebas, el histórico llegó a **347 B** de JSON y **394 B** con la reserva de cabecera MQTT. El límite comprobado en compilación admite un JSON de hasta 511 B más tópico y cabecera. El paquete de respuesta `GET` del Shadow mide **2.519 B** en la prueba representativa. El búfer compartido se mantiene en **3.072 B**.
 
 ## Despliegue manual posterior
 
@@ -94,20 +93,9 @@ Usar la misma región para el Thing, la regla, la Lambda y la tabla. Las accione
 6. Habilitar la regla y publicar casos de humo en un Thing de pruebas autorizado. Verificar una lectura válida, un duplicado idéntico con una sola fila, una transición de barrera y el descarte de un mensaje inválido. Consultar por rango y revisar `Errors` y `Throttles` de Lambda. Para una prueba prolongada, evaluar un destino de fallos asíncronos antes de depender del historial.
 7. Con el despliegue y la validación eléctrica autorizados, cargar el firmware y probar desconexión, reinicio y recuperación. Comparar las transiciones estimadas del ESP32 con las filas del histórico y con el movimiento observado. Deshabilitar la regla para detener el flujo si falla la validación o el consumo supera el previsto. La tabla conserva las filas ya escritas.
 
-## Costo incremental ilustrativo
+## Costo
 
-Escenario de 30 días con un Thing y una muestra cada cinco minutos, más 20 eventos diarios. Son 9.240 mensajes/mes de hasta 5 KB, una acción por regla y un ítem de hasta 1 KB por evento. Se supone 100 ms de Lambda x86 a 128 MB. Se usan tarifas unitarias públicas de referencia, antes de créditos, para estimar el orden de magnitud. Confirmar la región y tarifas en AWS Pricing Calculator al autorizar el despliegue.
-
-| Concepto | Supuesto unitario | USD/mes aprox. |
-|---|---:|---:|
-| MQTT entrante | 1,00 por millón | 0,0092 |
-| IoT Rule más una acción | 0,30 por millón | 0,0028 |
-| Invocaciones Lambda | 0,20 por millón | 0,0018 |
-| Cómputo Lambda | 0,0000166667 por GB-s | 0,0019 |
-| Escrituras DynamoDB Standard bajo demanda | 0,625 por millón | 0,0058 |
-| **Total del flujo** | | **0,022** |
-
-El estimado excluye conectividad, Shadow y Alexa existentes, lecturas del histórico, almacenamiento acumulado, logs, reintentos e impuestos. Los duplicados y mensajes inválidos pueden seguir causando invocaciones y los reintentos pueden aumentar el consumo. Las tarifas citadas ilustran el cálculo y no constituyen un precio contratado. [Precios de AWS IoT Core](https://aws.amazon.com/iot-core/pricing/) · [Precios de AWS Lambda](https://aws.amazon.com/lambda/pricing/) · [Precios de DynamoDB bajo demanda](https://aws.amazon.com/dynamodb/pricing/on-demand/)
+El costo mensual de todo el sistema (Shadow, histórico, Lambdas y DynamoDB), con tarifas verificadas de `us-east-1`, está en el [informe, 5.6](informe-practica-4.md#56-costo-mensual-estimado).
 
 La capacidad del prototipo se define en un solo valor, `PARKING_CAPACITY` de `include/config.h`. La plantilla mantiene cuatro plazas activas. Un valor menor usa las primeras plazas del mismo mapa y se refleja en LEDs, LCD, conteos y Shadow.
 

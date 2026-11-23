@@ -22,7 +22,9 @@ El firmware usa un backpack PCF8574 con dirección inicial `0x27`, datos en P4�
 
 ## LCD 16×2
 
-Si la pantalla muestra caracteres corruptos y el monitor serie sigue respondiendo, envía `LCDRESET` a 115200 baudios con terminación de línea. El comando solicita la reinicialización de la LCD y el redibujo de ambas filas desde el bucle normal. La confirmación de Serial indica que se recibió la orden. Usa `SLOT1` para consultar el estado I²C y comprueba visualmente que vuelve el texto. El comando no acciona el servo ni reinicia el ESP32.
+Si la pantalla muestra caracteres corruptos y el monitor serie sigue respondiendo, envía `LCDRESET` a 115200 baudios con terminación de línea. El comando solicita la reinicialización de la LCD y el redibujo de ambas filas desde el bucle normal. La confirmación de Serial indica que se recibió la orden. Usa `SLOT1` para consultar el estado I²C y comprueba visualmente que vuelve el texto. El comando no acciona el servo ni reinicia el ESP32. La inicialización espera 100 ms, fija E, RS y R/W en bajo (`prepareExpander()`), envía 3-3-3-2, `0x28 0x0C 0x01` y luego `0x06`, con 5 ms entre pasos.
+
+Para descartar el cableado o el módulo, `pio run -e lcd-diagnostico -t upload` carga [`src/lcd_diagnostico.cpp`](../src/lcd_diagnostico.cpp) en lugar del firmware: sondea la dirección 0x27, inicializa la pantalla con la biblioteca hd44780 y relee la DDRAM de cada fila (`Fila n: lectura de memoria OK`). Después se vuelve a cargar el firmware principal con `pio run -t upload`.
 
 `ParkingDisplay` controla una LCD 16×2 (HD44780 en modo de 4 bits por el PCF8574; filas en las direcciones DDRAM 0x00 y 0x40). Escribe una fila por llamada y solo si su texto cambió, sin bloquear `loop()`. Ante un error I²C reinicia la inicialización y reescribe ambas filas. El tamaño está en `LCD_COLUMNS = 16` y `LCD_ROWS = 2`, con valor por defecto en [`ParkingDisplay.h`](../include/ParkingDisplay.h).
 
@@ -64,7 +66,7 @@ El firmware muestrea cada IR nominalmente cada 10 ms y exige 120 ms de estabilid
 
 `lleno` significa cuatro plazas confirmadas ocupadas. En automático se bloquea la apertura cuando no existe ninguna plaza confirmada libre, incluidos arranque y lecturas desconocidas. Manual permite órdenes explícitas de apertura y cierre, y automático siempre admite el cierre explícito. Las lecturas, los cambios de modo, la liberación de plazas y el arranque no emiten órdenes PWM. Hasta la primera orden explícita no se inicializa el PWM y la posición de barrera queda sin estimar. El SG90 no tiene realimentación y su posición tras una orden es solo una estimación temporal.
 
-En cada vuelta, una configuración remota válida se aplica antes de decidir un movimiento. La petición Serial más reciente de esa vuelta prevalece sobre una petición remota pendiente. Entre órdenes remotas pendientes, prevalece la más reciente aceptada. La pérdida de conexión invalida movimientos en cola. Las opciones de modo y antirrebote se guardan en NVS antes de aplicarse y permanecen tras reiniciar. Se mantienen los comandos Serial `OPEN`, `CLOSE`, `STATUS`, `DISTANCE` y `HELP`; si llegan varias órdenes de barrera en la misma vuelta, se procesa la última.
+En cada vuelta, una configuración remota válida se aplica antes de decidir un movimiento. La petición Serial más reciente de esa vuelta prevalece sobre una petición remota pendiente. Entre órdenes remotas pendientes, prevalece la más reciente aceptada. La pérdida de conexión invalida movimientos en cola. Las opciones de modo y antirrebote se guardan en NVS antes de aplicarse y permanecen tras reiniciar. Los comandos Serial son `OPEN`, `CLOSE`, `STATUS`, `DISTANCE`, `SLOT1`, `LCDRESET` y `HELP`; si llegan varias órdenes de barrera en la misma vuelta, se procesa la última.
 
 ## Device Shadow clásico
 
@@ -88,9 +90,9 @@ Ejemplo de actualización emitida por el ESP32. Los valores ilustran el formato.
       "bloqueo_apertura": true,
       "parametros_auto": {"antirrebote_ir_ms":120},
       "ultima_orden": {
-        "id": "solicitud-42",
+        "id": null,
         "objetivo": "abierta",
-        "origen": "voz",
+        "origen": "legado",
         "resultado": "bloqueada"
       }
     }
@@ -98,7 +100,7 @@ Ejemplo de actualización emitida por el ESP32. Los valores ilustran el formato.
 }
 ```
 
-`barrera` se envía como `null` cuando todavía no hay posición estimada. La distancia y la presencia mantienen la semántica V1 de eliminar el dato inválido con `null`. `ultima_orden` puede faltar antes de procesar una orden. Sus orígenes son `voz`, `nube`, `edge` y `legado`, y sus resultados `aceptada`, `bloqueada`, `vencida` o `no_disponible`. `aceptada` indica que el controlador aceptó el objetivo, incluso si la barrera ya estaba en esa posición estimada.
+`barrera` se envía como `null` cuando todavía no hay posición estimada. `distancia_cm` y `vehiculo_detectado` salen de la misma muestra del HC-SR04 (presente ≤ 15 cm, ausente ≥ 18 cm); sin lectura válida ambos se envían como `null` y AWS elimina las claves. Las 3 muestras estables (`AWS_PRESENCE_STABLE_SAMPLES`) solo deciden si un cambio de presencia adelanta un reporte. El ejemplo muestra una orden V1 de la skill, que no lleva ID y se registra con origen `legado`. `ultima_orden` puede faltar antes de procesar una orden. Sus orígenes son `voz`, `nube`, `edge` y `legado`, y sus resultados `aceptada`, `bloqueada`, `vencida` o `no_disponible`. `aceptada` indica que el controlador aceptó el objetivo, incluso si la barrera ya estaba en esa posición estimada.
 
 Ejemplo del formato V2 de escritura. El productor debe regenerar los tiempos para cada orden nueva. Los reintentos conservan tanto ID como tiempos.
 
@@ -126,8 +128,8 @@ El cliente V1 sigue escribiendo `{"state":{"desired":{"barrera":"abierta"}}}`. E
 
 ## Verificación local
 
-La prueba de tamaño serializa el reporte con el código del firmware y construye respuestas representativas con metadatos AWS y ambos formatos `desired`. Midió **476 B** para el reporte, **2.458 B** para GET, **672 B** para delta y **1.887 B** para UPDATE accepted. El GET ocupó hasta **2.518 B** en el cálculo conservador para el tópico configurado y encabezado MQTT. Se aumentó el búfer de 1.024 a 3.072 B. Los límites heredados de publicación siguen vigentes. Los cambios de ocupación comparten el presupuesto de sensores, y las respuestas de control comparten la reserva de control. Las respuestas se simularon localmente, sin consultar AWS.
+La prueba de tamaño serializa el reporte con el código del firmware y construye respuestas representativas con metadatos AWS y ambos formatos `desired`. Midió **477 B** para el reporte, **2.459 B** para GET, **672 B** para delta y **1.888 B** para UPDATE accepted ([`host-tests.txt`](evidencias/pruebas-automaticas/host-tests.txt)). El GET ocupó hasta **2.519 B** en el cálculo conservador para el tópico configurado y encabezado MQTT. Se aumentó el búfer de 1.024 a 3.072 B. Los límites heredados de publicación siguen vigentes. Los cambios de ocupación comparten el presupuesto de sensores, y las respuestas de control comparten la reserva de control. Las respuestas se simularon localmente, sin consultar AWS.
 
-`pio run` compila para el DevKit. `sh test/run_host_tests.sh` usa dobles para GPIO, I²C, servo, NVS, Wi‑Fi y MQTT, y ArduinoJson real. Las comprobaciones de alimentación, módulos físicos, latencia real, recorrido del servo y sesión con AWS siguen pendientes.
+`pio run` compila para el DevKit. Con el Shadow, el monitor serie imprime al arrancar la marca `AWS Shadow diagnostico v1 compilado=…`, en cada UPDATE la línea `AWS Shadow TX` (bytes, escritura local y JSON) y en cada acuse `AWS Shadow RX update/accepted|rejected` con `coincide` y `version`. `sh test/run_host_tests.sh` usa dobles para GPIO, I²C, servo, NVS, Wi‑Fi y MQTT, y ArduinoJson real. Las comprobaciones de alimentación, módulos físicos, latencia real, recorrido del servo y sesión con AWS siguen pendientes.
 
 El publicador de histórico comparte el cliente y la tarea MQTT. Consulta el [contrato, las garantías de entrega y el orden de despliegue](historial-aws-practica-4.md#publicador-integrado-en-el-firmware).
