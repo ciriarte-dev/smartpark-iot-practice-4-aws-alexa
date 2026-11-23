@@ -16,6 +16,10 @@
 
 ---
 
+Parqueo de cuatro plazas con barrera, controlado por un ESP32 conectado a AWS IoT Core (Shadow, regla de IoT, Lambda y DynamoDB) y a una skill de Alexa, con la lógica de control en el Edge.
+
+> **Informe técnico de la Práctica 4: [docs/informe-practica-4.md](docs/informe-practica-4.md)**. Empieza por su [Guía para la evaluación](docs/informe-practica-4.md#guía-para-la-evaluación).
+
 ## Documentación
 
 - **Informe técnico de la Práctica 4:** [docs/informe-practica-4.md](docs/informe-practica-4.md)
@@ -107,7 +111,34 @@ AWS_EC2_METADATA_DISABLED=true python -m unittest discover -s tests    # Lambdas
 
 En Windows, las pruebas de las Lambdas necesitan `PYTHONUTF8=1` para leer el modelo de Alexa. Empaquetado de las Lambdas: `sh scripts/build.sh` desde `lambda/` ([`lambda/README.md`](lambda/README.md)).
 
-Las salidas de la última ejecución están en [`docs/evidencias/pruebas-automaticas/`](docs/evidencias/pruebas-automaticas/) y su resultado en la [sección 4.5 del informe](docs/informe-practica-4.md#45-pruebas-automáticas). El despliegue en AWS, las pruebas con el hardware y las pruebas en el simulador de Alexa siguen el plan de la [sección 4.1](docs/informe-practica-4.md#41-plan-de-pruebas-y-hojas-de-registro); sus resultados se registran en el informe junto con la evidencia correspondiente.
+Las salidas de la última ejecución están en [`docs/evidencias/pruebas-automaticas/`](docs/evidencias/pruebas-automaticas/) y su resultado en la [sección 4.5 del informe](docs/informe-practica-4.md#45-pruebas-automáticas). El análisis de las exportaciones de DynamoDB se reproduce con `python docs/evidencias/analisis/analizar_historial.py` (solo biblioteca estándar).
+
+## Estructura del repositorio
+
+| Carpeta | Contenido |
+|---|---|
+| [`src/`](src/), [`include/`](include/), [`platformio.ini`](platformio.ini) | Firmware del ESP32 y plantillas de configuración sin secretos |
+| [`lambda/`](lambda/) | `SmartParkAlexaBackend`, `SmartParkPairingAdmin`, `SmartParkHistoryProcessor`, pruebas y plantillas IAM |
+| [`alexa/`](alexa/) | Modelo de interacción de la skill (`es-US.smartpark-v2.final.json`) |
+| [`aws/history/`](aws/history/) | Regla de IoT, tabla, permiso de invocación y políticas del histórico |
+| [`test/`](test/), [`tools/`](tools/) | Pruebas del firmware en el host y herramienta de análisis de PNF-05 |
+| [`docs/`](docs/) | Informe, diagramas, mockups y documentos técnicos |
+| [`docs/evidencias/`](docs/evidencias/) | Evidencia de las pruebas: una carpeta por prueba en `pruebas/<ID>/` con su README, pruebas automáticas, análisis, capturas de AWS y Alexa, y foto del montaje |
+
+## Resultados
+
+Resumen de la [matriz de cumplimiento (5.1)](docs/informe-practica-4.md#51-matriz-de-cumplimiento). La convención de estados y el detalle están en el informe; cada estado distinto de ✅ tiene su análisis en la [sección 4.4](docs/informe-practica-4.md#44-análisis-de-fallas-y-correcciones).
+
+| Grupo | ✅ Cumple | ⚠️ Cumple parcial | ❌ No cumple | No ejecutada | Verificada con PA | No aplica |
+|---|---:|---:|---:|---:|---:|---:|
+| RF1–RF15 | 8 | 7 | 0 | 0 | 0 | 0 |
+| Reglas E1–E4 | 0 | 2 | 0 | 0 | 2 | 0 |
+| RNF (13 filas) | 2 | 2 | 5 | 2 | 1 | 1 |
+
+- **Cumplen:** lectura y reporte de sensores, órdenes y consultas por voz (6/6 órdenes en `desired`), almacenamiento del histórico con su origen (38 eventos de barrera), exactitud del HC-SR04 (error máximo 1,0 cm en 45 lecturas) y costo (≈ 0,01 USD/mes con capa gratuita).
+- **No cumplen:** estabilidad (3 reinicios en 10 min), respuesta por voz (máximo 4 s frente a 3,0 s), reconexión (1 a 4 min frente a 60 s), integridad del histórico en ráfagas (78,7 %) y latencia del histórico en ráfagas (Δ0 hasta 179,1 s). Causas y correcciones en las secciones 4.4 y 7.6 del informe.
+- **Pruebas automáticas:** compilación SUCCESS, firmware con dobles 6/6 PASS y Lambdas 108/108 OK.
+- **Permisos:** la cuenta usa permisos amplios (`iot:*` en la política del dispositivo y políticas FullAccess en el rol del backend), documentados con su mínimo de producción en la [sección 3.2](docs/informe-practica-4.md#32-configuraciones-en-aws-y-permisos-asignados).
 
 ## Ejemplos de frases de Alexa
 
