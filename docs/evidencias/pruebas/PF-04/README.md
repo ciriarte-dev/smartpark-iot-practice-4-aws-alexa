@@ -14,4 +14,4 @@ Análisis reproducible: [`../../analisis/historial-resultados.md`](../../analisi
 
 **Resultado.** 88 filas, 86 ítems únicos por `eventKey`; se excluyen 2 ítems `prueba-*` publicados a mano desde el cliente MQTT; quedan 84 eventos del firmware con los 9 atributos del modelo. La skill envía las órdenes en formato V1 (`desired.barrera`), por lo que la voz figura con `origin = legado`; el origen `voz` solo lo produce el formato V2, que la Lambda desplegada no usa. Las lecturas son del 19 y 20/11 con `capacidad = 1` (desarrollo); la sesión del 22/11 solo se exportó para la barrera (27 `legado`, 4 `edge`).
 
-**Estado:** ✅ Cumple (RF10, RF12); ⚠️ Cumple parcial (RF11, [ficha F13](../../../informe-practica-4.md#f13-lecturas-almacenadas-pf-04-rf11)).
+**Estado:** ✅ Cumple (RF10, RF12); ⚠️ Cumple parcial (RF11, [ficha F12](../../../informe-practica-4.md#f12-lecturas-almacenadas-pf-04-rf11)).

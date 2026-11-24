@@ -1,6 +1,6 @@
 # PNF-06 — Reconexión y operación sin conexión
 
-**Requisitos:** RNF6, RNF10, RF13 (E4). Procedimiento y criterio: [4.3 del informe](../../../informe-practica-4.md#43-pruebas-no-funcionales). Análisis: fichas [F3](../../../informe-practica-4.md#f3-reconexión-en-pnf-06) y [F9](../../../informe-practica-4.md#f9-operación-sin-conexión-y-e4-pnf-06).
+**Requisitos:** RNF6, RNF10, RF13 (E4). Procedimiento y criterio: [4.3 del informe](../../../informe-practica-4.md#43-pruebas-no-funcionales). Análisis: fichas [F3](../../../informe-practica-4.md#f3-reconexión-en-pnf-06) y [F8](../../../informe-practica-4.md#f8-operación-sin-conexión-y-e4-pnf-06).
 
 | Fuente | Qué contiene |
 |---|---|
