@@ -1,0 +1,10 @@
+video,transicion,plaza,tipo,cuadro0,pts0,cuadro1,pts1,delta_s,criterio_t0,valida,hoja,observacion
+PF-01/pf01-sesion.mp4,O1,1,ocupacion,146,4.867,149,4.967,0.100,dedo tapa emisor y receptor,si,cuadros/o1-plaza1-ocupacion.jpg,dedo entra desde abajo en un movimiento continuo
+PF-01/pf01-sesion.mp4,O2,2,ocupacion,213,7.101,216,7.201,0.100,dedo tapa emisor y receptor,si,cuadros/o2-plaza2-ocupacion.jpg,el emisor queda tapado desde el cuadro 207 y el receptor desde el 213
+PF-01/pf01-sesion.mp4,O3,4,ocupacion,750,25.003,755,25.169,0.167,primer cuadro con el dedo sobre el modulo,si,cuadros/o3-plaza4-ocupacion.jpg,emisor y receptor no se distinguen bajo el dedo; se toma el primer cuadro sobre el modulo (valor conservador)
+PF-01/pf01-sesion.mp4,O4,1,ocupacion,1180,39.337,1185,39.504,0.167,dedo tapa emisor y receptor,si,cuadros/o4-plaza1-ocupacion.jpg,receptor visible hasta el cuadro 1179
+PF-01/pf01-sesion.mp4,L1,1,liberacion,173,5.767,176,5.867,0.100,primer cuadro con emisor y receptor descubiertos,complementaria,cuadros/l1-plaza1-liberacion.jpg,dato complementario fuera de n; LED verde encendido y rojo apagado en el cuadro 176
+PF-01/pf01-sesion.mp4,X1,2,ocupacion,1194,39.804,1196,39.871,0.067,primer contacto del dedo con el borde del modulo,no,cuadros/x1-plaza2-sin-cubrir-receptor.jpg,el receptor sigue visible cuando el LED cambia: el IR detecta el dedo al lado del modulo y t0 no se puede fijar con el criterio
+PF-01/pf01-sesion.mp4,X2,3,ocupacion,,,453,15.102,,,no,cuadros/x2-plaza3-camara-en-movimiento.jpg,camara en movimiento: el desenfoque no deja distinguir emisor y receptor entre los cuadros 448 y 451
+PF-01/pf01-sesion.mp4,X3,2,liberacion,,,,,,,no,,0.0-0.6 s: la camara se aparta de la maqueta antes del cambio
+resultado,,,,,,,,,,,,"✅ Cumple: máx 0,167 s en las 4 ocupaciones medibles (5 planificadas); 1 liberación complementaria de 0,100 s; con el criterio de t0 más conservador, 0,300 s, en el límite de 0,3 s"
