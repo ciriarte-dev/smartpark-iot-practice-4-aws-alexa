@@ -1,6 +1,6 @@
 # PF-03 — Vinculación usuario ↔ Thing
 
-**Requisitos:** RF7, RF8, RF9. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Análisis: [ficha F10](../../../informe-practica-4.md#f10-vinculación-pf-03).
+**Requisitos:** RF7, RF8, RF9. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Análisis: [ficha F9](../../../informe-practica-4.md#f9-vinculación-pf-03).
 
 **Procedimiento planificado.** Generar un PIN con `SmartParkPairingAdmin`, vincular, cambiar la vinculación, desvincular, probar un PIN vencido y un Thing inexistente.
 

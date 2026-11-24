@@ -1,6 +1,6 @@
 # PF-08 — Consultas de los reportes M1–M4
 
-**Requisito:** RF15. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Análisis: [ficha F12](../../../informe-practica-4.md#f12-consultas-de-los-reportes-pf-08) y [5.3](../../../informe-practica-4.md#53-datos-almacenados-en-dynamodb).
+**Requisito:** RF15. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Análisis: [ficha F11](../../../informe-practica-4.md#f11-consultas-de-los-reportes-pf-08) y [5.3](../../../informe-practica-4.md#53-datos-almacenados-en-dynamodb).
 
 | Archivo | Qué demuestra |
 |---|---|

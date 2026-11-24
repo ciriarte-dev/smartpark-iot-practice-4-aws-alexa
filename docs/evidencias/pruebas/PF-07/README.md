@@ -2,21 +2,26 @@
 
 **Requisitos:** RF14, RF3. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales).
 
-**Procedimiento.** Consultar plazas disponibles y ocupadas, la plaza 2, el modo y el antirrebote; ajustar el antirrebote a 200 y 120 ms y a 1001 ms (fuera de rango); ayuda, cancelar y detener.
+Videos grabados por Isabella Montes en la sesión del 22/11/2026. La frase y la respuesta se leyeron en el chat del simulador; el cuadro indicado (índice / `pts_time`, [`tools/medir_videos.py`](../../../../tools/medir_videos.py)) es uno en que se leen. El chat acumula la conversación, así que un cuadro puede mostrar también las frases anteriores.
 
-| Archivo | Intent o escenario |
-|---|---|
-| [`EspaciosDisponibles.mp4`](EspaciosDisponibles.mp4) | `ConsultarDisponiblesIntent` |
-| [`EspaciosOcupados.mp4`](EspaciosOcupados.mp4) | `ConsultarOcupadosIntent` |
-| [`Plaza2Ocupada-1.mp4`](Plaza2Ocupada-1.mp4), [`Plaza2Ocupada-2.mp4`](Plaza2Ocupada-2.mp4) | `ConsultarEstacionamientoIntent` (plaza 2) |
-| [`ConsultaModoParqueo.mp4`](ConsultaModoParqueo.mp4) | `ConsultarModoIntent` |
-| [`ConsultaAntirrebote.mp4`](ConsultaAntirrebote.mp4) | `ConsultarAntirreboteIntent` |
-| [`Antirrebote200ms.mp4`](Antirrebote200ms.mp4) | `CambiarAntirreboteIntent` a 200 ms |
-| [`Antirrebote120ms.mp4`](Antirrebote120ms.mp4), [`Antirrebote120ms-2.mp4`](Antirrebote120ms-2.mp4) | `CambiarAntirreboteIntent` a 120 ms (dos ejecuciones; el segundo se llamaba `Antirrebote120mss.mp4`) |
-| [`Antirrebote1001ms.mp4`](Antirrebote1001ms.mp4) | `CambiarAntirreboteIntent` fuera de rango (1001 ms), rechazado |
-| [`Ayuda.mp4`](Ayuda.mp4), [`Cancelar.mp4`](Cancelar.mp4), [`Detener.mp4`](Detener.mp4) | `AMAZON.HelpIntent`, `AMAZON.CancelIntent`, `AMAZON.StopIntent` |
-| [`AbrirCuandoTodosEspaciosOcupados.mp4`](AbrirCuandoTodosEspaciosOcupados.mp4) | Intento de apertura con todas las plazas ocupadas (E2, ver [PF-06](../PF-06/)) |
+| Archivo | Intent | Frase | Respuesta observada (cuadro / s) | Coherencia |
+|---|---|---|---|---|
+| [`EspaciosDisponibles.mp4`](EspaciosDisponibles.mp4) | `ConsultarDisponiblesIntent` | *"cuántos espacios hay disponibles"* | *"El último reporte indica 4 espacios disponibles de 4."* (#75 / 2,500) | ✅ 4 LED verdes en #145 / 4,834 |
+| [`EspaciosOcupados.mp4`](EspaciosOcupados.mp4) | `ConsultarOcupadosIntent` | *"cantidad de espacios ocupados"* | *"El último reporte indica 0 espacios ocupados de 4."* (#122 / 5,082) | ✅ Igual a la consulta anterior |
+| [`Plaza2Ocupada-1.mp4`](Plaza2Ocupada-1.mp4), [`Plaza2Ocupada-2.mp4`](Plaza2Ocupada-2.mp4) | `ConsultarEstacionamientoIntent` | *"está libre la plaza dos"* | *"Según el último reporte, el estacionamiento 2 está ocupado."* (`-2`, #144 / 5,999) | ✅ LED rojo en la plaza 2 cubierta (`-1`, #10 / 0,333) |
+| [`ConsultaModoParqueo.mp4`](ConsultaModoParqueo.mp4) | `ConsultarModoIntent` | *"en qué modo está el parqueo"* | *"El último modo reportado es automático."* (#290 / 9,700; también en `AbrirCuandoTodosEspaciosOcupados.mp4`, #389 / 13,000) | ✅ |
+| [`ConsultaAntirrebote.mp4`](ConsultaAntirrebote.mp4) | `ConsultarAntirreboteIntent` | *"consulta el antirrebote"* | *"El antirrebote reportado es de 120 milisegundos."* (#231 / 7,700) | ✅ Valor por defecto |
+| [`Antirrebote200ms.mp4`](Antirrebote200ms.mp4) | `CambiarAntirreboteIntent` | *"ajusta el antirrebote a doscientos milisegundos"* | *"Solicité 200 milisegundos de antirrebote. El dispositivo aún debe confirmarlo…"* (#191 / 6,397) | ✅ |
+| [`Antirrebote120ms.mp4`](Antirrebote120ms.mp4) | `CambiarAntirreboteIntent` | *"ajusta el antirrebote a ciento veinte milisegundos"* | *"Solicité 120 milisegundos de antirrebote…"* (#286 / 9,567) | ✅ |
+| [`Antirrebote120ms-2.mp4`](Antirrebote120ms-2.mp4) | — | *"ajusta el antirrebote a ciento veinte milisegundos"*, después del rechazo de 1001 ms | *"¿A qué hora quieres la alarma?"* (#163 / 5,467) | Repetición no válida: la sesión ya estaba cerrada (desviación 12, 5.5) |
+| [`Antirrebote1001ms.mp4`](Antirrebote1001ms.mp4) | `CambiarAntirreboteIntent` | *"ajusta el antirrebote a mil uno milisegundos"* | *"Dime un valor entero entre 50 y 1000 milisegundos."* (#151 / 5,033) | ✅ Rechazado antes de escribir el Shadow ([`parking_handlers.py#L107-L109`](../../../../lambda/handlers/parking_handlers.py#L107-L109)) |
+| [`Ayuda.mp4`](Ayuda.mp4) | `AMAZON.HelpIntent` | *"ayuda"* | *"Dentro de SmartPark puedes decir abrir, cerrar, consultar el estado de la barrera…"* (#281 / 9,373) | ✅ |
+| [`Cancelar.mp4`](Cancelar.mp4) | `AMAZON.CancelIntent` | *"cancela"* | *"Hasta luego."* (#161 / 5,400) | ✅ |
+| [`Detener.mp4`](Detener.mp4) | `AMAZON.StopIntent` | *"detener"* | *"Hasta luego."* (se lee en `AbrirCuandoTodosEspaciosOcupados.mp4`, #389 / 13,000) | ✅ |
+| [`AbrirCuandoTodosEspaciosOcupados.mp4`](AbrirCuandoTodosEspaciosOcupados.mp4) | `AbrirBarreraIntent` con el parqueo lleno | *"abrir"* | Ver [PF-06](../PF-06/) | — |
 
-**Resultado.** 14 videos, uno por intent o escenario. Las consultas de plazas, modo y antirrebote solo se responden con datos de `reported` de menos de 180 s, por lo que también verifican que el ESP32 reporta esos atributos (RF2).
+**`Antirrebote120ms-2.mp4`.** El chat muestra *"ajusta el antirrebote a mil uno milisegundos"* → *"Dime un valor entero…"* y a continuación la frase de 120 ms sin volver a abrir la skill. **Hecho comprobado (código):** un valor fuera de rango lanza `UserError` y `SafeExceptionHandler` responde con `say()` sin `keep_open`, lo que cierra la sesión ([`system_handlers.py#L67`](../../../../lambda/handlers/system_handlers.py#L67)); la frase siguiente la interpreta el servicio general de Alexa. La misma frase dentro de una sesión (`Antirrebote120ms.mp4`) funciona.
 
-**Estado:** ✅ Cumple (consultas y ajuste del antirrebote). El cambio de modo por voz no tiene video (RF14 ⚠️ en el informe, [ficha F11](../../../informe-practica-4.md#f11-reglas-del-edge-y-cambio-de-modo-pf-06)).
+**Resultado.** 11 frases de 9 intents con la respuesta esperada y 1 frase enviada fuera de la sesión; en las de plazas y modo, la respuesta coincide con los LED o la LCD. Las consultas de plazas, modo y antirrebote solo se responden con `reported` de menos de 180 s, por lo que también verifican RF2.
+
+**Estado:** ✅ Cumple (consultas y ajuste del antirrebote). Observación: tras un valor rechazado hay que volver a invocar la skill.

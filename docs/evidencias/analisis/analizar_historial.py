@@ -3,6 +3,7 @@
 
 Uso, desde la raiz del repositorio (Python 3.9+, solo biblioteca estandar):
   python docs/evidencias/analisis/analizar_historial.py > docs/evidencias/analisis/historial-resultados.md
+En Windows se ejecuta con PYTHONUTF8=1 para que la salida use UTF-8.
 
 Pasos:
   1. Une historial-barrera.csv e historial-muestra.csv y deduplica por eventKey.
@@ -76,7 +77,10 @@ def main():
     print("# Análisis de las exportaciones de `SmartParkHistory`\n")
     print("Generado por [`analizar_historial.py`](analizar_historial.py) a partir de "
           "[`historial-barrera.csv`](../pruebas/PF-04/historial-barrera.csv) y "
-          "[`historial-muestra.csv`](../pruebas/PF-04/historial-muestra.csv).\n")
+          "[`historial-muestra.csv`](../pruebas/PF-04/historial-muestra.csv). "
+          "Reproducción, desde la raíz del repositorio: "
+          "`python docs/evidencias/analisis/analizar_historial.py > docs/evidencias/analisis/historial-resultados.md`; "
+          "en Windows, con `PYTHONUTF8=1`.\n")
     print("## Depuración\n")
     print("| Paso | Ítems |\n|---|---:|")
     print(f"| Filas de ambos CSV | {total + repetidos} |")

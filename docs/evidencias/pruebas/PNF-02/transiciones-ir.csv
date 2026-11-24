@@ -1,0 +1,8 @@
+video,transicion,cuadro_led,pts_led,plaza_cubierta,tipo,led_que_cambia,correcta,observacion
+PF-01/pf01-sesion.mp4,O1,149,4.967,1,ocupacion,plaza 1 rojo,si,
+PF-01/pf01-sesion.mp4,L1,176,5.867,1,liberacion,plaza 1 verde,si,
+PF-01/pf01-sesion.mp4,O2,216,7.201,2,ocupacion,plaza 2 rojo,si,
+PF-01/pf01-sesion.mp4,X2,453,15.102,3,ocupacion,plaza 3 rojo,si,camara en movimiento; el LED y la plaza se identifican
+PF-01/pf01-sesion.mp4,O3,755,25.169,4,ocupacion,plaza 4 rojo,si,
+PF-01/pf01-sesion.mp4,O4,1185,39.504,1,ocupacion,plaza 1 rojo,si,
+PF-01/pf01-sesion.mp4,X1,1196,39.871,2,ocupacion,plaza 2 rojo,si,dedo junto al modulo sin tapar el receptor

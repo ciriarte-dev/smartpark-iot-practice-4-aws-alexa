@@ -1,6 +1,6 @@
 # Análisis de las exportaciones de `SmartParkHistory`
 
-Generado por [`analizar_historial.py`](analizar_historial.py) a partir de [`historial-barrera.csv`](../pruebas/PF-04/historial-barrera.csv) y [`historial-muestra.csv`](../pruebas/PF-04/historial-muestra.csv).
+Generado por [`analizar_historial.py`](analizar_historial.py) a partir de [`historial-barrera.csv`](../pruebas/PF-04/historial-barrera.csv) y [`historial-muestra.csv`](../pruebas/PF-04/historial-muestra.csv). Reproducción, desde la raíz del repositorio: `python docs/evidencias/analisis/analizar_historial.py > docs/evidencias/analisis/historial-resultados.md`; en Windows, con `PYTHONUTF8=1`.
 
 ## Depuración
 

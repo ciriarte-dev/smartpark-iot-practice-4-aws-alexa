@@ -37,7 +37,7 @@ Antes de la sección 1: [Resumen del informe](#resumen-del-informe).
 
 ## Resumen del informe
 
-**Estado de la evidencia.** El diseño y la implementación (secciones 1 a 3) están en el repositorio y se enlazan al código con número de línea. Las pruebas automáticas se ejecutaron el 2026-11-23 sobre el commit `ad5d377` (4.5). La sesión de pruebas en vivo del 22/11/2026 dejó videos, hojas de cálculo, un PDF de mediciones y exportaciones de DynamoDB, todos transcritos o analizados en [`docs/evidencias/`](evidencias/); no dejó log serie ni exportación de CloudWatch, y las mediciones que dependían de ellos se declaran como no ejecutadas (4.1). Cada resultado que no cumple tiene una ficha de diagnóstico en 4.4.
+**Estado de la evidencia.** El diseño y la implementación (secciones 1 a 3) están en el repositorio y se enlazan al código con número de línea. Las pruebas automáticas se ejecutaron el 2026-11-23 sobre el commit `ad5d377` (4.5). La sesión de pruebas en vivo del 22/11/2026 dejó videos, hojas de cálculo, un PDF de mediciones y exportaciones de DynamoDB, todos transcritos o analizados en [`docs/evidencias/`](evidencias/); los videos se midieron cuadro a cuadro con [`medir_videos.py`](../tools/medir_videos.py). No dejó log serie ni exportación de CloudWatch, y las mediciones que dependían de ellos se declaran como no ejecutadas (4.1). Cada resultado que no cumple tiene una ficha de diagnóstico en 4.4.
 
 **Convención de estados.** Se usa una sola en todo el informe y en los README de evidencia.
 
@@ -54,14 +54,14 @@ Antes de la sección 1: [Resumen del informe](#resumen-del-informe).
 
 | Estado | RF (15) | Reglas E1–E4 (4) | RNF (13 filas) |
 |---|---:|---:|---:|
-| ✅ Cumple | 8 | 0 | 2 |
-| ⚠️ Cumple parcial | 7 | 2 | 2 |
+| ✅ Cumple | 9 | 1 | 3 |
+| ⚠️ Cumple parcial | 6 | 1 | 3 |
 | ❌ No cumple | 0 | 0 | 5 |
-| No ejecutada | 0 | 0 | 2 |
+| No ejecutada | 0 | 0 | 0 |
 | Verificada con PA-02/PA-03 | 0 | 2 | 1 |
 | No aplica | 0 | 0 | 1 |
 
-Todos los RF tienen evidencia en vivo total o parcial. Los RNF que no se cumplen (estabilidad, respuesta por voz, reconexión, integridad y latencia del histórico) tienen causa identificada en 4.4 y corrección en 7.6. PA-01, PA-02 (6/6) y PA-03 (108/108) pasan.
+Todos los RF tienen evidencia en vivo total o parcial. Los RNF que no se cumplen (estabilidad, respuesta por voz, reconexión, integridad y latencia del histórico) tienen causa identificada en 4.4 y corrección en 7.6. PNF-04: ✅ Cumple: máx 0,167 s en las 4 ocupaciones medibles (5 planificadas); 1 liberación complementaria de 0,100 s; con el criterio de t0 más conservador, 0,300 s, en el límite de 0,3 s. PA-01, PA-02 (6/6) y PA-03 (108/108) pasan.
 
 ---
 
@@ -1104,7 +1104,7 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 | Requerimientos funcionales RF1–RF15 | PF-01 a PF-08 (matriz en 5.1) |
 | Frases de la skill: todos los intents de [`es-US.smartpark-v2.final.json`](../alexa/es-US.smartpark-v2.final.json) | PF-02, PF-03, PF-06, PF-07 (lista por intent en 4.2) |
 | Almacenamiento en DynamoDB | PF-04, PF-05, PNF-05 |
-| Cada regla de la lógica de control (E1–E4) | PF-06 (E1–E3), PNF-06 (E4), PA-02 |
+| Cada regla de la lógica de control (E1–E4) | PF-01 y PF-06 (E1–E3), PNF-06 (E4), PA-02 |
 | Valores declarados en los RNF | PNF-01 a PNF-06; RNF11 por cálculo (5.6); RNF12 por revisión y PA-03 |
 
 **Plan completo y estado de ejecución.**
@@ -1113,30 +1113,25 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 |---|---|---|---|---|
 | PF-01 | RF1, RF2 | En vivo | Ejecutada | 4.2, 5.1 |
 | PF-02 | RF3–RF6 | En vivo | Ejecutada | 4.2, 5.1 |
-| PF-03 | RF7–RF9 | En vivo + PA-03 | Parcial (vinculación y desvinculación en el simulador) | 4.2, [F10](#f10-vinculación-pf-03) |
+| PF-03 | RF7–RF9 | En vivo + PA-03 | Parcial (vinculación y desvinculación en el simulador) | 4.2, [F9](#f9-vinculación-pf-03) |
 | PF-04 | RF10–RF12 | En vivo (exportación de DynamoDB) | Ejecutada | 4.2, 5.3 |
 | PF-05 | RF11, RNF7 | PA-03 | No ejecutada en vivo (cubierta por PA-03) | 4.2, [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05) |
-| PF-06 | RF13 (E1–E3), RF14 | En vivo | Parcial | 4.2, [F11](#f11-reglas-del-edge-y-cambio-de-modo-pf-06) |
+| PF-06 | RF13 (E1–E3), RF14 | En vivo (4 videos) | Ejecutada; el servo no queda en cuadro tras una orden bloqueada | 4.2, [F10](#f10-reglas-del-edge-pf-06) |
 | PF-07 | RF14, RF3 | En vivo | Ejecutada | 4.2, 5.1 |
-| PF-08 | RF15 | Exportación de DynamoDB | Parcial (sin exportaciones M1–M4) | 4.2, [F12](#f12-consultas-de-los-reportes-pf-08) |
+| PF-08 | RF15 | Exportación de DynamoDB | Parcial (sin exportaciones M1–M4) | 4.2, [F11](#f11-consultas-de-los-reportes-pf-08) |
 | PNF-01 | RNF1 | En vivo | Ejecutada (10 min) | 5.2, [F1](#f1-reinicios-en-pnf-01) |
-| PNF-02 | RNF2, RNF3 | En vivo | Ejecutada para RNF2; RNF3 no ejecutada | 5.2, [F7](#f7-exactitud-de-los-ir-pnf-02) |
+| PNF-02 | RNF2, RNF3 | En vivo + video | Ejecutada para RNF2; RNF3 con 7 de 40 transiciones | 5.2, [F7](#f7-exactitud-de-los-ir-pnf-02) |
 | PNF-03 | RNF4 | En vivo | Ejecutada con cronómetro | 5.2, [F2](#f2-respuesta-por-voz-pnf-03) |
-| PNF-04 | RNF9 (Edge) | En vivo | No ejecutada (videos sin conteo de cuadros) | [F8](#f8-respuesta-ir--led-pnf-04) |
+| PNF-04 | RNF9 (Edge) | Video por cuadros | Ejecutada (4 de 5 ocupaciones + 1 liberación) | 5.2, [`PNF-04`](evidencias/pruebas/PNF-04/README.md) |
 | PNF-05 | RNF5, RNF7, RNF8 | Exportación de DynamoDB | Parcial (sin log serie ni CloudWatch; N reconstruido por secuencia) | 5.2, [F4](#f4-latencia-del-histórico-en-ráfagas-pnf-05), [F5](#f5-frecuencia-de-las-muestras-pnf-05), [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05) |
-| PNF-06 | RNF6, RNF10, RF13 (E4) | En vivo | Parcial (3 cortes; tiempos en minutos) | 5.2, [F3](#f3-reconexión-en-pnf-06), [F9](#f9-operación-sin-conexión-y-e4-pnf-06) |
+| PNF-06 | RNF6, RNF10, RF13 (E4) | En vivo | Parcial (3 cortes; tiempos en minutos) | 5.2, [F3](#f3-reconexión-en-pnf-06), [F8](#f8-operación-sin-conexión-y-e4-pnf-06) |
 | PA-01 | Compilación | Automática | Ejecutada | 4.5 |
 | PA-02 | Firmware con dobles + contrato | Automática | Ejecutada | 4.5 |
 | PA-03 | Lambdas + modelo de Alexa | Automática | Ejecutada | 4.5 |
 
-**Alcance real de la sesión de pruebas (22/11/2026).**
+**Alcance real de la sesión (22/11/2026).** Se ejecutaron PF-01, PF-02, PF-04, PF-06, PF-07, PNF-01, PNF-02 (HC-SR04), PNF-03 (cronómetro), PNF-06 (3 cortes) y la exportación de `SmartParkHistory`; los 23 videos se midieron después por cuadros (PNF-04, RNF3, PF-06). No se generaron el log serie, la exportación de CloudWatch, las 40 transiciones IR, el corte controlado de 45 s, los mensajes MQTT inválidos (PF-05), las exportaciones M1–M4 (PF-08) ni la captura del cambio de vinculación (PF-03): la sesión se registró con hojas, cronómetro y celular. Cada hueco tiene su ficha en 4.4 y, cuando existe, la prueba automática que lo cubre.
 
-- **Ejecutado:** lecturas del HC-SR04 y detección por distancia (PF-01, PF-02, PNF-02), órdenes y consultas por voz (PF-02, PF-07), apertura y cierre por Serial (PF-04), escenarios de apertura con el parqueo lleno (PF-06, PF-07), estabilidad durante 10 min (PNF-01), 10 tiempos de respuesta por voz con cronómetro (PNF-03), 3 cortes de red (PNF-06) y la exportación de `SmartParkHistory` (PF-04).
-- **No ejecutado:** el log serie de toda la sesión (`serial-sesion.txt`), la exportación de CloudWatch Logs, las 40 transiciones IR de RNF3, el conteo de cuadros de los videos (PNF-03 y PNF-04), el corte controlado de 45 s con cronómetro (PNF-06), la publicación MQTT de mensajes inválidos (PF-05), las exportaciones M1–M4 (PF-08) y la captura del simulador para cambio de vinculación (PF-03).
-- **Por qué:** la sesión se registró con hojas en papel, cronómetro y videos de celular; sin el log serie no hay contadores `Historico: MQTT local` ni horas de conexión, y sin CloudWatch no hay hora de fin del `PutItem`. Las mediciones que dependían de esas fuentes quedaron sin dato.
-- **Compensación:** cada regla y validación sin prueba en vivo está cubierta por una prueba automática nombrada (PA-02, PA-03); la latencia, la frecuencia de muestras, el reparto por origen y la integridad (reconstruida con el número de secuencia de cada evento) se calcularon con las exportaciones de DynamoDB ([`historial-resultados.md`](evidencias/analisis/historial-resultados.md)). Lo que ninguna fuente permite medir figura como **No ejecutada**, con su ficha en 4.4.
-
-**Orígenes de tiempo usados.** `occurredAt` (reloj NTP del ESP32, 1 ms) y `receivedAt` (`timestamp()` de la regla, 1 ms) de cada ítem de DynamoDB; cronómetro con resolución de 1 s (PNF-03); minutos enteros anotados en la hoja (PNF-06). El plan preveía además el log serie con la hora del PC (`pio device monitor -f time`), video ≥ 30 fps contado por cuadros y `@timestamp` de CloudWatch; esas fuentes no se generaron en la sesión.
+**Orígenes de tiempo usados.** R: `receivedAt` (`timestamp()` de la regla, 1 ms) y O: `occurredAt` (reloj NTP del ESP32, 1 ms) de cada ítem de DynamoDB; V: `pts_time` de cada cuadro de video (≈ 33 ms; [`videos-fps.md`](evidencias/pruebas/videos-fps.md), [`medir_videos.py`](../tools/medir_videos.py); 29,97 fps es la frecuencia estándar nominal de 30 fps, y como los tiempos se calculan con el `pts_time` de cada cuadro, los cuadros sueltos de 66,7 ms no alteran Δt); cronómetro con resolución de 1 s (PNF-03); minutos enteros anotados en la hoja (PNF-06). El plan preveía además S: log serie con la hora del PC (`pio device monitor -f time`) y C: `@timestamp` de CloudWatch; esas fuentes no se generaron en la sesión.
 
 **Hojas de registro** (plantillas usadas para planificar la sesión): [`hoja-pruebas-funcionales.md`](evidencias/hojas-registro/hoja-pruebas-funcionales.md) y [`hoja-pruebas-no-funcionales.md`](evidencias/hojas-registro/hoja-pruebas-no-funcionales.md). Los valores anotados en la sesión están en las hojas de cálculo y en el PDF de cada carpeta, transcritos a Markdown.
 
@@ -1153,40 +1148,43 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 | PF-03 | RF7–RF9 | Desvincular y vincular con PIN en el simulador; cambio de vinculación, PIN vencido, Thing inexistente y aislamiento con PA-03 | Vínculo creado y eliminado; guía sin vínculo; rechazos esperados | [`test-publica.png`](evidencias/alexa/test-publica.png), [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) | ⚠️ Cumple parcial |
 | PF-04 | RF10–RF12 | `OPEN`/`CLOSE` por Serial y órdenes por voz; exportar `SmartParkHistory` | Ítem por evento, con `thingName`, `eventKey`, `schemaVersion`, `occurredAt`, `receivedAt`, `origin` y `data` | [`historial-barrera.csv`](evidencias/pruebas/PF-04/historial-barrera.csv), [`historial-muestra.csv`](evidencias/pruebas/PF-04/historial-muestra.csv), [`Abrir-CerrarPorTerminal.mp4`](evidencias/pruebas/PF-04/Abrir-CerrarPorTerminal.mp4) | ✅ RF10, RF12; ⚠️ RF11 |
 | PF-05 | RF11 | Mensajes inválidos y duplicados al histórico | Inválidos sin ítem; duplicado sin segundo ítem | PA-03: `test_history` (4.5) | Verificada con PA-03 |
-| PF-06 | RF13 (E1–E3), RF14 | Llenar las 4 plazas en `automatico`, pedir apertura y cierre, liberar una plaza, cambiar a `manual` | LED/LCD según plazas; apertura bloqueada con 0 libres; cierre aceptado | [`PF-06/`](evidencias/pruebas/PF-06/) (3 videos), [`AbrirCuandoTodosEspaciosOcupados.mp4`](evidencias/pruebas/PF-07/AbrirCuandoTodosEspaciosOcupados.mp4) | ⚠️ Cumple parcial |
-| PF-07 | RF14, RF3 | Consultar plazas, plaza 2, modo y antirrebote; ajustar a 200 y 120 ms; 1001 ms fuera de rango; ayuda, cancelar, detener | Respuestas iguales a `reported`; 1001 ms rechazado sin escribir el Shadow | [`PF-07/`](evidencias/pruebas/PF-07/) (14 videos) | ✅ Cumple |
+| PF-06 | RF13 (E1–E3), RF14 | Llenar las 4 plazas en `automatico`, pedir apertura y cierre, liberar una plaza, cambiar a `manual` | LED/LCD según plazas; apertura bloqueada con 0 libres; cierre aceptado | [`PF-06/README.md`](evidencias/pruebas/PF-06/README.md) (4 videos, 8 cuadros clave) | ✅ E1 y cambio de modo; ⚠️ E2; E3 con PA-02 |
+| PF-07 | RF14, RF3 | Consultar plazas, plaza 2, modo y antirrebote; ajustar a 200 y 120 ms; 1001 ms fuera de rango; ayuda, cancelar, detener | Respuestas iguales a `reported`; 1001 ms rechazado sin escribir el Shadow | [`PF-07/README.md`](evidencias/pruebas/PF-07/README.md) (14 videos) | ✅ Cumple |
 | PF-08 | RF15 | Ejecutar las consultas M1–M4 de [`consultas.txt`](evidencias/pruebas/PF-08/consultas.txt) y comprobar los atributos de cada mockup | Cada mockup se obtiene de atributos almacenados | [`consultas.txt`](evidencias/pruebas/PF-08/consultas.txt), CSV de PF-04, 5.3 | ⚠️ Cumple parcial |
 
 **PF-01.** Las 30 lecturas de [`pf01.xlsx`](evidencias/pruebas/PF-01/pf01.xlsx) tienen un error máximo de 0,5 cm y la detección es correcta en 30/30 (`true` a 10 cm, `false` a 20 y 30 cm). El reporte al Shadow se apoya en dos fuentes. La captura [`shadow-publica.png`](evidencias/aws-iot/shadow-publica.png) muestra `distancia_cm`, `vehiculo_detectado`, `barrera` y `barrera_posicion_estimada` en `reported` (captura del 08/11/2026, anterior a los atributos de plazas). Los atributos de plazas, modo y antirrebote se verifican indirectamente en PF-07, porque Alexa solo responde esas consultas leyendo `reported` con menos de 180 s de antigüedad ([`get_reported_fields`](../lambda/services/shadow_service.py#L38)). La hoja de PF-01 anota el cambio de la plaza 1 en `update/accepted` a las 19:24:41 del 22/11.
 
 **PF-02 y la histéresis.** En [`pf02.md`](evidencias/pruebas/PF-02/pf02.md) coinciden 46 de 48 lecturas; las 2 discrepancias son "No" a 17 cm en las series 1 y 5. Están dentro de la banda de histéresis (15–18 cm), donde el firmware conserva el estado anterior y, si es desconocido o hubo una lectura fallida, resuelve `false` ([`UltrasonicSensor.cpp#L29-L37`](../src/UltrasonicSensor.cpp#L29-L37)). La hoja no registra el sentido del movimiento, así que no se puede decidir cuál de las dos situaciones ocurrió; en las distancias que fijan el umbral (10 y 18 cm) coinciden 24/24. Las 3 órdenes de apertura y 3 de cierre por voz dejaron `desired.barrera` en el valor esperado (6/6, [`pf02-voz-desired.xlsx`](evidencias/pruebas/PF-02/pf02-voz-desired.xlsx)).
 
-**PF-03.** La captura del simulador ([`test-publica.png`](evidencias/alexa/test-publica.png)) muestra, en este orden: *"desvincular parqueo"* → *"Desvinculé tu parqueo."*; al abrir la skill sin vínculo, la guía para pedir un código; y la vinculación con un código de 4 dígitos (oculto en la captura) → *"Tu parqueo quedó vinculado…"*. La captura no tiene fecha y su mensaje de bienvenida difiere del código actual ([`system_handlers.py#L20`](../lambda/handlers/system_handlers.py#L20)), por lo que corresponde a un despliegue anterior del backend. El cambio de vinculación, el PIN de 300 s con 3 intentos y el Thing inexistente solo están verificados con PA-03 ([F10](#f10-vinculación-pf-03)).
+**PF-03.** La captura del simulador ([`test-publica.png`](evidencias/alexa/test-publica.png)) muestra, en este orden: *"desvincular parqueo"* → *"Desvinculé tu parqueo."*; al abrir la skill sin vínculo, la guía para pedir un código; y la vinculación con un código de 4 dígitos (oculto en la captura) → *"Tu parqueo quedó vinculado…"*. La captura no tiene fecha y su mensaje de bienvenida difiere del código actual ([`system_handlers.py#L20`](../lambda/handlers/system_handlers.py#L20)), por lo que corresponde a un despliegue anterior del backend. El cambio de vinculación, el PIN de 300 s con 3 intentos y el Thing inexistente solo están verificados con PA-03 ([F9](#f9-vinculación-pf-03)).
 
-**PF-04.** Las exportaciones contienen 38 `barrier_changed` (31 `legado`, 7 `edge`), 40 `occupancy_changed` y 8 `sample`; deduplicadas por `eventKey`, 86 ítems únicos. Todos tienen los 9 atributos del modelo (2.8). Las órdenes de voz figuran como `legado` porque la skill escribe el formato V1 (5.5, desviación 1). Las lecturas (`sample`, `occupancy_changed`) son del 19 y 20/11 con `capacidad = 1`: verifican el formato y el enriquecimiento, no la sesión con 4 plazas ([F13](#f13-lecturas-almacenadas-pf-04-rf11)). Detalle en 5.3.
+**PF-04.** Las exportaciones contienen 38 `barrier_changed` (31 `legado`, 7 `edge`), 40 `occupancy_changed` y 8 `sample`; deduplicadas por `eventKey`, 86 ítems únicos. Todos tienen los 9 atributos del modelo (2.8). Las órdenes de voz figuran como `legado` porque la skill escribe el formato V1 (5.5, desviación 1). Las lecturas (`sample`, `occupancy_changed`) son del 19 y 20/11 con `capacidad = 1`: verifican el formato y el enriquecimiento, no la sesión con 4 plazas ([F12](#f12-lecturas-almacenadas-pf-04-rf11)). Detalle en 5.3.
 
-**PF-06.** Los videos de [`PF-06/`](evidencias/pruebas/PF-06/) (`Abrir.mp4`, `Abrir1.mp4`, `Abrir2.mp4`) registran aperturas, pero su README no identifica el escenario de cada uno; el intento de apertura con todas las plazas ocupadas está en [`AbrirCuandoTodosEspaciosOcupados.mp4`](evidencias/pruebas/PF-07/AbrirCuandoTodosEspaciosOcupados.mp4). El cierre con el parqueo lleno (E3) y la apertura en `manual` con el parqueo lleno no tienen un archivo identificable ([F11](#f11-reglas-del-edge-y-cambio-de-modo-pf-06)).
+**PF-06** (videos de Isabella Montes; cuadros rotados en [`PF-06/cuadros/`](evidencias/pruebas/PF-06/cuadros/)). `Abrir.mp4`: 4 plazas ocupadas en `automatico`, LCD `Libres:0/4 Oc:4` / `APERTURA BLOQ.` (#30, 1,000 s) y en el chat *"abrir"* y *"baja"*. `Abrir1.mp4`: con una plaza libre, `Libres:1/4 Oc:3` (#5, 0,167 s) y, tras *"abrir"*, `Barrera: abierta` (#375, 12,533 s). `Abrir2.mp4`: *"activa el modo manual"* → *"Solicité el modo manual…"* (#269, 9,000 s) y la LCD con 0 libres muestra `PARQUEO LLENO` en lugar de `APERTURA BLOQ.` (#30, 1,000 s): el Edge aplicó el modo. En `AbrirCuandoTodosEspaciosOcupados.mp4` el servo no se mueve entre 22,700 y 23,900 s tras *"abrir"* en `automatico` con los 4 LED en rojo, pero no se ve el envío de la orden. Ningún video muestra el servo tras una orden bloqueada ni tras un cierre con el parqueo lleno ([F10](#f10-reglas-del-edge-pf-06)).
 
-**PF-08.** No se exportaron los resultados de las cuatro consultas. 5.3 comprueba con los CSV de PF-04 que cada atributo usado por M1–M4 está en los ítems almacenados y calcula M2 sobre los datos del 22/11 ([F12](#f12-consultas-de-los-reportes-pf-08)).
+**PF-08.** No se exportaron los resultados de las cuatro consultas. 5.3 comprueba con los CSV de PF-04 que cada atributo usado por M1–M4 está en los ítems almacenados y calcula M2 sobre los datos del 22/11 ([F11](#f11-consultas-de-los-reportes-pf-08)).
 
 **Intents cubiertos.**
 
-| Intent | Prueba | Evidencia |
-|---|---|---|
-| `AbrirBarreraIntent`, `CerrarBarreraIntent` | PF-02 | [`Abrir-Cerrar.mp4`](evidencias/pruebas/PF-02/Abrir-Cerrar.mp4), [`pf02-voz-desired.xlsx`](evidencias/pruebas/PF-02/pf02-voz-desired.xlsx) |
-| `ConsultarDistanciaIntent` | PF-02 | [`ConsultarDistancia.mp4`](evidencias/pruebas/PF-02/ConsultarDistancia.mp4) |
-| `ConsultarVehiculoIntent` | PF-02 | [`AutoEsperando.mp4`](evidencias/pruebas/PF-02/AutoEsperando.mp4) |
-| `EstadoBarreraIntent` | PF-02 | [`ConsultarEstado.mp4`](evidencias/pruebas/PF-02/ConsultarEstado.mp4) |
-| `VincularParqueoIntent`, `DesvincularParqueoIntent` | PF-03 | [`test-publica.png`](evidencias/alexa/test-publica.png) |
-| `CambiarVinculacionIntent` | PF-03 | PA-03 (`test_backend`, `test_pin_public`) |
-| `ConsultarDisponiblesIntent`, `ConsultarOcupadosIntent` | PF-07 | [`EspaciosDisponibles.mp4`](evidencias/pruebas/PF-07/EspaciosDisponibles.mp4), [`EspaciosOcupados.mp4`](evidencias/pruebas/PF-07/EspaciosOcupados.mp4) |
-| `ConsultarEstacionamientoIntent` | PF-07 | [`Plaza2Ocupada-1.mp4`](evidencias/pruebas/PF-07/Plaza2Ocupada-1.mp4), [`Plaza2Ocupada-2.mp4`](evidencias/pruebas/PF-07/Plaza2Ocupada-2.mp4) |
-| `ConsultarModoIntent` | PF-07 | [`ConsultaModoParqueo.mp4`](evidencias/pruebas/PF-07/ConsultaModoParqueo.mp4) |
-| `ConsultarAntirreboteIntent` | PF-07 | [`ConsultaAntirrebote.mp4`](evidencias/pruebas/PF-07/ConsultaAntirrebote.mp4) |
-| `CambiarAntirreboteIntent` | PF-07 | [`Antirrebote200ms.mp4`](evidencias/pruebas/PF-07/Antirrebote200ms.mp4), [`Antirrebote120ms.mp4`](evidencias/pruebas/PF-07/Antirrebote120ms.mp4), [`Antirrebote120ms-2.mp4`](evidencias/pruebas/PF-07/Antirrebote120ms-2.mp4), [`Antirrebote1001ms.mp4`](evidencias/pruebas/PF-07/Antirrebote1001ms.mp4) |
-| `ActivarModoAutomaticoIntent`, `ActivarModoManualIntent` | PF-06 | Sin archivo identificable; PA-03 (`test_v2_writes_precise_patches_and_uses_each_users_binding`) |
-| `AMAZON.HelpIntent`, `AMAZON.CancelIntent`, `AMAZON.StopIntent` | PF-07 | [`Ayuda.mp4`](evidencias/pruebas/PF-07/Ayuda.mp4), [`Cancelar.mp4`](evidencias/pruebas/PF-07/Cancelar.mp4), [`Detener.mp4`](evidencias/pruebas/PF-07/Detener.mp4) |
-| `AMAZON.NavigateHomeIntent` | — | Declarado en el modelo sin frases propias; no se prueba por voz |
+Frase enviada y respuesta leídas en el chat del simulador (cuadro / s del video; detalle en los README de [PF-06](evidencias/pruebas/PF-06/README.md) y [PF-07](evidencias/pruebas/PF-07/README.md)).
+
+| Intent | Prueba | Frase | Respuesta observada | Evidencia |
+|---|---|---|---|---|
+| `AbrirBarreraIntent`, `CerrarBarreraIntent` | PF-02 | *"abrir"*, *"baja"* | *"Solicité abrir / cerrar la barrera. Puedes consultar su estado…"* (#595 / 20,135) | [`Abrir-Cerrar.mp4`](evidencias/pruebas/PF-02/Abrir-Cerrar.mp4), [`pf02-voz-desired.xlsx`](evidencias/pruebas/PF-02/pf02-voz-desired.xlsx) |
+| `ConsultarDistanciaIntent` | PF-02 | *"consultar distancia"* | *"La última distancia reportada es de 8,5 centímetros."* (`ConsultarEstado.mp4` #0 / 0,000) | [`ConsultarDistancia.mp4`](evidencias/pruebas/PF-02/ConsultarDistancia.mp4) |
+| `ConsultarVehiculoIntent` | PF-02 | *"hay un auto en la entrada"* | *"El último reporte indica que hay un vehículo esperando."* (#107 / 3,567); coherente con 8,5 cm < 15 cm | [`AutoEsperando.mp4`](evidencias/pruebas/PF-02/AutoEsperando.mp4) |
+| `EstadoBarreraIntent` | PF-02 | *"consultar estado"* | *"Según el último estado reportado, la barrera está abierta."* (`AutoEsperando.mp4` #0 / 0,000) | [`ConsultarEstado.mp4`](evidencias/pruebas/PF-02/ConsultarEstado.mp4) |
+| `VincularParqueoIntent`, `DesvincularParqueoIntent` | PF-03 | *"desvincular parqueo"*, vinculación con código | *"Desvinculé tu parqueo."*, *"Tu parqueo quedó vinculado…"* | [`test-publica.png`](evidencias/alexa/test-publica.png) |
+| `CambiarVinculacionIntent` | PF-03 | — | — | PA-03 (`test_backend`, `test_pin_public`) |
+| `ConsultarDisponiblesIntent`, `ConsultarOcupadosIntent` | PF-07 | *"cuántos espacios hay disponibles"*, *"cantidad de espacios ocupados"* | *"…4 espacios disponibles de 4."* (#75 / 2,500), *"…0 espacios ocupados de 4."* (#122 / 5,082); 4 LED verdes | [`EspaciosDisponibles.mp4`](evidencias/pruebas/PF-07/EspaciosDisponibles.mp4), [`EspaciosOcupados.mp4`](evidencias/pruebas/PF-07/EspaciosOcupados.mp4) |
+| `ConsultarEstacionamientoIntent` | PF-07 | *"está libre la plaza dos"* | *"Según el último reporte, el estacionamiento 2 está ocupado."* (#144 / 5,999); LED rojo en la plaza 2 | [`Plaza2Ocupada-1.mp4`](evidencias/pruebas/PF-07/Plaza2Ocupada-1.mp4), [`Plaza2Ocupada-2.mp4`](evidencias/pruebas/PF-07/Plaza2Ocupada-2.mp4) |
+| `ConsultarModoIntent` | PF-07 | *"en qué modo está el parqueo"* | *"El último modo reportado es automático."* (#290 / 9,700) | [`ConsultaModoParqueo.mp4`](evidencias/pruebas/PF-07/ConsultaModoParqueo.mp4) |
+| `ConsultarAntirreboteIntent` | PF-07 | *"consulta el antirrebote"* | *"El antirrebote reportado es de 120 milisegundos."* (#231 / 7,700) | [`ConsultaAntirrebote.mp4`](evidencias/pruebas/PF-07/ConsultaAntirrebote.mp4) |
+| `CambiarAntirreboteIntent` | PF-07 | *"ajusta el antirrebote a doscientos / ciento veinte / mil uno milisegundos"* | *"Solicité 200…"* (#191 / 6,397), *"Solicité 120…"* (#286 / 9,567), *"Dime un valor entero entre 50 y 1000 milisegundos."* (#151 / 5,033). En `Antirrebote120ms-2.mp4`, enviada tras el rechazo sin reabrir la skill: *"¿A qué hora quieres la alarma?"* (#163 / 5,467; 5.5, desviación 12) | [`Antirrebote200ms.mp4`](evidencias/pruebas/PF-07/Antirrebote200ms.mp4), [`Antirrebote120ms.mp4`](evidencias/pruebas/PF-07/Antirrebote120ms.mp4), [`Antirrebote120ms-2.mp4`](evidencias/pruebas/PF-07/Antirrebote120ms-2.mp4), [`Antirrebote1001ms.mp4`](evidencias/pruebas/PF-07/Antirrebote1001ms.mp4) |
+| `ActivarModoManualIntent` | PF-06 | *"activa el modo manual"* | *"Solicité el modo manual. El dispositivo aún debe confirmarlo…"* (#269 / 9,000); LCD `PARQUEO LLENO` | [`Abrir2.mp4`](evidencias/pruebas/PF-06/Abrir2.mp4), [`modo-manual-por-voz.jpg`](evidencias/pruebas/PF-06/cuadros/modo-manual-por-voz.jpg) |
+| `ActivarModoAutomaticoIntent` | — | — | — | PA-03 (`test_v2_writes_precise_patches_and_uses_each_users_binding`) |
+| `AMAZON.HelpIntent`, `AMAZON.CancelIntent`, `AMAZON.StopIntent` | PF-07 | *"ayuda"*, *"cancela"*, *"detener"* | *"Dentro de SmartPark puedes decir abrir, cerrar…"* (#281 / 9,373), *"Hasta luego."* (#161 / 5,400 y `AbrirCuandoTodosEspaciosOcupados.mp4` #389 / 13,000) | [`Ayuda.mp4`](evidencias/pruebas/PF-07/Ayuda.mp4), [`Cancelar.mp4`](evidencias/pruebas/PF-07/Cancelar.mp4), [`Detener.mp4`](evidencias/pruebas/PF-07/Detener.mp4) |
+| `AMAZON.NavigateHomeIntent` | — | — | — | Declarado en el modelo sin frases propias; no se prueba por voz |
 
 ### 4.3 Pruebas no funcionales
 
@@ -1194,9 +1192,9 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 |---|---|---|---|---|---|---|---|
 | PNF-01 | RNF1 | Operación continua con uso normal; conteo de reinicios, bloqueos y desconexiones | 1 sesión | Duración; reinicios / bloqueos / reconexiones | ≥ 15 min; 0 / 0 / 0 | [`registro-no-funcionales.md`](evidencias/pruebas/PNF-01/registro-no-funcionales.md) | ❌ No cumple |
 | PNF-02 | RNF2 | 5 lecturas a 5–50 cm (PDF) y 10 series a 10/20/30 cm (`pf01.xlsx`) | 45 en 10/20/30 cm | Error absoluto máximo | ≤ 1 cm en 10, 20 y 30 cm | [`registro-no-funcionales.md`](evidencias/pruebas/PNF-01/registro-no-funcionales.md), [`pf01.md`](evidencias/pruebas/PF-01/pf01.md) | ✅ Cumple |
-| PNF-02 | RNF3 | 5 entradas y 5 salidas por plaza frente a LED y `occupancy_changed` | 40 | Aciertos IR | ≥ 38/40 | — | No ejecutada (sin registro de las transiciones) |
+| PNF-02 | RNF3 | Transiciones IR del video de PF-01 frente al LED de la plaza cubierta | 7 de 40 | Aciertos IR | ≥ 38/40 | [`transiciones-ir.csv`](evidencias/pruebas/PNF-02/transiciones-ir.csv) | ⚠️ Cumple parcial |
 | PNF-03 | RNF4 | Orden de voz en el simulador hasta el fin del movimiento del servo, con cronómetro | 10 | t (s) | máx ≤ 3,0 s | [`registro-no-funcionales.md`](evidencias/pruebas/PNF-01/registro-no-funcionales.md) | ❌ No cumple |
-| PNF-04 | RNF9 (Edge) | Cubrir un IR y medir hasta el cambio del LED, por cuadros de video | 5 | t = Δcuadros / fps | máx ≤ 0,3 s | Videos de [`PF-06/`](evidencias/pruebas/PF-06/) sin conteo | No ejecutada (sin conteo de cuadros) |
+| PNF-04 | RNF9 (Edge) | Cubrir un IR y medir hasta el cambio del LED, por cuadros de [`pf01-sesion.mp4`](evidencias/pruebas/PF-01/pf01-sesion.mp4) | 4 de 5 ocupaciones (+1 liberación) | Δt = pts(t1) − pts(t0) | máx ≤ 0,3 s | [`mediciones.csv`](evidencias/pruebas/PNF-04/mediciones.csv), [`PNF-04/`](evidencias/pruebas/PNF-04/README.md) | ✅ Cumple: máx 0,167 s en las 4 ocupaciones medibles (5 planificadas); 1 liberación complementaria de 0,100 s; con el criterio de t0 más conservador, 0,300 s, en el límite de 0,3 s |
 | — | RNF9 (Nube) | No aplica: no hay reglas de control en la Nube (2.6) | — | — | — | — | No aplica |
 | PNF-05 | RNF5 | Intervalo entre ítems `sample` (respaldo del Shadow requería el log serie) | 7 intervalos | Intervalo (s) | 300 ± 10 s | [`historial-resultados.md`](evidencias/analisis/historial-resultados.md) | ⚠️ Cumple parcial |
 | PNF-05 | RNF7 | M/N con el contador serie (reconstruido con el número de secuencia de `eventId`); descarte de inválidos y duplicados | 61 eventos | Integridad (%); descartes | ≥ 99 %; 100 % | [`historial-resultados.md`](evidencias/analisis/historial-resultados.md#integridad-reconstruida-por-número-de-secuencia), PA-03 (`test_history`) | ❌ No cumple |
@@ -1208,7 +1206,7 @@ Procedimiento de despliegue y validación en consola: [`alexa-practica-4.md`](al
 
 **Fórmulas.** Promedio x̄ = Σxᵢ/n; mediana; P95 = valor en la posición ⌈0,95·n⌉ de la muestra ordenada; integridad = M/N·100; error absoluto = |lectura − referencia|.
 
-**Revisión de secretos (RNF12, 2026-11-23).** `git ls-files` no incluye `include/secrets.h`, `include/config.h`, `.env` ni archivos `.pem`, `.key` o `.crt` (excluidos en [`.gitignore`](../.gitignore)); los únicos PEM versionados son las cabeceras vacías de [`secrets.example.h`](../include/secrets.example.h), el `secrets.h` de `test/host/aws_fakes/` solo contiene marcadores `test` y no hay claves de acceso de AWS. La plantilla versionada [`config.example.h`](../include/config.example.h) usa el marcador `TU_ENDPOINT-ats.iot.us-east-1.amazonaws.com`; el endpoint real de AWS IoT solo está en `include/config.h`, excluido por [`.gitignore`](../.gitignore). Los commits anteriores del historial conservan el endpoint de la cuenta en la plantilla; no es una credencial, porque la conexión exige el certificado del Thing y su clave privada, que nunca se versionaron. Las capturas de `docs/evidencias/` tienen ocultos los ARN, el número de cuenta, el Skill ID y el código de vinculación.
+**Revisión de secretos (RNF12, 2026-11-23).** `git ls-files` no incluye `include/secrets.h`, `include/config.h`, `.env` ni archivos `.pem`, `.key` o `.crt` (excluidos en [`.gitignore`](../.gitignore)); los únicos PEM versionados son las cabeceras vacías de [`secrets.example.h`](../include/secrets.example.h), el `secrets.h` de `test/host/aws_fakes/` solo contiene marcadores `test` y no hay claves de acceso de AWS. La plantilla versionada [`config.example.h`](../include/config.example.h) usa el marcador `TU_ENDPOINT-ats.iot.us-east-1.amazonaws.com`; el endpoint real de AWS IoT solo está en `include/config.h`, excluido por [`.gitignore`](../.gitignore). Los commits anteriores del historial conservan el endpoint de la cuenta en la plantilla; no es una credencial, porque la conexión exige el certificado del Thing y su clave privada, que nunca se versionaron. Las capturas PNG de `docs/evidencias/` tienen ocultos los ARN, el número de cuenta, el Skill ID y el código de vinculación; los videos de la sesión del 22/11 muestran parcialmente el Skill ID y el `userId` del simulador, que no son credenciales: no permiten invocar la skill ni acceder a AWS.
 
 ### 4.4 Análisis de fallas y correcciones
 
@@ -1237,7 +1235,7 @@ Una ficha por cada resultado que no es ✅. El impacto sobre el usuario del parq
 | Comparación | Máx 4 s > 3,0 s (medición 5). |
 | Por qué | **Hecho comprobado (diseño):** la orden recorre simulador → `SmartParkAlexaBackend` → `UpdateThingShadow` → `delta` MQTT → tarea `smartpark-aws` → `loop()` → servo, y solo el último tramo (700 ms de `SERVO_TRAVEL_MS`, [`config.example.h#L62`](../include/config.example.h#L62)) es del objeto. **Causa probable** del valor de 4 s: un tramo de red lento o el arranque en frío del backend (≈ 18 MB con el SDK de Alexa, 2.9). **Causa de proceso:** la resolución de 1 s no permite separar los tramos ni distinguir 3,0 de 3,9 s; un valor de "4" puede ser cualquier tiempo entre 3,5 y 4,5 s según cómo se redondeó. |
 | Qué sí queda garantizado | La Lambda responde sin esperar al dispositivo y usa una sola llamada con tiempos de 0,5 s de conexión y 1 s de lectura ([`runtime.py`](../lambda/services/runtime.py)); una orden de más de 30 s no mueve la barrera (E4, PA-02). |
-| Acción correctiva | Medir con video ≥ 30 fps y conteo de cuadros; registrar en CloudWatch la duración de la Lambda y en el log serie la llegada del `delta` para separar tramos (7.6). |
+| Acción correctiva | Medir con video ≥ 30 fps y conteo de cuadros; registrar en CloudWatch la duración de la Lambda y en el log serie la llegada del `delta` para separar tramos (7.6). Los videos de la sesión no sirven: en `Abrir-Cerrar.mp4`, los de PF-06 y `Abrir-CerrarPorTerminal.mp4` la cámara pasa de la pantalla a la maqueta y ningún tramo continuo muestra a la vez el envío (frase o Enter) y el servo. |
 | Cómo volver a medir | 10 órdenes (5 abrir, 5 cerrar) filmadas a ≥ 30 fps; t = Δcuadros / fps; separar Lambda (`REPORT` de CloudWatch) y `delta` (log serie); criterio máx ≤ 3,0 s; orígenes V, C y S. |
 | Estado | ❌ No cumple en el máximo (9/10 ≤ 3,0 s). Nueva medición no realizada. |
 
@@ -1298,28 +1296,15 @@ Una ficha por cada resultado que no es ✅. El impacto sobre el usuario del parq
 | Campo | Contenido |
 |---|---|
 | Qué se planificó | 5 entradas y 5 salidas por plaza (40 transiciones) contrastadas con el LED y con `occupancy_changed` (RNF3). |
-| Qué se midió | Nada: el PDF y las hojas no tienen tabla de transiciones IR. |
-| Comparación | Sin dato frente a ≥ 38/40. |
-| Por qué | **Causa de proceso:** la prueba no se ejecutó en la sesión del 22/11. Los 38 `occupancy_changed` exportados son de una sola plaza (`capacidad = 1`) el 19 y 20/11 y no tienen referencia de qué transiciones fueron reales. |
-| Qué sí queda garantizado | PA-02: "cuatro sensores IR, rebotes, conteos, LEDs y LCD 16x2" verifica el antirrebote y los conteos con dobles. PF-01 registra el cambio de la plaza 1. |
-| Acción correctiva | Ejecutar la prueba con la hoja de registro (7.6). |
-| Cómo volver a medir | 40 transiciones con video y exportación de `occupancy_changed`; criterio ≥ 38/40. |
-| Estado | No ejecutada (sin registro de las transiciones). |
+| Qué se midió | Las 7 transiciones con el LED en cuadro de [`pf01-sesion.mp4`](evidencias/pruebas/PF-01/pf01-sesion.mp4): 6 ocupaciones (plazas 1, 2, 3, 4, 1, 2) y 1 liberación (plaza 1). En las 7 cambió el LED de la plaza cubierta y ningún otro ([`transiciones-ir.csv`](evidencias/pruebas/PNF-02/transiciones-ir.csv)). |
+| Comparación | 7/7 aciertos en una muestra de 7 de las 40 transiciones del criterio. |
+| Por qué | **Causa de proceso:** la sesión no registró las 40 transiciones en una hoja ni con el video fijo en la maqueta; las liberaciones de las plazas 2 a 4 ocurren fuera de cuadro. Los 38 `occupancy_changed` exportados son de una sola plaza (19 y 20/11) y no tienen referencia de qué transiciones fueron reales. |
+| Qué sí queda garantizado | PA-02: "cuatro sensores IR, rebotes, conteos, LEDs y LCD 16x2" verifica el antirrebote y los conteos con dobles. |
+| Acción correctiva | Ejecutar la prueba con la cámara fija y la hoja de registro (7.6). |
+| Cómo volver a medir | 40 transiciones (5 entradas y 5 salidas por plaza) filmadas con la cámara fija y los 4 LED en cuadro; marcar cada una con `medir_videos.py hoja`; cruzar con `occupancy_changed` de la exportación; criterio ≥ 38/40; orígenes V y O. |
+| Estado | ⚠️ Cumple parcial (7/7, muestra de 7 de 40). |
 
-#### F8. Respuesta IR → LED (PNF-04)
-
-| Campo | Contenido |
-|---|---|
-| Qué se planificó | 5 ocupaciones filmadas a ≥ 30 fps; t = Δcuadros / fps desde que el vehículo cubre el IR hasta que cambia el LED; criterio ≤ 0,3 s (RNF9 Edge). |
-| Qué se midió | Hay videos en [`PF-06/`](evidencias/pruebas/PF-06/), pero no se contaron cuadros ni se registró su fps. |
-| Comparación | Sin valor medido. |
-| Por qué | **Causa de proceso:** el conteo de cuadros no se hizo. **Hecho comprobado (diseño):** el retardo del Edge es el antirrebote (120 ms por defecto, [`config.example.h#L73`](../include/config.example.h#L73)) más el muestreo de 10 ms y la vuelta de `loop()`, sin red de por medio (2.5.3). |
-| Qué sí queda garantizado | PA-02 verifica que la plaza cambia exactamente cuando el candidato se mantiene `debounceMs` y que los LEDs siguen al estado. |
-| Acción correctiva | Contar cuadros en los videos existentes si su fps es conocido, o grabar de nuevo (7.6). |
-| Cómo volver a medir | 5 ocupaciones a ≥ 30 fps con el IR y el LED en el mismo cuadro; criterio máx ≤ 0,3 s; origen V. |
-| Estado | No ejecutada (sin conteo de cuadros). |
-
-#### F9. Operación sin conexión y E4 (PNF-06)
+#### F8. Operación sin conexión y E4 (PNF-06)
 
 | Campo | Contenido |
 |---|---|
@@ -1332,7 +1317,7 @@ Una ficha por cada resultado que no es ✅. El impacto sobre el usuario del parq
 | Cómo volver a medir | 2 cortes de 45 s; 4 transiciones y una apertura por voz durante cada corte; contar `occupancy_changed` recibidos al reconectar; criterio: E1–E4 operan, eventos encolados almacenados; orígenes S y R. |
 | Estado | Verificada con PA-02 (RNF10 y E4); sin ejecución en vivo. |
 
-#### F10. Vinculación (PF-03)
+#### F9. Vinculación (PF-03)
 
 | Campo | Contenido |
 |---|---|
@@ -1345,20 +1330,20 @@ Una ficha por cada resultado que no es ✅. El impacto sobre el usuario del parq
 | Cómo volver a medir | Secuencia completa con dos usuarios del simulador; criterio: cada respuesta coincide con la esperada. |
 | Estado | ⚠️ Cumple parcial (RF7–RF9). |
 
-#### F11. Reglas del Edge y cambio de modo (PF-06)
+#### F10. Reglas del Edge (PF-06)
 
 | Campo | Contenido |
 |---|---|
-| Qué se planificó | 4 plazas ocupadas en `automatico`: apertura bloqueada con `APERTURA BLOQ.`, cierre aceptado, liberación de la plaza 4 y apertura aceptada, `manual` con el parqueo lleno; cambio de modo por voz (RF13, RF14). |
-| Qué se midió | 3 videos de apertura sin escenario identificado y el video del intento de apertura con todas las plazas ocupadas ([`AbrirCuandoTodosEspaciosOcupados.mp4`](evidencias/pruebas/PF-07/AbrirCuandoTodosEspaciosOcupados.mp4)). No hay archivo identificable del cierre con el parqueo lleno, del modo `manual` con el parqueo lleno ni de *"activa el modo automático/manual"*. |
-| Comparación | E1 y E2 con evidencia parcial; E3 y el cambio de modo por voz sin archivo. |
-| Por qué | **Causa de proceso:** los videos se nombraron por acción (`Abrir*`) y no por escenario, y el README no los describe. |
-| Qué sí queda garantizado | PA-02: E2 en [`test_aws.cpp#L61-L62`](../test/host/test_aws.cpp#L61-L62) (orden de voz bloqueada sin escribir el servo), E3 en [`test_aws.cpp#L254-L256`](../test/host/test_aws.cpp#L254-L256) ("Explicit close is legal when full"), LCD y prioridades en la suite del `loop`. PA-03: `test_v2_*` para el cambio de modo por voz. |
-| Acción correctiva | Un video por escenario con la LCD, los LEDs y el servo en el mismo cuadro, nombrado por escenario (7.6). |
-| Cómo volver a medir | Los 5 escenarios de PF-06; criterio de 4.2. |
-| Estado | ⚠️ Cumple parcial (RF13 y cambio de modo de RF14). |
+| Qué se planificó | 4 plazas ocupadas en `automatico`: apertura bloqueada con `APERTURA BLOQ.`, cierre aceptado, liberación de una plaza y apertura aceptada, `manual` con el parqueo lleno; cambio de modo por voz (RF13, RF14). |
+| Qué se midió | En 4 videos ([`PF-06/README.md`](evidencias/pruebas/PF-06/README.md)): E1 (fila 0 de la LCD igual a las plazas; LED de la plaza correcta 7/7 en PF-01); bloqueo activo con 0 libres (`APERTURA BLOQ.`); apertura aceptada con 1 libre (`Barrera: abierta`); *"activa el modo manual"* aplicado (`PARQUEO LLENO`); servo sin movimiento durante 1,2 s tras *"abrir"* con el parqueo lleno, sin ver el envío. |
+| Comparación | E1 y el cambio de modo cumplen. E2: se ve el bloqueo y el desbloqueo, no el rechazo de una orden concreta. E3: se envió *"baja"* con el parqueo lleno, pero el servo no está en cuadro. |
+| Por qué | **Causa de proceso:** la cámara alterna entre el simulador y la maqueta, y la LCD prioriza `APERTURA BLOQ.` y `PARQUEO LLENO` sobre el estado de la barrera ([`ParkingDisplay.cpp#L50`](../src/ParkingDisplay.cpp#L50)); la respuesta de Alexa es la misma para una orden aceptada o bloqueada porque la Lambda no espera al dispositivo. |
+| Qué sí queda garantizado | PA-02: E2 en [`test_aws.cpp#L61-L62`](../test/host/test_aws.cpp#L61-L62) (orden de voz bloqueada sin escribir el servo), E3 en [`test_aws.cpp#L254-L256`](../test/host/test_aws.cpp#L254-L256) ("Explicit close is legal when full"). PA-03: `test_v2_*` para *"activa el modo automático"*. |
+| Acción correctiva | Video fijo con la LCD, los LED y el servo en el mismo cuadro y el simulador al lado (7.6); `reported.ultima_orden.resultado` en la consulta de estado (7.1). |
+| Cómo volver a medir | 3 órdenes de apertura y 3 de cierre con el parqueo lleno en `automatico`, filmadas sin cortes; criterio: el servo no se mueve en la apertura (≥ 3 s observados) y sí en el cierre; origen V. |
+| Estado | ⚠️ Cumple parcial (E2); E3 Verificada con PA-02. |
 
-#### F12. Consultas de los reportes (PF-08)
+#### F11. Consultas de los reportes (PF-08)
 
 | Campo | Contenido |
 |---|---|
@@ -1371,7 +1356,7 @@ Una ficha por cada resultado que no es ✅. El impacto sobre el usuario del parq
 | Cómo volver a medir | Consultas de `consultas.txt` con el rango de la sesión; criterio: cada mockup se reconstruye con su CSV. |
 | Estado | ⚠️ Cumple parcial. |
 
-#### F13. Lecturas almacenadas (PF-04, RF11)
+#### F12. Lecturas almacenadas (PF-04, RF11)
 
 | Campo | Contenido |
 |---|---|
@@ -1384,7 +1369,7 @@ Una ficha por cada resultado que no es ✅. El impacto sobre el usuario del parq
 | Cómo volver a medir | Query por `thingName` y rango de la sesión, todas las páginas; criterio: un ítem por transición observada. |
 | Estado | ⚠️ Cumple parcial (RF11). |
 
-#### F14. Permisos de la cuenta (RNF12)
+#### F13. Permisos de la cuenta (RNF12)
 
 | Campo | Contenido |
 |---|---|
@@ -1429,23 +1414,23 @@ Convención de estados en el [Resumen del informe](#resumen-del-informe). Cada v
 | RF4 | PF-02 | PA-03 ✅ | Respuestas a distancia y vehículo esperando | Dato de `reported` ≤ 180 s | ✅ Cumple | [`ConsultarDistancia.mp4`](evidencias/pruebas/PF-02/ConsultarDistancia.mp4), [`AutoEsperando.mp4`](evidencias/pruebas/PF-02/AutoEsperando.mp4) |
 | RF5 | PF-02 | PA-03 ✅ | 3 aperturas y 3 cierres por voz; `desired.barrera` 6/6 | Barrera se mueve | ✅ Cumple | [`Abrir-Cerrar.mp4`](evidencias/pruebas/PF-02/Abrir-Cerrar.mp4), [`pf02.md`](evidencias/pruebas/PF-02/pf02.md) |
 | RF6 | PF-02 | PA-03 ✅ | Respuesta con el estado de la barrera | Estado de `reported` | ✅ Cumple | [`ConsultarEstado.mp4`](evidencias/pruebas/PF-02/ConsultarEstado.mp4) |
-| RF7 | PF-03 | PA-03 ✅ | Vinculación con PIN en el simulador; PIN de 300 s y 3 intentos solo con PA-03 | Vínculo persistente | ⚠️ Cumple parcial | [`test-publica.png`](evidencias/alexa/test-publica.png), [F10](#f10-vinculación-pf-03) |
-| RF8 | PF-03 | PA-03 ✅ | Guía sin vínculo en el simulador (backend anterior) | Resolver por `userId` y guiar | ⚠️ Cumple parcial | [`test-publica.png`](evidencias/alexa/test-publica.png), [F10](#f10-vinculación-pf-03) |
-| RF9 | PF-03 | PA-03 ✅ | Desvinculación en vivo; cambio y Thing inexistente solo con PA-03 | Validar, cambiar y eliminar | ⚠️ Cumple parcial | [`test-publica.png`](evidencias/alexa/test-publica.png), [F10](#f10-vinculación-pf-03) |
+| RF7 | PF-03 | PA-03 ✅ | Vinculación con PIN en el simulador; PIN de 300 s y 3 intentos solo con PA-03 | Vínculo persistente | ⚠️ Cumple parcial | [`test-publica.png`](evidencias/alexa/test-publica.png), [F9](#f9-vinculación-pf-03) |
+| RF8 | PF-03 | PA-03 ✅ | Guía sin vínculo en el simulador (backend anterior) | Resolver por `userId` y guiar | ⚠️ Cumple parcial | [`test-publica.png`](evidencias/alexa/test-publica.png), [F9](#f9-vinculación-pf-03) |
+| RF9 | PF-03 | PA-03 ✅ | Desvinculación en vivo; cambio y Thing inexistente solo con PA-03 | Validar, cambiar y eliminar | ⚠️ Cumple parcial | [`test-publica.png`](evidencias/alexa/test-publica.png), [F9](#f9-vinculación-pf-03) |
 | RF10 | PF-04 | PA-02 ✅, PA-03 ✅ | 31 `barrier_changed` del 22/11 almacenados por la regla y la Lambda | Ítem por evento | ✅ Cumple | [`historial-barrera.csv`](evidencias/pruebas/PF-04/historial-barrera.csv) |
-| RF11 | PF-04, PF-05 | PA-03 ✅ | 46 lecturas enriquecidas (19-20/11, capacidad 1); inválidos y duplicados con PA-03 | Validar, descartar, enriquecer, guardar | ⚠️ Cumple parcial | [`historial-resultados.md`](evidencias/analisis/historial-resultados.md), [F13](#f13-lecturas-almacenadas-pf-04-rf11), [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05) |
+| RF11 | PF-04, PF-05 | PA-03 ✅ | 46 lecturas enriquecidas (19-20/11, capacidad 1); inválidos y duplicados con PA-03 | Validar, descartar, enriquecer, guardar | ⚠️ Cumple parcial | [`historial-resultados.md`](evidencias/analisis/historial-resultados.md), [F12](#f12-lecturas-almacenadas-pf-04-rf11), [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05) |
 | RF12 | PF-04 | PA-03 ✅ | 38 `barrier_changed` con origen: 31 `legado` (voz V1), 7 `edge` | Origen registrado | ✅ Cumple | [`historial-barrera.csv`](evidencias/pruebas/PF-04/historial-barrera.csv) |
-| RF13 | PF-06, PNF-06 | PA-02 ✅ | Ver reglas E1–E4 | Reglas del Edge | ⚠️ Cumple parcial | [F11](#f11-reglas-del-edge-y-cambio-de-modo-pf-06), [F9](#f9-operación-sin-conexión-y-e4-pnf-06) |
-| RF14 | PF-07, PF-06 | PA-03 ✅ | Consulta de modo y antirrebote; ajuste 200/120 ms; 1001 ms rechazado; cambio de modo por voz sin archivo | Consultar y modificar por voz | ⚠️ Cumple parcial | [`PF-07/`](evidencias/pruebas/PF-07/), [F11](#f11-reglas-del-edge-y-cambio-de-modo-pf-06) |
-| RF15 | PF-08 | — | 11/11 atributos de M1–M4 presentes; M2 calculado (22/11: 14 aperturas `legado`, 2 `edge`) | Mockups obtenibles de DynamoDB | ⚠️ Cumple parcial | 5.3, [F12](#f12-consultas-de-los-reportes-pf-08) |
+| RF13 | PF-01, PF-06, PNF-06 | PA-02 ✅ | Ver reglas E1–E4 | Reglas del Edge | ⚠️ Cumple parcial | [F10](#f10-reglas-del-edge-pf-06), [F8](#f8-operación-sin-conexión-y-e4-pnf-06) |
+| RF14 | PF-07, PF-06 | PA-03 ✅ | Consulta de modo y antirrebote; ajuste 200/120 ms; 1001 ms rechazado; *"activa el modo manual"* aplicado en el Edge (`PARQUEO LLENO`) | Consultar y modificar por voz | ✅ Cumple | [`PF-07/`](evidencias/pruebas/PF-07/README.md), [`PF-06/`](evidencias/pruebas/PF-06/README.md) |
+| RF15 | PF-08 | — | 11/11 atributos de M1–M4 presentes; M2 calculado (22/11: 14 aperturas `legado`, 2 `edge`) | Mockups obtenibles de DynamoDB | ⚠️ Cumple parcial | 5.3, [F11](#f11-consultas-de-los-reportes-pf-08) |
 
 **Reglas de control (RF13).**
 
 | Regla | Prueba en vivo | Prueba automática | Observado | Estado |
 |---|---|---|---|---|
-| E1 Indicación de plaza | PF-01, PF-06 | PA-02 ✅ | Cambio de la plaza 1 (PF-01); videos de PF-06 sin escenario identificado | ⚠️ Cumple parcial |
-| E2 Bloqueo de apertura | PF-06/PF-07 | PA-02 ✅ ([`#L61-L62`](../test/host/test_aws.cpp#L61-L62)) | Video del intento de apertura con todas las plazas ocupadas | ⚠️ Cumple parcial |
-| E3 Cierre permitido | — | PA-02 ✅ ([`#L254-L256`](../test/host/test_aws.cpp#L254-L256)) | Sin archivo identificable | Verificada con PA-02 |
+| E1 Indicación de plaza | PF-01, PF-06 | PA-02 ✅ | LED de la plaza cubierta 7/7 (PF-01); fila 0 igual a las plazas en 3 videos (0/4, 1/4) | ✅ Cumple |
+| E2 Bloqueo de apertura | PF-06 | PA-02 ✅ ([`#L61-L62`](../test/host/test_aws.cpp#L61-L62)) | `APERTURA BLOQ.` con 0 libres; apertura aceptada con 1 libre; rechazo de la orden no filmado | ⚠️ Cumple parcial |
+| E3 Cierre permitido | PF-06 | PA-02 ✅ ([`#L254-L256`](../test/host/test_aws.cpp#L254-L256)) | *"baja"* enviado con el parqueo lleno; servo fuera de cuadro | Verificada con PA-02 |
 | E4 Orden vencida | PNF-06 | PA-02 ✅ ([`#L83-L85`](../test/host/test_aws.cpp#L83-L85)) | Sin registro en vivo | Verificada con PA-02 |
 
 **Requerimientos no funcionales.**
@@ -1454,26 +1439,26 @@ Convención de estados en el [Resumen del informe](#resumen-del-informe). Cada v
 |---|---|---|---|---|---|
 | RNF1 Estabilidad | PNF-01 | ≥ 15 min; 0 / 0 / 0 | 10 min; 3 reinicios, 0 bloqueos, 1 desconexión | ❌ No cumple | [F1](#f1-reinicios-en-pnf-01) |
 | RNF2 Exactitud HC-SR04 | PNF-02 | ≤ 1 cm en 10, 20 y 30 cm | Máx 1,0 cm (20 cm); error medio 0,24 cm; n = 45 | ✅ Cumple | 5.2 |
-| RNF3 Exactitud IR | PNF-02 | ≥ 38/40 | Sin dato | No ejecutada (sin registro de las transiciones) | [F7](#f7-exactitud-de-los-ir-pnf-02) |
+| RNF3 Exactitud IR | PNF-02 | ≥ 38/40 | 7/7 en 7 transiciones del video | ⚠️ Cumple parcial | [F7](#f7-exactitud-de-los-ir-pnf-02) |
 | RNF4 Respuesta por voz | PNF-03 | máx ≤ 3,0 s | mín 1 s, prom 1,9 s, máx 4 s; 9/10 ≤ 3,0 s | ❌ No cumple | [F2](#f2-respuesta-por-voz-pnf-03) |
 | RNF5 Frecuencia de reporte | PNF-05 | muestra 300 s; respaldo 30 s | 2/7 intervalos en 300,0 s (los 2 dentro de un arranque); respaldo sin dato | ⚠️ Cumple parcial | [F5](#f5-frecuencia-de-las-muestras-pnf-05) |
 | RNF6 Reconexión | PNF-06 | ≤ 60 s; ≤ 70 s | Wi-Fi 1–4 min, MQTT 1–3 min; `desired` 3/3 | ❌ No cumple | [F3](#f3-reconexión-en-pnf-06) |
 | RNF7 Integridad | PNF-05, PF-05 | ≥ 99 %; 100 % inválidos descartados | M/N = 48/61 (78,7 %; ráfaga del 19/11: 38/50); descarte con PA-03 | ❌ No cumple | [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05) |
 | RNF8 Latencia de almacenamiento | PNF-05 | Δ1 ≤ 5 s; Δ0 ≤ 15 s | Δ1 sin dato; Δ0 máx 179,1 s (aislados máx 9,8 s) | ❌ No cumple | [F4](#f4-latencia-del-histórico-en-ráfagas-pnf-05) |
-| RNF9 Lógica automática Edge | PNF-04 | ≤ 0,3 s | Sin dato | No ejecutada (sin conteo de cuadros) | [F8](#f8-respuesta-ir--led-pnf-04) |
+| RNF9 Lógica automática Edge | PNF-04 | ≤ 0,3 s | 4 ocupaciones: mín 0,100 s, mediana 0,133 s, máx 0,167 s (± 0,033 s) | ✅ Cumple: máx 0,167 s en las 4 ocupaciones medibles (5 planificadas); 1 liberación complementaria de 0,100 s; con el criterio de t0 más conservador, 0,300 s, en el límite de 0,3 s | 5.2 |
 | RNF9 Lógica automática Nube | — | No aplica | — | No aplica | 2.6 |
-| RNF10 Operación sin conexión | PNF-06 | E1–E4 sin red; eventos encolados | Sin registro en vivo | Verificada con PA-02 | [F9](#f9-operación-sin-conexión-y-e4-pnf-06) |
+| RNF10 Operación sin conexión | PNF-06 | E1–E4 sin red; eventos encolados | Sin registro en vivo | Verificada con PA-02 | [F8](#f8-operación-sin-conexión-y-e4-pnf-06) |
 | RNF11 Costo | 5.6 | < 0,05 / < 0,30 USD/mes | ≈ 0,01 USD/mes con capa gratuita; ≈ 0,15 (peor caso ≈ 0,23) sin ella | ✅ Cumple (cálculo) | 5.6 |
-| RNF12 Seguridad | Revisión, PA-03 | Sin secretos; políticas por recurso | 0 secretos; `iot:*` y FullAccess en la cuenta | ⚠️ Cumple parcial | [F14](#f14-permisos-de-la-cuenta-rnf12), 3.2 |
+| RNF12 Seguridad | Revisión, PA-03 | Sin secretos; políticas por recurso | 0 secretos; `iot:*` y FullAccess en la cuenta | ⚠️ Cumple parcial | [F13](#f13-permisos-de-la-cuenta-rnf12), 3.2 |
 
 **Conteo por estado.**
 
 | Estado | RF (15) | Reglas E1–E4 (4) | RNF (13 filas) |
 |---|---:|---:|---:|
-| ✅ Cumple | 8 (RF1–RF6, RF10, RF12) | 0 | 2 (RNF2, RNF11) |
-| ⚠️ Cumple parcial | 7 (RF7–RF9, RF11, RF13–RF15) | 2 (E1, E2) | 2 (RNF5, RNF12) |
+| ✅ Cumple | 9 (RF1–RF6, RF10, RF12, RF14) | 1 (E1) | 3 (RNF2, RNF9 Edge, RNF11) |
+| ⚠️ Cumple parcial | 6 (RF7–RF9, RF11, RF13, RF15) | 1 (E2) | 3 (RNF3, RNF5, RNF12) |
 | ❌ No cumple | 0 | 0 | 5 (RNF1, RNF4, RNF6, RNF7, RNF8) |
-| No ejecutada | 0 | 0 | 2 (RNF3, RNF9 Edge) |
+| No ejecutada | 0 | 0 | 0 |
 | Verificada con PA-02/PA-03 | 0 | 2 (E3, E4) | 1 (RNF10) |
 | No aplica | 0 | 0 | 1 (RNF9 Nube) |
 
@@ -1502,6 +1487,14 @@ El error máximo (1,0 cm, lectura de 21,0 cm a 20 cm) iguala el límite de RNF2:
 | t (s) | 2 | 3 | 1 | 2 | 4 | 1 | 1 | 1 | 1 | 3 | 1 | 1,5 | 1,9 | 4 |
 
 9/10 cumplen ≤ 3,0 s; la medición 5 lo supera. Resolución de 1 s (cronómetro), sin conteo de cuadros; el PDF anota 5 s como máximo por error de transcripción ([`registro-no-funcionales.md`](evidencias/pruebas/PNF-01/registro-no-funcionales.md#pnf-03-pdf--tiempo-de-respuesta-de-alexa-rnf4)). Análisis en [F2](#f2-respuesta-por-voz-pnf-03).
+
+**PNF-04 — Respuesta IR → LED** ([`PNF-04/README.md`](evidencias/pruebas/PNF-04/README.md), [`mediciones.csv`](evidencias/pruebas/PNF-04/mediciones.csv)). t0: primer cuadro con el emisor y el receptor tapados (descubiertos en la liberación); t1: primer cuadro con el LED cambiado; Δt con el `pts_time` de cada cuadro.
+
+| Repetición | O1 (plaza 1) | O2 (plaza 2) | O3 (plaza 4) | O4 (plaza 1) | Mín | Mediana | Máx | L1 (plaza 1, liberación, fuera de n) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Δt (s) ± 0,033 | 0,100 | 0,100 | 0,167 | 0,167 | 0,100 | 0,133 | 0,167 | 0,100 |
+
+Estado: ✅ Cumple: máx 0,167 s en las 4 ocupaciones medibles (5 planificadas); 1 liberación complementaria de 0,100 s; con el criterio de t0 más conservador, 0,300 s, en el límite de 0,3 s (O2 contado desde el primer cuadro con el emisor tapado). Se descartaron 3 transiciones: una ocupación de la plaza 3 con desenfoque por movimiento (t0 entre los cuadros 448 y 451), una con el receptor todavía visible y un cambio fuera de cuadro. Los valores de 0,100 s son menores que el antirrebote de 120 ms: el IR reflectivo detecta el dedo antes de que lo tape del todo, así que Δt mide el indicador de RNF9 (cubrir → LED) y no el retardo interno del Edge.
 
 **PNF-05 — Latencia y frecuencia del histórico** (84 eventos del firmware; [`historial-sesion.csv`](evidencias/pruebas/PNF-05/historial-sesion.csv), [`analisis.md`](evidencias/pruebas/PNF-05/analisis.md), [`historial-resultados.md`](evidencias/analisis/historial-resultados.md)).
 
@@ -1577,7 +1570,7 @@ Los 11 atributos que usan los cuatro mockups están en los ítems almacenados, y
 
 **El viaje por la Nube medido.** Una orden de voz recorre simulador → Lambda → Shadow → `delta` → ESP32 → servo y tardó entre 1 y 4 s (promedio 1,9 s, PNF-03); en 1 de 10 casos superó los 3 s declarados. Esa variabilidad es propia del camino por la red y no se puede controlar desde el objeto.
 
-**La decisión local.** E1–E4 se evalúan en `loop()` con el estado que el ESP32 ya tiene ([`openingBlocked()`](../include/Parking.h#L15), [`applyPending()`](../src/AwsIoTManager.cpp#L29), [`main.cpp#L62`](../src/main.cpp#L62)): el bloqueo de una apertura no espera ningún mensaje. PNF-04 no tiene conteo de cuadros, así que el valor de ≤ 0,3 s es un argumento de diseño (antirrebote de 120 ms + muestreo de 10 ms), no una medición. Los datos muestran intervalos sin red (3 reinicios y 1 desconexión en PNF-01; cortes de 1 a 4 min en PNF-06) en los que una regla en la Nube no habría podido decidir. Que E1–E4 siguieran operando en esos intervalos no se registró en vivo ([F9](#f9-operación-sin-conexión-y-e4-pnf-06)); el código de `loop()` no depende de la red (2.6).
+**La decisión local.** E1–E4 se evalúan en `loop()` con el estado que el ESP32 ya tiene ([`openingBlocked()`](../include/Parking.h#L15), [`applyPending()`](../src/AwsIoTManager.cpp#L29), [`main.cpp#L62`](../src/main.cpp#L62)): el bloqueo de una apertura no espera ningún mensaje. PNF-04 lo midió por cuadros de video: del IR cubierto al LED, máx 0,167 s (4 ocupaciones), frente a 1–4 s del viaje por la Nube. Los datos muestran intervalos sin red (3 reinicios y 1 desconexión en PNF-01; cortes de 1 a 4 min en PNF-06) en los que una regla en la Nube no habría podido decidir. Que E1–E4 siguieran operando en esos intervalos no se registró en vivo ([F8](#f8-operación-sin-conexión-y-e4-pnf-06)); el código de `loop()` no depende de la red (2.6).
 
 **Si las reglas estuvieran en la Nube.** E2 se implementaría con una regla sobre `update/accepted` y una Lambda que lea las plazas y reescriba `desired`. Con los tiempos medidos:
 
@@ -1603,8 +1596,9 @@ Los 11 atributos que usan los cuatro mockups están en los ítems almacenados, y
 | 7 | Respuesta por voz de hasta 4 s. | RNF4 no se cumple en el máximo. | El encargado puede repetir la orden antes de ver el movimiento; la segunda orden igual no cambia el resultado. | [F2](#f2-respuesta-por-voz-pnf-03) |
 | 8 | Latencia del histórico en ráfagas (hasta 179,1 s). | RNF8 complementario no se cumple. | Ninguno en los reportes (usan `occurredAt`); un panel en tiempo real mostraría los eventos con retraso. | [F4](#f4-latencia-del-histórico-en-ráfagas-pnf-05) |
 | 9 | Pérdida de eventos al llenarse la cola de plazas en una ráfaga (12 de 50 en el arranque `39cdb54e`). | RNF7 no se cumple (78,7 %). | Los reportes M1 y M4 calcularían mal la ocupación y la permanencia de una plaza con mucho movimiento. | [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05) |
-| 10 | La política IoT de la cuenta es `iot:*` sobre `*` y el rol del backend tiene `AWSIoTFullAccess` y `AmazonDynamoDBFullAccess`. | RNF12 parcial: el aislamiento por Thing del tópico de histórico y del Shadow no está activo en la cuenta. | Un certificado comprometido podría publicar o leer cualquier tópico de la cuenta, incluido el histórico de otro parqueo. | 3.2, [F14](#f14-permisos-de-la-cuenta-rnf12) |
-| 11 | Pruebas sin evidencia en vivo completa (RNF3, RNF9 Edge, RNF10, E3, E4, PF-03, PF-08). | Estados parciales o no ejecutados en 5.1. | Ninguno directo; el comportamiento está verificado con PA-02 y PA-03. | 4.1, [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05)–[F13](#f13-lecturas-almacenadas-pf-04-rf11) |
+| 10 | La política IoT de la cuenta es `iot:*` sobre `*` y el rol del backend tiene `AWSIoTFullAccess` y `AmazonDynamoDBFullAccess`. | RNF12 parcial: el aislamiento por Thing del tópico de histórico y del Shadow no está activo en la cuenta. | Un certificado comprometido podría publicar o leer cualquier tópico de la cuenta, incluido el histórico de otro parqueo. | 3.2, [F13](#f13-permisos-de-la-cuenta-rnf12) |
+| 11 | Pruebas sin evidencia en vivo completa (RNF3, RNF10, E2, E3, E4, PF-03, PF-08). | Estados parciales en 5.1. | Ninguno directo; el comportamiento está verificado con PA-02 y PA-03. | 4.1, [F6](#f6-integridad-del-almacenamiento-pf-05-y-pnf-05)–[F12](#f12-lecturas-almacenadas-pf-04-rf11) |
+| 12 | Un valor rechazado (por ejemplo, 1001 ms) cierra la sesión: `SafeExceptionHandler` responde sin `keep_open` ([`system_handlers.py#L67`](../lambda/handlers/system_handlers.py#L67)). | Ninguno sobre RF14: la misma frase funciona dentro de una sesión. | Si repite la orden sin decir *"abre parqueo inteligente"*, Alexa la interpreta fuera de la skill (*"¿A qué hora quieres la alarma?"*, [`Antirrebote120ms-2.mp4`](evidencias/pruebas/PF-07/Antirrebote120ms-2.mp4)). | [PF-07](evidencias/pruebas/PF-07/README.md) |
 
 ### 5.6 Costo mensual estimado
 
@@ -1637,7 +1631,7 @@ Cotas: aun en el máximo físico del histórico (8640 publicaciones/día = 259 2
 
 1. **El caso de uso y el diseño están completos y son coherentes con el código.** Cuatro IR dan la disponibilidad por plaza, el HC-SR04 responde a la pregunta distinta de si hay un vehículo en la barrera y cada componente se usa en una consulta, una regla o un reporte (1.2). Los 13 diagramas Mermaid son idénticos a sus fuentes y cada enlace al código apunta a la línea vigente.
 2. **La cadena de voz funciona de punta a punta.** Las 6 órdenes de apertura y cierre llegaron a `desired` (PF-02), los 14 videos de PF-07 cubren las consultas de plazas, modo y antirrebote y el rechazo de 1001 ms, y el `desired` pendiente se aplicó en los 3 cortes de PNF-06. El tiempo de respuesta (promedio 1,9 s) no cumplió el máximo declarado en 1 de 10 casos (4 s), y la medición con resolución de 1 s no permite atribuir ese caso a un tramo concreto (F2).
-3. **La lógica de control en el Edge es la decisión correcta, y los datos lo respaldan de forma indirecta.** Con 3 reinicios en 10 min, una desconexión y reconexiones de 1 a 4 min, una regla en la Nube habría dejado el parqueo sin protección durante esos intervalos; E1–E4 se evalúan en `loop()` sin depender de la red. La latencia local (≤ 0,3 s declarada) no se midió por falta de conteo de cuadros (F8).
+3. **La lógica de control en el Edge es la decisión correcta, y los datos lo respaldan de forma indirecta.** Con 3 reinicios en 10 min, una desconexión y reconexiones de 1 a 4 min, una regla en la Nube habría dejado el parqueo sin protección durante esos intervalos; E1–E4 se evalúan en `loop()` sin depender de la red, y el LED cambia en 0,167 s como máximo desde que se cubre el IR (PNF-04).
 4. **El almacenamiento en AWS es fiable, pero el ESP32 pierde eventos en ráfagas.** Los 84 eventos que salieron del ESP32 tienen ítem, con los 9 atributos del modelo y el origen de cada orden de barrera (31 `legado`, 7 `edge`), y los inválidos y duplicados se descartan según PA-03. Reconstruyendo N con el número de secuencia, la integridad fue 78,7 % (48/61): en una ráfaga de transiciones la cola de 16 eventos se llenó y se descartaron 12 (F6). La latencia del `PutItem` (Δ1) no se midió por falta de CloudWatch.
 5. **El límite de 10 s del histórico es un compromiso deliberado con un costo medible.** Mantiene el histórico por debajo de 8640 mensajes/día, pero en ráfagas retrasa los eventos hasta 179,1 s; los eventos aislados llegan en una mediana de 1,2 s (F4). Para reportes no afecta el resultado; para una regla de Nube en tiempo real habría que permitir ráfagas.
 6. **La estabilidad eléctrica es la principal debilidad del prototipo.** Los reinicios (RNF1) también explican los intervalos cortos entre muestras (RNF5) y la pérdida de eventos en RAM. La causa más probable es alimentar el SG90 desde el 3,3 V del ESP32, una decisión del montaje (2.3) con corrección concreta (7.5, 7.6).
@@ -1701,8 +1695,8 @@ El montaje de la maqueta (2.3) conecta los módulos directamente al ESP32 y se a
 | F2 Respuesta por voz | Video ≥ 30 fps con conteo de cuadros; `REPORT` de CloudWatch y llegada del `delta` en el log serie | PNF-03 con 10 órdenes y tramos separados |
 | F3 Reconexión | Corte controlado de 45 s con cronómetro; *backoff* de Wi-Fi limitado a 30 s (7.1) | PNF-06 con log serie: ≤ 60 s y ≤ 70 s |
 | F4 y F6 Latencia y pérdidas en ráfagas | Cola de plazas de mayor tamaño (por ejemplo, 64 eventos, ≈ 2 KB más de RAM) y cupo de ráfaga (por ejemplo, 5 eventos seguidos y luego 1 cada 10 s) o lote de eventos en un solo mensaje; exportación de CloudWatch | PNF-05 con una ráfaga de 30 transiciones en 3 min: M/N ≥ 99 %, Δ0 ≤ 15 s y Δ1 ≤ 5 s |
-| F5–F13 Evidencia incompleta | Log serie de toda la sesión (`pio device monitor -f time \| tee …`), exportación de todas las páginas de DynamoDB y de CloudWatch, un video por escenario nombrado por escenario, capturas del simulador con el backend actual | Repetir PF-03, PF-05, PF-06, PF-08, PNF-02 (IR), PNF-04 y PNF-06 según sus fichas |
-| F14 Permisos | Migración al mínimo privilegio (pasos abajo) | Capturas de la política y los roles; PF-02 y PF-04 sin cambios de resultado |
+| F5–F12 Evidencia incompleta | Log serie de toda la sesión (`pio device monitor -f time \| tee …`), exportación de todas las páginas de DynamoDB y de CloudWatch, video fijo con la LCD, los LED y el servo en el mismo cuadro, capturas del simulador con el backend actual | Repetir PF-03, PF-05, PF-06, PF-08, PNF-02 (IR) y PNF-06 según sus fichas |
+| F13 Permisos | Migración al mínimo privilegio (pasos abajo) | Capturas de la política y los roles; PF-02 y PF-04 sin cambios de resultado |
 
 **Plan de migración al mínimo privilegio.**
 
@@ -1768,24 +1762,25 @@ El montaje de la maqueta (2.3) conecta los módulos directamente al ESP32 y se a
 | | | [`historial-muestra.csv`](evidencias/pruebas/PF-04/historial-muestra.csv) | 50 filas: 8 `sample`, 40 `occupancy_changed`, 2 `barrier_changed` |
 | | | [`Abrir-CerrarPorTerminal.mp4`](evidencias/pruebas/PF-04/Abrir-CerrarPorTerminal.mp4) | `OPEN` y `CLOSE` por Serial (origen `edge`) |
 | PF-05 | [`PF-05/`](evidencias/pruebas/PF-05/) | [`lambda-unittest.txt`](evidencias/pruebas-automaticas/lambda-unittest.txt) | Descarte de inválidos y duplicados (PA-03) |
-| PF-06 | [`PF-06/`](evidencias/pruebas/PF-06/) | `Abrir.mp4`, `Abrir1.mp4`, `Abrir2.mp4` | Aperturas de la barrera (escenario no identificado) |
-| PF-07 | [`PF-07/`](evidencias/pruebas/PF-07/) | 14 videos | Un intent o escenario por video (lista en 4.2) |
+| PF-06 | [`PF-06/`](evidencias/pruebas/PF-06/README.md) | `Abrir.mp4`, `Abrir1.mp4`, `Abrir2.mp4` y [`cuadros/`](evidencias/pruebas/PF-06/cuadros/) | Bloqueo con 0 libres, apertura con 1 libre, modo `manual` por voz (escenario por video en el README) |
+| PF-07 | [`PF-07/`](evidencias/pruebas/PF-07/README.md) | 14 videos | Frase y respuesta de cada intent, con cuadro y `pts_time` |
 | PF-08 | [`PF-08/`](evidencias/pruebas/PF-08/) | [`consultas.txt`](evidencias/pruebas/PF-08/consultas.txt) | Consultas PartiQL de M1–M4 |
 | PNF-01 | [`PNF-01/`](evidencias/pruebas/PNF-01/) | [`registro-no-funcionales.pdf`](evidencias/pruebas/PNF-01/registro-no-funcionales.pdf) → [`registro-no-funcionales.md`](evidencias/pruebas/PNF-01/registro-no-funcionales.md) | Estabilidad, HC-SR04, voz y reconexión (hoja de la sesión) |
-| PNF-02 | [`PNF-02/`](evidencias/pruebas/PNF-02/) | PDF de PNF-01, [`pf01.md`](evidencias/pruebas/PF-01/pf01.md) | 45 lecturas a 10/20/30 cm |
+| PNF-02 | [`PNF-02/`](evidencias/pruebas/PNF-02/) | PDF de PNF-01, [`pf01.md`](evidencias/pruebas/PF-01/pf01.md), [`transiciones-ir.csv`](evidencias/pruebas/PNF-02/transiciones-ir.csv) | 45 lecturas a 10/20/30 cm; 7/7 transiciones IR |
 | PNF-03 | [`PNF-03/`](evidencias/pruebas/PNF-03/) | PDF de PNF-01 | 10 tiempos de respuesta por voz |
-| PNF-04 | [`PNF-04/`](evidencias/pruebas/PNF-04/) | Videos de PF-06 | Sin conteo de cuadros |
+| PNF-04 | [`PNF-04/`](evidencias/pruebas/PNF-04/) | [`mediciones.csv`](evidencias/pruebas/PNF-04/mediciones.csv), [`cuadros/`](evidencias/pruebas/PNF-04/cuadros/) | 5 tiempos IR → LED por cuadros, máx 0,167 s |
+| Videos | [`pruebas/`](evidencias/pruebas/) | [`videos-fps.md`](evidencias/pruebas/videos-fps.md), [`medir_videos.py`](../tools/medir_videos.py) | fps, cuadros y duración de los 23 videos; medición por `pts_time` |
 | PNF-05 | [`PNF-05/`](evidencias/pruebas/PNF-05/) | [`historial-sesion.csv`](evidencias/pruebas/PNF-05/historial-sesion.csv), [`analisis.md`](evidencias/pruebas/PNF-05/analisis.md) | 84 eventos del firmware; Δ0, muestras e integridad |
 | PNF-06 | [`PNF-06/`](evidencias/pruebas/PNF-06/) | PDF de PNF-01 | 3 cortes y `desired` aplicado |
 | Análisis | [`analisis/`](evidencias/analisis/) | [`analizar_historial.py`](evidencias/analisis/analizar_historial.py) → [`historial-resultados.md`](evidencias/analisis/historial-resultados.md) | Deduplicación, Δ0 por grupo, muestras por arranque, integridad por número de secuencia |
 | PA-01–PA-03 | [`pruebas-automaticas/`](evidencias/pruebas-automaticas/) | `pio-run.txt`, `pio-run-publica.png`, `host-tests.txt`, `lambda-unittest.txt` | Salidas completas con commit y comando |
 | Plantillas | [`hojas-registro/`](evidencias/hojas-registro/) | Hojas funcional y no funcional | Plan de registro de la sesión |
 
-**No generados en la sesión** (motivo en 4.1): log serie `serial-sesion.txt`, exportación de CloudWatch Logs, M1–M4.csv y conteo de cuadros de los videos.
+**No generados en la sesión** (motivo en 4.1): log serie `serial-sesion.txt`, exportación de CloudWatch Logs y M1–M4.csv.
 
 ### 8.4 Evidencias de arquitectura y configuración
 
-Las capturas tienen ocultos los ARN, el número de cuenta, el Skill ID y el código de vinculación.
+Las capturas PNG tienen ocultos los ARN, el número de cuenta, el Skill ID y el código de vinculación; los videos de la sesión muestran parcialmente el Skill ID y el `userId` del simulador (4.3).
 
 | Evidencia | Archivo | Qué muestra |
 |---|---|---|

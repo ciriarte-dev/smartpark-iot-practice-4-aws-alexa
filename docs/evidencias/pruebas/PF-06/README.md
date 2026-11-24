@@ -1,14 +1,20 @@
 # PF-06 — Lógica Edge y convivencia con la voz
 
-**Requisitos:** RF13 (E1–E3), RF14. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Análisis: [ficha F11](../../../informe-practica-4.md#f11-reglas-del-edge-y-cambio-de-modo-pf-06).
+**Requisitos:** RF13 (E1–E3), RF14. Procedimiento y criterio: [4.2 del informe](../../../informe-practica-4.md#42-pruebas-funcionales). Análisis: [ficha F10](../../../informe-practica-4.md#f10-reglas-del-edge-pf-06).
 
-**Procedimiento planificado.** Con las 4 plazas ocupadas en `automatico`, pedir apertura (bloqueada, LCD `APERTURA BLOQ.`) y cierre (aceptado); liberar la plaza 4 y abrir (aceptada); volver a llenar, pasar a `manual` y abrir (aceptada, LCD `PARQUEO LLENO`).
+Videos grabados por Isabella Montes en la sesión del 22/11/2026. Los de esta carpeta están girados 90°: los cuadros clave de [`cuadros/`](cuadros/) se rotaron para leer la LCD y se generaron con [`tools/medir_videos.py`](../../../../tools/medir_videos.py) (`hoja`, rotulados con índice y `pts_time`). Los recortes del simulador muestran solo el chat, sin el panel JSON.
 
-| Archivo | Qué demuestra |
-|---|---|
-| [`Abrir.mp4`](Abrir.mp4), [`Abrir1.mp4`](Abrir1.mp4), [`Abrir2.mp4`](Abrir2.mp4) | Aperturas de la barrera; el escenario de cada video no está identificado |
-| [`../PF-07/AbrirCuandoTodosEspaciosOcupados.mp4`](../PF-07/AbrirCuandoTodosEspaciosOcupados.mp4) | Intento de apertura con todas las plazas ocupadas (E2) |
+**Cómo leer la LCD** ([`ParkingDisplay::update()`](../../../../src/ParkingDisplay.cpp#L50)). Fila 1: `APERTURA BLOQ.` solo en `automatico` sin plaza libre (E2 activa); `PARQUEO LLENO` con 0 libres y la apertura permitida, es decir, en `manual`; sin aviso, modo y barrera alternados cada 2 s.
 
-**Resultado.** E1 y E2 con evidencia parcial; el cierre con el parqueo lleno (E3), la apertura en `manual` con el parqueo lleno y el cambio de modo por voz no tienen un archivo identificable. Cubiertos por PA-02 (E2 en [`test_aws.cpp#L61-L62`](../../../../test/host/test_aws.cpp#L61-L62), E3 en [`test_aws.cpp#L254-L256`](../../../../test/host/test_aws.cpp#L254-L256)) y PA-03 (`test_v2_*`). Los videos no tienen conteo de cuadros, por lo que no sirven para [PNF-04](../PNF-04/).
+| Video | Escenario | Regla | Frases y respuesta de Alexa | LCD (cuadro / s) | Resultado | Cuadro clave |
+|---|---|---|---|---|---|---|
+| [`Abrir.mp4`](Abrir.mp4) | 4 plazas ocupadas en `automatico` | E1, E2; E3 | *"abrir"*, *"baja"*, *"abrir"*, *"baja"* → *"Solicité abrir/cerrar la barrera…"* (#539 / 18,000) | `Libres:0/4 Oc:4` / `APERTURA BLOQ.` (#30 / 1,000) | ✅ E1 y bloqueo activo; el servo no está en cuadro, así que el rechazo de la orden y el cierre (E3) no se ven | [`e2-apertura-bloqueada.jpg`](cuadros/e2-apertura-bloqueada.jpg), [`abrir-y-bajar-por-voz.jpg`](cuadros/abrir-y-bajar-por-voz.jpg) |
+| [`Abrir1.mp4`](Abrir1.mp4) | Una plaza liberada | E2 (desbloqueo) | *"abrir"* → *"Solicité abrir la barrera…"* (#179 / 6,000) | `Libres:1/4 Oc:3` (#5 / 0,167) → `Barrera: abierta` (#375 / 12,533) | ✅ Apertura aceptada con 1 plaza libre | [`plaza-liberada-inicio.jpg`](cuadros/plaza-liberada-inicio.jpg), [`plaza-liberada-apertura-aceptada.jpg`](cuadros/plaza-liberada-apertura-aceptada.jpg) |
+| [`Abrir2.mp4`](Abrir2.mp4) | Parqueo lleno en `manual` | RF14, E2 | *"activa el modo manual"* → *"Solicité el modo manual. El dispositivo aún debe confirmarlo…"*; luego *"abrir"* y *"baja"* (#269 / 9,000) | `Libres:0/4 Oc:4` / `PARQUEO LLENO` (#30 / 1,000) | ✅ Cambio de modo por voz aplicado en el Edge: con 0 libres la LCD ya no muestra `APERTURA BLOQ.` | [`modo-manual-por-voz.jpg`](cuadros/modo-manual-por-voz.jpg), [`manual-parqueo-lleno.jpg`](cuadros/manual-parqueo-lleno.jpg) |
+| [`../PF-07/AbrirCuandoTodosEspaciosOcupados.mp4`](../PF-07/AbrirCuandoTodosEspaciosOcupados.mp4) | 4 plazas ocupadas en `automatico` | E2 | *"consulta el modo del parqueo"* → *"El último modo reportado es automático."*; *"abrir"*, *"baja"* y se escribe *"abrir"* (#623 / 20,800) | No se ve; 4 LED rojos (#767 / 25,600) | ⚠️ El servo no se mueve entre 22,700 y 23,900 s (#680–#716), pero no se ve el envío de la última orden | [`e2-chat-modo-automatico.jpg`](cuadros/e2-chat-modo-automatico.jpg), [`e2-servo-sin-movimiento.jpg`](cuadros/e2-servo-sin-movimiento.jpg) |
 
-**Estado:** ⚠️ Cumple parcial (E1, E2); E3 Verificada con PA-02.
+Las respuestas de apertura y cierre de Alexa son iguales en todos los casos porque la Lambda responde sin esperar al dispositivo ([`barrier_handlers.py#L15`](../../../../lambda/handlers/barrier_handlers.py#L15)); el resultado de la regla solo se ve en la maqueta.
+
+**Resultado.** E1 se cumple en vivo: la fila 0 coincide con las plazas en los tres videos y los LED en [PF-01](../PF-01/) (7/7 transiciones, [PNF-02](../PNF-02/)). La condición de E2 (bloqueo con 0 libres en `automatico`) y su desbloqueo al liberar una plaza se ven en la LCD. El cambio a `manual` por voz se aplica en el Edge. No hay un tramo con el servo en cuadro justo después de una orden bloqueada ni de un cierre con el parqueo lleno: el rechazo (E2) y E3 quedan cubiertos por PA-02 ([`test_aws.cpp#L61-L62`](../../../../test/host/test_aws.cpp#L61-L62), [`test_aws.cpp#L254-L256`](../../../../test/host/test_aws.cpp#L254-L256)). *"activa el modo automático"* no aparece en ningún video (PA-03, `test_v2_*`).
+
+**Estado:** E1 ✅ Cumple; E2 ⚠️ Cumple parcial; E3 Verificada con PA-02; cambio de modo por voz (RF14) ✅ Cumple.
